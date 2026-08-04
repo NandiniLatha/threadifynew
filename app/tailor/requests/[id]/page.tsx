@@ -1,5 +1,5 @@
-import Image from "next/image"
 "use client"
+import Image from "next/image"
 
 import * as React from "react"
 import { useParams, useRouter } from "next/navigation"

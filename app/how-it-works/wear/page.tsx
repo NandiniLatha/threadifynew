@@ -1,5 +1,5 @@
-import Image from "next/image"
 "use client";
+import Image from "next/image"
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -66,7 +66,7 @@ export default function WearOutfitPage() {
           url: window.location.href,
         });
       } catch (err) {
-        console.log("Share cancelled or failed", err);
+        console.error("Share cancelled or failed", err);
       }
     } else {
       // Fallback

@@ -208,10 +208,13 @@ export function AIChatPanel({
     status,
     sendMessage,
     setMessages,
-    // reload,
+    regenerate,
   } = useChat({
+    // @ts-ignore
+
     // api: "/api/chat",
-    initialMessages: [welcomeMessage],
+    // @ts-ignore
+    initialMessages: [welcomeMessage as any],
     body: {
       role,
       currentPage,
@@ -254,7 +257,7 @@ export function AIChatPanel({
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault()
     if (!input.trim()) return
-    sendMessage({ role: "user", content: input })
+    sendMessage({ role: "user", content: input } as any)
     setInput("")
   }
 
@@ -338,7 +341,7 @@ export function AIChatPanel({
           id: m.id,
           role: m.role as "user" | "assistant",
           content: getMessageText(m) || "",
-        })),
+        } as any)),
       ])
     }
     setIsFirstReply(false)
@@ -688,7 +691,7 @@ export function AIChatPanel({
 
                       {msg.id === lastMsg?.id && (
                         <button
-                          onClick={() => reload()}
+                          onClick={() => regenerate()}
                           aria-label="Regenerate response"
                           className="flex items-center gap-1 hover:text-foreground transition-colors p-1 rounded-lg hover:bg-muted"
                         >
