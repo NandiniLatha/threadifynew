@@ -1,3 +1,4 @@
+import Image from "next/image"
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -105,7 +106,7 @@ export default function WearOutfitPage() {
         <div className="flex-1 flex gap-4">
           {mockOutfitImages.map((src, i) => (
             <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} className="flex-1 rounded-3xl overflow-hidden aspect-[3/4] border border-border shadow-lg">
-              <img src={src} alt="Outfit preview" className="w-full h-full object-cover" />
+              <Image width={400} height={400} src={src} alt="Outfit preview" className="w-full h-full object-cover" />
             </motion.div>
           ))}
         </div>

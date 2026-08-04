@@ -1,3 +1,4 @@
+import Image from "next/image"
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -125,7 +126,7 @@ export default function TrackProductionPage() {
                           >
                             {stage.photos.map((photo, pIdx) => (
                               <div key={pIdx} className="w-20 h-20 rounded-xl overflow-hidden border border-border group relative">
-                                <img src={photo} alt={`${stage.label} update`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                                <Image width={400} height={400} src={photo} alt={`${stage.label} update`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                   <Camera className="w-5 h-5 text-white" />
                                 </div>

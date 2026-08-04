@@ -1,3 +1,4 @@
+import Image from "next/image"
 "use client";
 
 import React, { useState, useRef } from "react";
@@ -221,7 +222,7 @@ export default function UploadInspirationPage() {
                   className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-border group"
                 >
                   {item.type === 'image' ? (
-                    <img src={item.src} alt="Upload preview" className="w-full h-full object-cover" />
+                    <Image width={400} height={400} src={item.src} alt="Upload preview" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full bg-muted/30 flex flex-col items-center justify-center p-4 text-center break-all">
                       <LinkIcon className="w-8 h-8 text-muted-foreground mb-2" />

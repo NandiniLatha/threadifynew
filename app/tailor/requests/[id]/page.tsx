@@ -1,3 +1,4 @@
+import Image from "next/image"
 "use client"
 
 import * as React from "react"
@@ -168,7 +169,7 @@ export default function TailorRequestDetails() {
         {/* Left Col: Request Details */}
         <div className="space-y-6">
           <div className="aspect-[4/5] rounded-3xl overflow-hidden border border-border bg-muted relative shadow-sm">
-            <img 
+            <Image width={400} height={400} 
               src={request.image_url} 
               alt="Design inspiration" 
               className="w-full h-full object-cover"
