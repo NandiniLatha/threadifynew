@@ -2,26 +2,177 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Base color tokens */
+    --ink: 24 18% 11%;
+    --ivory: 37 42% 94%;
+    --rust: 15 59% 45%;
+    --terracotta: 21 61% 62%;
+    --thread-green: 129 10% 26%;
+
+    /* Semantic mappings - Light Mode */
+    --background: var(--ivory);
+    --foreground: var(--ink);
+
+    --card: 37 42% 96%;
+    --card-foreground: var(--ink);
+
+    --popover: var(--ivory);
+    --popover-foreground: var(--ink);
+
+    --primary: var(--rust);
+    --primary-foreground: var(--ivory);
+
+    --secondary: var(--terracotta);
+    --secondary-foreground: var(--ink);
+
+    --tertiary: var(--thread-green);
+    --tertiary-foreground: var(--ivory);
+
+    --muted: 37 20% 86%;
+    --muted-foreground: 24 10% 30%;
+
+    --accent: var(--thread-green);
+    --accent-foreground: var(--ivory);
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 24 12% 82%;
+    --input: 24 12% 82%;
+    --ring: var(--rust);
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    /* Semantic mappings - Dark Mode */
+    --background: var(--ink);
+    --foreground: var(--ivory);
+
+    --card: 24 18% 14%;
+    --card-foreground: var(--ivory);
+
+    --popover: var(--ink);
+    --popover-foreground: var(--ivory);
+
+    --primary: var(--rust);
+    --primary-foreground: var(--ivory);
+
+    --secondary: var(--terracotta);
+    --secondary-foreground: var(--ink);
+
+    --tertiary: 129 15% 42%;
+    --tertiary-foreground: var(--ivory);
+
+    --muted: 24 12% 20%;
+    --muted-foreground: 37 20% 72%;
+
+    --accent: 129 15% 42%;
+    --accent-foreground: var(--ivory);
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 24 12% 22%;
+    --input: 24 12% 22%;
+    --ring: var(--rust);
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    background-color: hsl(var(--background));
+  }
+  body {
+    @apply text-foreground;
+    background: transparent;
+  }
+
+  /* ─── Global Focus Styles ───────────────────────────────────────────────── */
+  /* Applied via focus-visible so mouse clicks don't show the ring, only keyboard */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Ensure interactive elements not covered by focus-visible above get styles */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  /* ─── Prefers Reduced Motion ─────────────────────────────────────────────── */
+  /* Safety net: collapse all animations when the user opts out of motion.     */
+  /* Individual components should also use Framer Motion's useReducedMotion(). */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* ─── Screen Reader Only ─────────────────────────────────────────────────── */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* Show the element when it receives focus (for skip-nav links) */
+  .focus\:not-sr-only:focus {
+    position: fixed;
+    width: auto;
+    height: auto;
+    padding: revert;
+    margin: revert;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+  /* ─── Scroll Performance ────────────────────────────────────────────────── */
+  /* Apply to tall sections below the fold to skip their layout+paint pass     */
+  /* until they enter the viewport (saves 50–200ms of style recalc on load).  */
+  .content-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 600px; /* estimated height */
+  }
+
+  /* GPU-composite layer hint for elements that will animate */
+  .will-animate {
+    will-change: transform;
+  }
+
+  /* ─── Optimized scrolling ───────────────────────────────────────────────── */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Reduce paint cost on fixed overlays */
+  .sticky-header {
+    will-change: opacity, backdrop-filter;
+    contain: layout style;
   }
 }

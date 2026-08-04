@@ -1,0 +1,404 @@
+/* ================================================================
+   Threadify — CinematicHero.css
+   Premium animation layer: ribbons, light rays, silhouettes.
+   All elements: z-index 0–2, behind headline z-index 10+.
+   60 FPS: only transform / opacity animated.
+   ================================================================ */
+
+/* ── Custom properties ──────────────────────────────────────── */
+:root {
+  --ch-ray-gold:       rgba(201, 169, 97, 0.07);
+  --ch-ray-ivory:      rgba(250, 248, 244, 0.12);
+  --ch-ray-champagne:  rgba(240, 230, 204, 0.09);
+  --ch-ribbon-a:       rgba(201, 169, 97, 0.18);
+  --ch-ribbon-b:       rgba(232, 206, 176, 0.20);
+  --ch-ribbon-c:       rgba(220, 195, 165, 0.15);
+  --ch-ribbon-d:       rgba(180, 160, 130, 0.12);
+}
+
+.dark {
+  --ch-ray-gold:       rgba(201, 169, 97, 0.05);
+  --ch-ray-ivory:      rgba(60, 45, 25, 0.10);
+  --ch-ray-champagne:  rgba(80, 58, 28, 0.07);
+  --ch-ribbon-a:       rgba(201, 169, 97, 0.10);
+  --ch-ribbon-b:       rgba(180, 140, 90, 0.08);
+  --ch-ribbon-c:       rgba(160, 120, 70, 0.07);
+  --ch-ribbon-d:       rgba(130, 100, 60, 0.06);
+}
+
+/* ================================================================
+   LIGHT RAYS
+   Diagonal crepuscular beams fanning out behind headline.
+   Each ray is a tall, narrow, blurred div rotated from a focal point.
+   ================================================================ */
+.ch-rays {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.ch-ray {
+  position: absolute;
+  top: -20%;
+  left: 50%;
+  transform-origin: top center;
+  will-change: opacity;
+}
+
+/* Individual rays — fanned out by rotation */
+.ch-ray--1  { width: 2px;  height: 160%; transform: translateX(-50%) rotate(-40deg); background: linear-gradient(to bottom, var(--ch-ray-gold), transparent 80%);      filter: blur(12px); opacity: 0.9; animation: ch-ray-breathe 8s  ease-in-out infinite alternate; }
+.ch-ray--2  { width: 3px;  height: 155%; transform: translateX(-50%) rotate(-28deg); background: linear-gradient(to bottom, var(--ch-ray-ivory), transparent 75%);     filter: blur(18px); opacity: 0.8; animation: ch-ray-breathe 11s ease-in-out infinite alternate 1s; }
+.ch-ray--3  { width: 5px;  height: 165%; transform: translateX(-50%) rotate(-16deg); background: linear-gradient(to bottom, var(--ch-ray-champagne), transparent 70%); filter: blur(22px); opacity: 0.9; animation: ch-ray-breathe 9s  ease-in-out infinite alternate 0.5s; }
+.ch-ray--4  { width: 8px;  height: 180%; transform: translateX(-50%) rotate(-5deg);  background: linear-gradient(to bottom, var(--ch-ray-gold), transparent 65%);      filter: blur(30px); opacity: 1.0; animation: ch-ray-breathe 14s ease-in-out infinite alternate 2s; }
+.ch-ray--5  { width: 8px;  height: 180%; transform: translateX(-50%) rotate(0deg);   background: linear-gradient(to bottom, var(--ch-ray-ivory), transparent 60%);     filter: blur(35px); opacity: 1.0; animation: ch-ray-breathe 12s ease-in-out infinite alternate 0.3s; }
+.ch-ray--6  { width: 8px;  height: 180%; transform: translateX(-50%) rotate(5deg);   background: linear-gradient(to bottom, var(--ch-ray-champagne), transparent 65%); filter: blur(30px); opacity: 1.0; animation: ch-ray-breathe 10s ease-in-out infinite alternate 1.5s; }
+.ch-ray--7  { width: 5px;  height: 165%; transform: translateX(-50%) rotate(16deg);  background: linear-gradient(to bottom, var(--ch-ray-gold), transparent 70%);      filter: blur(22px); opacity: 0.9; animation: ch-ray-breathe 13s ease-in-out infinite alternate 0.7s; }
+.ch-ray--8  { width: 3px;  height: 155%; transform: translateX(-50%) rotate(28deg);  background: linear-gradient(to bottom, var(--ch-ray-ivory), transparent 75%);     filter: blur(18px); opacity: 0.8; animation: ch-ray-breathe 9s  ease-in-out infinite alternate 2.2s; }
+.ch-ray--9  { width: 2px;  height: 150%; transform: translateX(-50%) rotate(40deg);  background: linear-gradient(to bottom, var(--ch-ray-champagne), transparent 80%); filter: blur(12px); opacity: 0.7; animation: ch-ray-breathe 11s ease-in-out infinite alternate 1.1s; }
+
+/* Wide soft halo behind centre */
+.ch-ray--halo {
+  width: 60vw;
+  height: 50vh;
+  top: -5%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse 100% 80% at 50% 0%, var(--ch-ray-ivory) 0%, transparent 70%);
+  filter: blur(60px);
+  opacity: 0.8;
+  animation: ch-ray-halo-pulse 16s ease-in-out infinite alternate;
+}
+
+@keyframes ch-ray-breathe {
+  0%   { opacity: 0.4; }
+  50%  { opacity: 1.0; }
+  100% { opacity: 0.6; }
+}
+
+@keyframes ch-ray-halo-pulse {
+  0%   { opacity: 0.4; transform: translateX(-50%) scale(0.95); }
+  50%  { opacity: 0.9; transform: translateX(-50%) scale(1.05); }
+  100% { opacity: 0.6; transform: translateX(-50%) scale(1.00); }
+}
+
+/* ================================================================
+   FABRIC RIBBONS
+   Long sinuous SVG-path-shaped divs that drift across the scene.
+   ================================================================ */
+.ch-ribbons {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.ch-ribbon {
+  position: absolute;
+  border-radius: 999px;
+  will-change: transform, opacity;
+  filter: blur(2px);
+  transform-origin: center center;
+}
+
+/* Ribbon A — wide diagonal, top left to bottom right */
+.ch-ribbon--a {
+  width: 3px;
+  height: 80vh;
+  background: linear-gradient(to bottom,
+    transparent 0%,
+    var(--ch-ribbon-a) 20%,
+    var(--ch-ribbon-b) 55%,
+    var(--ch-ribbon-a) 80%,
+    transparent 100%
+  );
+  top: -10%;
+  left: 15%;
+  transform: rotate(-25deg) scaleX(1);
+  animation: ch-ribbon-drift-a 22s ease-in-out infinite alternate;
+  filter: blur(1.5px);
+}
+
+/* Ribbon B — slim, upper right */
+.ch-ribbon--b {
+  width: 2px;
+  height: 60vh;
+  background: linear-gradient(to bottom,
+    transparent 0%,
+    var(--ch-ribbon-b) 30%,
+    var(--ch-ribbon-c) 60%,
+    transparent 100%
+  );
+  top: 5%;
+  right: 20%;
+  transform: rotate(18deg);
+  animation: ch-ribbon-drift-b 28s ease-in-out infinite alternate;
+  filter: blur(1px);
+}
+
+/* Ribbon C — wide, centre-left, slow */
+.ch-ribbon--c {
+  width: 4px;
+  height: 110vh;
+  background: linear-gradient(to bottom,
+    transparent 0%,
+    var(--ch-ribbon-c) 15%,
+    var(--ch-ribbon-a) 50%,
+    var(--ch-ribbon-d) 80%,
+    transparent 100%
+  );
+  top: -15%;
+  left: 35%;
+  transform: rotate(-8deg);
+  animation: ch-ribbon-drift-c 34s ease-in-out infinite alternate;
+  filter: blur(2px);
+}
+
+/* Ribbon D — narrow, right side */
+.ch-ribbon--d {
+  width: 2px;
+  height: 70vh;
+  background: linear-gradient(to bottom,
+    transparent 0%,
+    var(--ch-ribbon-d) 25%,
+    var(--ch-ribbon-b) 65%,
+    transparent 100%
+  );
+  top: 10%;
+  right: 35%;
+  transform: rotate(32deg);
+  animation: ch-ribbon-drift-d 26s ease-in-out infinite alternate;
+  filter: blur(1.5px);
+}
+
+/* Ribbon E — accent, far left */
+.ch-ribbon--e {
+  width: 3px;
+  height: 50vh;
+  background: linear-gradient(to bottom,
+    transparent 0%,
+    var(--ch-ribbon-a) 35%,
+    var(--ch-ribbon-c) 70%,
+    transparent 100%
+  );
+  top: 20%;
+  left: 5%;
+  transform: rotate(-45deg);
+  animation: ch-ribbon-drift-e 30s ease-in-out infinite alternate;
+  filter: blur(2px);
+}
+
+/* Ribbon F — far right accent */
+.ch-ribbon--f {
+  width: 2px;
+  height: 45vh;
+  background: linear-gradient(to bottom,
+    transparent 0%,
+    var(--ch-ribbon-b) 40%,
+    transparent 100%
+  );
+  top: 15%;
+  right: 8%;
+  transform: rotate(15deg);
+  animation: ch-ribbon-drift-f 24s ease-in-out infinite alternate;
+  filter: blur(1px);
+}
+
+@keyframes ch-ribbon-drift-a {
+  0%   { transform: rotate(-25deg) translate3d(  0px,   0px, 0); opacity: 0.6; }
+  40%  { transform: rotate(-22deg) translate3d( 18px, -30px, 0); opacity: 0.9; }
+  100% { transform: rotate(-28deg) translate3d(-12px,  20px, 0); opacity: 0.7; }
+}
+
+@keyframes ch-ribbon-drift-b {
+  0%   { transform: rotate( 18deg) translate3d(   0px,   0px, 0); opacity: 0.5; }
+  50%  { transform: rotate( 22deg) translate3d( -20px,  15px, 0); opacity: 0.85; }
+  100% { transform: rotate( 15deg) translate3d(  10px, -25px, 0); opacity: 0.65; }
+}
+
+@keyframes ch-ribbon-drift-c {
+  0%   { transform: rotate(-8deg) translate3d(  0px,   0px, 0); opacity: 0.55; }
+  33%  { transform: rotate(-5deg) translate3d(-15px,  10px, 0); opacity: 0.80; }
+  66%  { transform: rotate(-10deg) translate3d( 8px, -20px, 0); opacity: 0.70; }
+  100% { transform: rotate(-6deg) translate3d(-5px,  15px, 0); opacity: 0.60; }
+}
+
+@keyframes ch-ribbon-drift-d {
+  0%   { transform: rotate( 32deg) translate3d( 0px,   0px, 0); opacity: 0.45; }
+  50%  { transform: rotate( 28deg) translate3d(12px, -18px, 0); opacity: 0.75; }
+  100% { transform: rotate( 35deg) translate3d(-8px,  12px, 0); opacity: 0.55; }
+}
+
+@keyframes ch-ribbon-drift-e {
+  0%   { transform: rotate(-45deg) translate3d(  0px,   0px, 0); opacity: 0.40; }
+  50%  { transform: rotate(-40deg) translate3d( 15px, -10px, 0); opacity: 0.70; }
+  100% { transform: rotate(-48deg) translate3d( -8px,  18px, 0); opacity: 0.50; }
+}
+
+@keyframes ch-ribbon-drift-f {
+  0%   { transform: rotate( 15deg) translate3d( 0px,   0px, 0); opacity: 0.35; }
+  60%  { transform: rotate( 18deg) translate3d(-10px, 14px, 0); opacity: 0.65; }
+  100% { transform: rotate( 12deg) translate3d(  6px, -10px, 0); opacity: 0.45; }
+}
+
+/* ================================================================
+   CLOTHING SILHOUETTES
+   Outlined SVG-based dress / coat / trouser silhouettes floating
+   gently in the background. Pure CSS fill animation.
+   ================================================================ */
+.ch-silhouettes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.ch-silhouette {
+  position: absolute;
+  will-change: transform, opacity;
+}
+
+.ch-silhouette svg {
+  display: block;
+}
+
+/* Silhouette A — gown, far left */
+.ch-silhouette--a {
+  left: 3%;
+  top: 10%;
+  width: clamp(80px, 9vw, 150px);
+  opacity: 0.055;
+  animation: ch-sil-float-a 18s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+/* Silhouette B — blazer, right side */
+.ch-silhouette--b {
+  right: 5%;
+  top: 15%;
+  width: clamp(70px, 8vw, 130px);
+  opacity: 0.045;
+  animation: ch-sil-float-b 22s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+/* Silhouette C — trouser, upper centre-left */
+.ch-silhouette--c {
+  left: 18%;
+  top: 5%;
+  width: clamp(55px, 6vw, 100px);
+  opacity: 0.035;
+  animation: ch-sil-float-c 26s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+/* Silhouette D — coat, right-centre */
+.ch-silhouette--d {
+  right: 18%;
+  top: 8%;
+  width: clamp(70px, 7.5vw, 120px);
+  opacity: 0.040;
+  animation: ch-sil-float-d 20s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+/* Silhouette E — skirt, far right edge */
+.ch-silhouette--e {
+  right: 1%;
+  bottom: 15%;
+  width: clamp(60px, 7vw, 110px);
+  opacity: 0.030;
+  animation: ch-sil-float-e 24s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+/* Silhouette F — handbag accent, bottom left */
+.ch-silhouette--f {
+  left: 1%;
+  bottom: 20%;
+  width: clamp(45px, 5vw, 80px);
+  opacity: 0.035;
+  animation: ch-sil-float-f 16s ease-in-out infinite;
+}
+
+@keyframes ch-sil-float-a {
+  0%   { transform: translate3d(  0px,   0px, 0) rotate(-1.5deg); }
+  30%  { transform: translate3d(  8px, -18px, 0) rotate( 0.5deg); }
+  65%  { transform: translate3d( -5px, -10px, 0) rotate(-2.0deg); }
+  100% { transform: translate3d(  0px,   0px, 0) rotate(-1.5deg); }
+}
+
+@keyframes ch-sil-float-b {
+  0%   { transform: translate3d(  0px,   0px, 0) rotate( 1.0deg); }
+  40%  { transform: translate3d(-10px, -14px, 0) rotate(-0.5deg); }
+  75%  { transform: translate3d(  6px,  -8px, 0) rotate( 1.5deg); }
+  100% { transform: translate3d(  0px,   0px, 0) rotate( 1.0deg); }
+}
+
+@keyframes ch-sil-float-c {
+  0%   { transform: translate3d(  0px,   0px, 0) rotate(-0.8deg); }
+  45%  { transform: translate3d(  6px, -20px, 0) rotate( 0.8deg); }
+  80%  { transform: translate3d( -4px, -12px, 0) rotate(-1.2deg); }
+  100% { transform: translate3d(  0px,   0px, 0) rotate(-0.8deg); }
+}
+
+@keyframes ch-sil-float-d {
+  0%   { transform: translate3d(  0px,   0px, 0) rotate( 0.6deg); }
+  35%  { transform: translate3d( -8px, -12px, 0) rotate(-0.4deg); }
+  70%  { transform: translate3d(  5px, -20px, 0) rotate( 1.2deg); }
+  100% { transform: translate3d(  0px,   0px, 0) rotate( 0.6deg); }
+}
+
+@keyframes ch-sil-float-e {
+  0%   { transform: translate3d(  0px,   0px, 0) rotate(-1.2deg); }
+  50%  { transform: translate3d(  7px, -16px, 0) rotate( 0.6deg); }
+  100% { transform: translate3d(  0px,   0px, 0) rotate(-1.2deg); }
+}
+
+@keyframes ch-sil-float-f {
+  0%   { transform: translate3d(  0px,  0px, 0) rotate( 2deg); }
+  50%  { transform: translate3d( -5px, -8px, 0) rotate(-1deg); }
+  100% { transform: translate3d(  0px,  0px, 0) rotate( 2deg); }
+}
+
+/* Dark mode: slightly boost opacity so silhouettes remain visible on dark bg */
+.dark .ch-silhouette--a { opacity: 0.08; }
+.dark .ch-silhouette--b { opacity: 0.07; }
+.dark .ch-silhouette--c { opacity: 0.06; }
+.dark .ch-silhouette--d { opacity: 0.065; }
+.dark .ch-silhouette--e { opacity: 0.05; }
+.dark .ch-silhouette--f { opacity: 0.055; }
+
+/* ================================================================
+   FLOATING DUST MOTES (tiny dots) — bonus texture layer
+   ================================================================ */
+.ch-motes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.ch-mote {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--ch-ribbon-a);
+  will-change: transform, opacity;
+}
+
+/* ================================================================
+   REDUCED MOTION
+   Silence all animations — layers remain visible but static.
+   ================================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .ch-ray,
+  .ch-ribbon,
+  .ch-silhouette,
+  .ch-mote {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -1,0 +1,1602 @@
+{
+  "totalProcessed": 49,
+  "importedClothingCount": 40,
+  "ignoredNonClothingCount": 9,
+  "categoriesDetected": [
+    "Apparel"
+  ],
+  "subCategoriesDetected": [
+    "Topwear",
+    "Bottomwear",
+    "Dress",
+    "Saree",
+    "Loungewear",
+    "Inspiration Garment",
+    "Fashion Collection"
+  ],
+  "articleTypesDetected": [
+    "Tshirts",
+    "Kurtis",
+    "Trousers",
+    "Shirts",
+    "Dresses",
+    "Sarees",
+    "Blazers",
+    "Nightdress",
+    "Sherwani",
+    "Lehenga",
+    "Saree",
+    "Custom Garment",
+    "Dress",
+    "Kurti",
+    "Jacket",
+    "Blazer",
+    "Suit",
+    "Gown"
+  ],
+  "lastUpdated": "2026-07-24T03:45:48.999Z",
+  "records": [
+    {
+      "id": "1163",
+      "imagePath": "/images/1163.jpg",
+      "productName": "Nike Men Solid Blue Round Neck T-shirt",
+      "gender": "Men",
+      "masterCategory": "Apparel",
+      "subCategory": "Topwear",
+      "articleType": "Tshirts",
+      "baseColour": "Blue",
+      "season": "Summer",
+      "usage": "Casual",
+      "tags": [
+        "nike men solid blue round neck t-shirt",
+        "tshirts",
+        "topwear",
+        "apparel",
+        "blue",
+        "men",
+        "summer",
+        "casual"
+      ],
+      "complexity": "Basic",
+      "fabricRecommendations": [
+        "100% Organic Cotton",
+        "Linen",
+        "Modal",
+        "Viscose"
+      ],
+      "tailorRecommendations": [
+        "Bespoke Garment Craftsman"
+      ],
+      "estimatedStitchingCost": {
+        "min": 800,
+        "max": 2200,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 3,
+        "max": 5
+      }
+    },
+    {
+      "id": "1525",
+      "imagePath": "/images/1525.jpg",
+      "productName": "Biba Women Red Printed Cotton Kurti",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Topwear",
+      "articleType": "Kurtis",
+      "baseColour": "Red",
+      "season": "Summer",
+      "usage": "Ethnic",
+      "tags": [
+        "biba women red printed cotton kurti",
+        "kurtis",
+        "topwear",
+        "apparel",
+        "red",
+        "women",
+        "summer",
+        "ethnic"
+      ],
+      "complexity": "Moderate",
+      "fabricRecommendations": [
+        "Chanderi Silk",
+        "Cotton Blend",
+        "Mulmul",
+        "Rayon",
+        "Linen"
+      ],
+      "tailorRecommendations": [
+        "Traditional Ethnic Atelier"
+      ],
+      "estimatedStitchingCost": {
+        "min": 1800,
+        "max": 4500,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 4,
+        "max": 7
+      }
+    },
+    {
+      "id": "1526",
+      "imagePath": "/images/1526.jpg",
+      "productName": "Park Avenue Women Black Trousers",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Bottomwear",
+      "articleType": "Trousers",
+      "baseColour": "Black",
+      "season": "Fall",
+      "usage": "Casual",
+      "tags": [
+        "park avenue women black trousers",
+        "trousers",
+        "bottomwear",
+        "apparel",
+        "black",
+        "women",
+        "fall",
+        "casual"
+      ],
+      "complexity": "Moderate",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Bespoke Garment Craftsman"
+      ],
+      "estimatedStitchingCost": {
+        "min": 1800,
+        "max": 4500,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 4,
+        "max": 7
+      }
+    },
+    {
+      "id": "1527",
+      "imagePath": "/images/1527.jpg",
+      "productName": "Raymond Men White Formal Cotton Shirt",
+      "gender": "Men",
+      "masterCategory": "Apparel",
+      "subCategory": "Topwear",
+      "articleType": "Shirts",
+      "baseColour": "White",
+      "season": "Spring",
+      "usage": "Formal",
+      "tags": [
+        "raymond men white formal cotton shirt",
+        "shirts",
+        "topwear",
+        "apparel",
+        "white",
+        "men",
+        "spring",
+        "formal"
+      ],
+      "complexity": "Basic",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Bespoke Garment Craftsman"
+      ],
+      "estimatedStitchingCost": {
+        "min": 800,
+        "max": 2200,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 3,
+        "max": 5
+      }
+    },
+    {
+      "id": "1528",
+      "imagePath": "/images/1528.jpg",
+      "productName": "FabAlley Women Navy Blue A-Line Dress",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Dress",
+      "articleType": "Dresses",
+      "baseColour": "Midnight Blue",
+      "season": "Summer",
+      "usage": "Casual",
+      "tags": [
+        "faballey women navy blue a-line dress",
+        "dresses",
+        "dress",
+        "apparel",
+        "midnight blue",
+        "women",
+        "summer",
+        "casual"
+      ],
+      "complexity": "Moderate",
+      "fabricRecommendations": [
+        "100% Organic Cotton",
+        "Linen",
+        "Modal",
+        "Viscose"
+      ],
+      "tailorRecommendations": [
+        "Couture Fashion Designer Specialist"
+      ],
+      "estimatedStitchingCost": {
+        "min": 1800,
+        "max": 4500,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 4,
+        "max": 7
+      }
+    },
+    {
+      "id": "1529",
+      "imagePath": "/images/1529.jpg",
+      "productName": "Fabindia Emerald Green Silk Saree",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Saree",
+      "articleType": "Sarees",
+      "baseColour": "Emerald Green",
+      "season": "All Season",
+      "usage": "Ethnic",
+      "tags": [
+        "fabindia emerald green silk saree",
+        "sarees",
+        "saree",
+        "apparel",
+        "emerald green",
+        "women",
+        "all season",
+        "ethnic"
+      ],
+      "complexity": "High",
+      "fabricRecommendations": [
+        "Silk",
+        "Chiffon",
+        "Georgette",
+        "Organza",
+        "Raw Silk"
+      ],
+      "tailorRecommendations": [
+        "Master Ethnic Specialist & Zardozi Artisan"
+      ],
+      "estimatedStitchingCost": {
+        "min": 4500,
+        "max": 14000,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 7,
+        "max": 14
+      }
+    },
+    {
+      "id": "1530",
+      "imagePath": "/images/1530.jpg",
+      "productName": "Louis Philippe Men Charcoal Slim Fit Blazer",
+      "gender": "Men",
+      "masterCategory": "Apparel",
+      "subCategory": "Topwear",
+      "articleType": "Blazers",
+      "baseColour": "Charcoal",
+      "season": "Winter",
+      "usage": "Formal",
+      "tags": [
+        "louis philippe men charcoal slim fit blazer",
+        "blazers",
+        "topwear",
+        "apparel",
+        "charcoal",
+        "men",
+        "winter",
+        "formal"
+      ],
+      "complexity": "High",
+      "fabricRecommendations": [
+        "Wool Blend",
+        "Tweed",
+        "Linen Blend",
+        "Velvet",
+        "Structured Cotton"
+      ],
+      "tailorRecommendations": [
+        "Master Bespoke Suit Cutter"
+      ],
+      "estimatedStitchingCost": {
+        "min": 4500,
+        "max": 14000,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 7,
+        "max": 14
+      }
+    },
+    {
+      "id": "1531",
+      "imagePath": "/images/1531.jpg",
+      "productName": "Zivame Women Pink Satin Nightdress",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Loungewear",
+      "articleType": "Nightdress",
+      "baseColour": "Pink",
+      "season": "Summer",
+      "usage": "Casual",
+      "tags": [
+        "zivame women pink satin nightdress",
+        "nightdress",
+        "loungewear",
+        "apparel",
+        "pink",
+        "women",
+        "summer",
+        "casual"
+      ],
+      "complexity": "Moderate",
+      "fabricRecommendations": [
+        "100% Organic Cotton",
+        "Linen",
+        "Modal",
+        "Viscose"
+      ],
+      "tailorRecommendations": [
+        "Couture Fashion Designer Specialist"
+      ],
+      "estimatedStitchingCost": {
+        "min": 1800,
+        "max": 4500,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 4,
+        "max": 7
+      }
+    },
+    {
+      "id": "1541",
+      "imagePath": "/images/1541.jpg",
+      "productName": "Manyavar Men Maroon Embroidered Sherwani",
+      "gender": "Men",
+      "masterCategory": "Apparel",
+      "subCategory": "Topwear",
+      "articleType": "Sherwani",
+      "baseColour": "Maroon",
+      "season": "Winter",
+      "usage": "Ethnic",
+      "tags": [
+        "manyavar men maroon embroidered sherwani",
+        "sherwani",
+        "topwear",
+        "apparel",
+        "maroon",
+        "men",
+        "winter",
+        "ethnic"
+      ],
+      "complexity": "Bespoke Luxury",
+      "fabricRecommendations": [
+        "Cashmere Wool",
+        "Merino Wool",
+        "Heavy Denim",
+        "Fleece"
+      ],
+      "tailorRecommendations": [
+        "Traditional Ethnic Atelier"
+      ],
+      "estimatedStitchingCost": {
+        "min": 12000,
+        "max": 45000,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 14,
+        "max": 28
+      }
+    },
+    {
+      "id": "1542",
+      "imagePath": "/images/1542.jpg",
+      "productName": "Anita Dongre Crimson Zardozi Bridal Lehenga",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Bottomwear",
+      "articleType": "Lehenga",
+      "baseColour": "Crimson",
+      "season": "Winter",
+      "usage": "Ethnic",
+      "tags": [
+        "anita dongre crimson zardozi bridal lehenga",
+        "lehenga",
+        "bottomwear",
+        "apparel",
+        "crimson",
+        "women",
+        "winter",
+        "ethnic"
+      ],
+      "complexity": "Bespoke Luxury",
+      "fabricRecommendations": [
+        "Silk",
+        "Chiffon",
+        "Georgette",
+        "Organza",
+        "Raw Silk"
+      ],
+      "tailorRecommendations": [
+        "Master Ethnic Specialist & Zardozi Artisan"
+      ],
+      "estimatedStitchingCost": {
+        "min": 12000,
+        "max": 45000,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 14,
+        "max": 28
+      }
+    },
+    {
+      "id": "builtin_banarasi_saree_png",
+      "imagePath": "/images/inspiration/banarasi_saree.png",
+      "productName": "BANARASI SAREE",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Inspiration Garment",
+      "articleType": "Saree",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "banarasi saree",
+        "saree",
+        "women",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "High",
+      "fabricRecommendations": [
+        "Silk",
+        "Chiffon",
+        "Georgette",
+        "Organza",
+        "Raw Silk"
+      ],
+      "tailorRecommendations": [
+        "Master Ethnic Specialist & Zardozi Artisan"
+      ],
+      "estimatedStitchingCost": {
+        "min": 4500,
+        "max": 14000,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 7,
+        "max": 14
+      }
+    },
+    {
+      "id": "builtin_bridal_lehenga_png",
+      "imagePath": "/images/inspiration/bridal_lehenga.png",
+      "productName": "BRIDAL LEHENGA",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Inspiration Garment",
+      "articleType": "Lehenga",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "bridal lehenga",
+        "lehenga",
+        "women",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Bespoke Luxury",
+      "fabricRecommendations": [
+        "Silk",
+        "Chiffon",
+        "Georgette",
+        "Organza",
+        "Raw Silk"
+      ],
+      "tailorRecommendations": [
+        "Master Ethnic Specialist & Zardozi Artisan"
+      ],
+      "estimatedStitchingCost": {
+        "min": 12000,
+        "max": 45000,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 14,
+        "max": 28
+      }
+    },
+    {
+      "id": "builtin_coord_set_png",
+      "imagePath": "/images/inspiration/coord_set.png",
+      "productName": "COORD SET",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Inspiration Garment",
+      "articleType": "Custom Garment",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "coord set",
+        "custom garment",
+        "women",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Basic",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Bespoke Garment Craftsman"
+      ],
+      "estimatedStitchingCost": {
+        "min": 800,
+        "max": 2200,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 3,
+        "max": 5
+      }
+    },
+    {
+      "id": "builtin_cotton_dress_png",
+      "imagePath": "/images/inspiration/cotton_dress.png",
+      "productName": "COTTON DRESS",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Inspiration Garment",
+      "articleType": "Dress",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "cotton dress",
+        "dress",
+        "women",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Moderate",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Couture Fashion Designer Specialist"
+      ],
+      "estimatedStitchingCost": {
+        "min": 1800,
+        "max": 4500,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 4,
+        "max": 7
+      }
+    },
+    {
+      "id": "builtin_designer_kurti_png",
+      "imagePath": "/images/inspiration/designer_kurti.png",
+      "productName": "DESIGNER KURTI",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Inspiration Garment",
+      "articleType": "Kurti",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "designer kurti",
+        "kurti",
+        "women",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Moderate",
+      "fabricRecommendations": [
+        "Chanderi Silk",
+        "Cotton Blend",
+        "Mulmul",
+        "Rayon",
+        "Linen"
+      ],
+      "tailorRecommendations": [
+        "Traditional Ethnic Atelier"
+      ],
+      "estimatedStitchingCost": {
+        "min": 1800,
+        "max": 4500,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 4,
+        "max": 7
+      }
+    },
+    {
+      "id": "builtin_half_saree_png",
+      "imagePath": "/images/inspiration/half_saree.png",
+      "productName": "HALF SAREE",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Inspiration Garment",
+      "articleType": "Saree",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "half saree",
+        "saree",
+        "women",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "High",
+      "fabricRecommendations": [
+        "Silk",
+        "Chiffon",
+        "Georgette",
+        "Organza",
+        "Raw Silk"
+      ],
+      "tailorRecommendations": [
+        "Master Ethnic Specialist & Zardozi Artisan"
+      ],
+      "estimatedStitchingCost": {
+        "min": 4500,
+        "max": 14000,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 7,
+        "max": 14
+      }
+    },
+    {
+      "id": "builtin_indo_western_png",
+      "imagePath": "/images/inspiration/indo_western.png",
+      "productName": "INDO WESTERN",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Inspiration Garment",
+      "articleType": "Custom Garment",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "indo western",
+        "custom garment",
+        "women",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Basic",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Bespoke Garment Craftsman"
+      ],
+      "estimatedStitchingCost": {
+        "min": 800,
+        "max": 2200,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 3,
+        "max": 5
+      }
+    },
+    {
+      "id": "builtin_jacket_png",
+      "imagePath": "/images/inspiration/jacket.png",
+      "productName": "JACKET",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Inspiration Garment",
+      "articleType": "Jacket",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "jacket",
+        "jacket",
+        "women",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "High",
+      "fabricRecommendations": [
+        "Wool Blend",
+        "Tweed",
+        "Linen Blend",
+        "Velvet",
+        "Structured Cotton"
+      ],
+      "tailorRecommendations": [
+        "Bespoke Garment Craftsman"
+      ],
+      "estimatedStitchingCost": {
+        "min": 4500,
+        "max": 14000,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 7,
+        "max": 14
+      }
+    },
+    {
+      "id": "builtin_kanjeevaram_saree_png",
+      "imagePath": "/images/inspiration/kanjeevaram_saree.png",
+      "productName": "KANJEEVARAM SAREE",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Inspiration Garment",
+      "articleType": "Saree",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "kanjeevaram saree",
+        "saree",
+        "women",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "High",
+      "fabricRecommendations": [
+        "Silk",
+        "Chiffon",
+        "Georgette",
+        "Organza",
+        "Raw Silk"
+      ],
+      "tailorRecommendations": [
+        "Master Ethnic Specialist & Zardozi Artisan"
+      ],
+      "estimatedStitchingCost": {
+        "min": 4500,
+        "max": 14000,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 7,
+        "max": 14
+      }
+    },
+    {
+      "id": "builtin_mens_blazer_png",
+      "imagePath": "/images/inspiration/mens_blazer.png",
+      "productName": "MENS BLAZER",
+      "gender": "Men",
+      "masterCategory": "Apparel",
+      "subCategory": "Inspiration Garment",
+      "articleType": "Blazer",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "mens blazer",
+        "blazer",
+        "men",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "High",
+      "fabricRecommendations": [
+        "Wool Blend",
+        "Tweed",
+        "Linen Blend",
+        "Velvet",
+        "Structured Cotton"
+      ],
+      "tailorRecommendations": [
+        "Master Bespoke Suit Cutter"
+      ],
+      "estimatedStitchingCost": {
+        "min": 4500,
+        "max": 14000,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 7,
+        "max": 14
+      }
+    },
+    {
+      "id": "builtin_mens_casual_shirt_png",
+      "imagePath": "/images/inspiration/mens_casual_shirt.png",
+      "productName": "MENS CASUAL SHIRT",
+      "gender": "Men",
+      "masterCategory": "Apparel",
+      "subCategory": "Inspiration Garment",
+      "articleType": "Custom Garment",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "mens casual shirt",
+        "custom garment",
+        "men",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Basic",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Bespoke Garment Craftsman"
+      ],
+      "estimatedStitchingCost": {
+        "min": 800,
+        "max": 2200,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 3,
+        "max": 5
+      }
+    },
+    {
+      "id": "builtin_mens_formal_shirt_png",
+      "imagePath": "/images/inspiration/mens_formal_shirt.png",
+      "productName": "MENS FORMAL SHIRT",
+      "gender": "Men",
+      "masterCategory": "Apparel",
+      "subCategory": "Inspiration Garment",
+      "articleType": "Custom Garment",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "mens formal shirt",
+        "custom garment",
+        "men",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Basic",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Bespoke Garment Craftsman"
+      ],
+      "estimatedStitchingCost": {
+        "min": 800,
+        "max": 2200,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 3,
+        "max": 5
+      }
+    },
+    {
+      "id": "builtin_party_wear_dress_png",
+      "imagePath": "/images/inspiration/party_wear_dress.png",
+      "productName": "PARTY WEAR DRESS",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Inspiration Garment",
+      "articleType": "Dress",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "party wear dress",
+        "dress",
+        "women",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Moderate",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Couture Fashion Designer Specialist"
+      ],
+      "estimatedStitchingCost": {
+        "min": 1800,
+        "max": 4500,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 4,
+        "max": 7
+      }
+    },
+    {
+      "id": "builtin_sherwani_png",
+      "imagePath": "/images/inspiration/sherwani.png",
+      "productName": "SHERWANI",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Inspiration Garment",
+      "articleType": "Sherwani",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "sherwani",
+        "sherwani",
+        "women",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Bespoke Luxury",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Traditional Ethnic Atelier"
+      ],
+      "estimatedStitchingCost": {
+        "min": 12000,
+        "max": 45000,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 14,
+        "max": 28
+      }
+    },
+    {
+      "id": "builtin_three_piece_suit_png",
+      "imagePath": "/images/inspiration/three_piece_suit.png",
+      "productName": "THREE PIECE SUIT",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Inspiration Garment",
+      "articleType": "Suit",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "three piece suit",
+        "suit",
+        "women",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "High",
+      "fabricRecommendations": [
+        "Chanderi Silk",
+        "Cotton Blend",
+        "Mulmul",
+        "Rayon",
+        "Linen"
+      ],
+      "tailorRecommendations": [
+        "Master Bespoke Suit Cutter"
+      ],
+      "estimatedStitchingCost": {
+        "min": 4500,
+        "max": 14000,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 7,
+        "max": 14
+      }
+    },
+    {
+      "id": "builtin_wedding_gown_png",
+      "imagePath": "/images/inspiration/wedding_gown.png",
+      "productName": "WEDDING GOWN",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Inspiration Garment",
+      "articleType": "Gown",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "wedding gown",
+        "gown",
+        "women",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Bespoke Luxury",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Couture Fashion Designer Specialist"
+      ],
+      "estimatedStitchingCost": {
+        "min": 12000,
+        "max": 45000,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 14,
+        "max": 28
+      }
+    },
+    {
+      "id": "builtin_womens_shirt_png",
+      "imagePath": "/images/inspiration/womens_shirt.png",
+      "productName": "WOMENS SHIRT",
+      "gender": "Men",
+      "masterCategory": "Apparel",
+      "subCategory": "Inspiration Garment",
+      "articleType": "Custom Garment",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "womens shirt",
+        "custom garment",
+        "men",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Basic",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Bespoke Garment Craftsman"
+      ],
+      "estimatedStitchingCost": {
+        "min": 800,
+        "max": 2200,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 3,
+        "max": 5
+      }
+    },
+    {
+      "id": "builtin_bridal_blouse_1_png",
+      "imagePath": "/images/fashion/bridal_blouse_1.png",
+      "productName": "BRIDAL BLOUSE 1",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Fashion Collection",
+      "articleType": "Custom Garment",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "bridal blouse 1",
+        "custom garment",
+        "women",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Basic",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Bespoke Garment Craftsman"
+      ],
+      "estimatedStitchingCost": {
+        "min": 800,
+        "max": 2200,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 3,
+        "max": 5
+      }
+    },
+    {
+      "id": "builtin_bridal_blouse_2_png",
+      "imagePath": "/images/fashion/bridal_blouse_2.png",
+      "productName": "BRIDAL BLOUSE 2",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Fashion Collection",
+      "articleType": "Custom Garment",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "bridal blouse 2",
+        "custom garment",
+        "women",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Basic",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Bespoke Garment Craftsman"
+      ],
+      "estimatedStitchingCost": {
+        "min": 800,
+        "max": 2200,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 3,
+        "max": 5
+      }
+    },
+    {
+      "id": "builtin_bridal_blouse_3_png",
+      "imagePath": "/images/fashion/bridal_blouse_3.png",
+      "productName": "BRIDAL BLOUSE 3",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Fashion Collection",
+      "articleType": "Custom Garment",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "bridal blouse 3",
+        "custom garment",
+        "women",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Basic",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Bespoke Garment Craftsman"
+      ],
+      "estimatedStitchingCost": {
+        "min": 800,
+        "max": 2200,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 3,
+        "max": 5
+      }
+    },
+    {
+      "id": "builtin_bridal_blouse_4_png",
+      "imagePath": "/images/fashion/bridal_blouse_4.png",
+      "productName": "BRIDAL BLOUSE 4",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Fashion Collection",
+      "articleType": "Custom Garment",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "bridal blouse 4",
+        "custom garment",
+        "women",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Basic",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Bespoke Garment Craftsman"
+      ],
+      "estimatedStitchingCost": {
+        "min": 800,
+        "max": 2200,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 3,
+        "max": 5
+      }
+    },
+    {
+      "id": "builtin_bridal_blouse_5_png",
+      "imagePath": "/images/fashion/bridal_blouse_5.png",
+      "productName": "BRIDAL BLOUSE 5",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Fashion Collection",
+      "articleType": "Custom Garment",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "bridal blouse 5",
+        "custom garment",
+        "women",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Basic",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Bespoke Garment Craftsman"
+      ],
+      "estimatedStitchingCost": {
+        "min": 800,
+        "max": 2200,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 3,
+        "max": 5
+      }
+    },
+    {
+      "id": "builtin_designer_1_png",
+      "imagePath": "/images/fashion/designer_1.png",
+      "productName": "DESIGNER 1",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Fashion Collection",
+      "articleType": "Custom Garment",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "designer 1",
+        "custom garment",
+        "women",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Basic",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Bespoke Garment Craftsman"
+      ],
+      "estimatedStitchingCost": {
+        "min": 800,
+        "max": 2200,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 3,
+        "max": 5
+      }
+    },
+    {
+      "id": "builtin_designer_2_png",
+      "imagePath": "/images/fashion/designer_2.png",
+      "productName": "DESIGNER 2",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Fashion Collection",
+      "articleType": "Custom Garment",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "designer 2",
+        "custom garment",
+        "women",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Basic",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Bespoke Garment Craftsman"
+      ],
+      "estimatedStitchingCost": {
+        "min": 800,
+        "max": 2200,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 3,
+        "max": 5
+      }
+    },
+    {
+      "id": "builtin_designer_3_png",
+      "imagePath": "/images/fashion/designer_3.png",
+      "productName": "DESIGNER 3",
+      "gender": "Women",
+      "masterCategory": "Apparel",
+      "subCategory": "Fashion Collection",
+      "articleType": "Custom Garment",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "designer 3",
+        "custom garment",
+        "women",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Basic",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Bespoke Garment Craftsman"
+      ],
+      "estimatedStitchingCost": {
+        "min": 800,
+        "max": 2200,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 3,
+        "max": 5
+      }
+    },
+    {
+      "id": "builtin_kids_wear_1_png",
+      "imagePath": "/images/fashion/kids_wear_1.png",
+      "productName": "KIDS WEAR 1",
+      "gender": "Kids",
+      "masterCategory": "Apparel",
+      "subCategory": "Fashion Collection",
+      "articleType": "Custom Garment",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "kids wear 1",
+        "custom garment",
+        "kids",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Basic",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Bespoke Garment Craftsman"
+      ],
+      "estimatedStitchingCost": {
+        "min": 800,
+        "max": 2200,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 3,
+        "max": 5
+      }
+    },
+    {
+      "id": "builtin_kids_wear_2_png",
+      "imagePath": "/images/fashion/kids_wear_2.png",
+      "productName": "KIDS WEAR 2",
+      "gender": "Kids",
+      "masterCategory": "Apparel",
+      "subCategory": "Fashion Collection",
+      "articleType": "Custom Garment",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "kids wear 2",
+        "custom garment",
+        "kids",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Basic",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Bespoke Garment Craftsman"
+      ],
+      "estimatedStitchingCost": {
+        "min": 800,
+        "max": 2200,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 3,
+        "max": 5
+      }
+    },
+    {
+      "id": "builtin_kids_wear_3_png",
+      "imagePath": "/images/fashion/kids_wear_3.png",
+      "productName": "KIDS WEAR 3",
+      "gender": "Kids",
+      "masterCategory": "Apparel",
+      "subCategory": "Fashion Collection",
+      "articleType": "Custom Garment",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "kids wear 3",
+        "custom garment",
+        "kids",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Basic",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Bespoke Garment Craftsman"
+      ],
+      "estimatedStitchingCost": {
+        "min": 800,
+        "max": 2200,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 3,
+        "max": 5
+      }
+    },
+    {
+      "id": "builtin_kids_wear_4_png",
+      "imagePath": "/images/fashion/kids_wear_4.png",
+      "productName": "KIDS WEAR 4",
+      "gender": "Kids",
+      "masterCategory": "Apparel",
+      "subCategory": "Fashion Collection",
+      "articleType": "Custom Garment",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "kids wear 4",
+        "custom garment",
+        "kids",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Basic",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Bespoke Garment Craftsman"
+      ],
+      "estimatedStitchingCost": {
+        "min": 800,
+        "max": 2200,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 3,
+        "max": 5
+      }
+    },
+    {
+      "id": "builtin_kids_wear_5_png",
+      "imagePath": "/images/fashion/kids_wear_5.png",
+      "productName": "KIDS WEAR 5",
+      "gender": "Kids",
+      "masterCategory": "Apparel",
+      "subCategory": "Fashion Collection",
+      "articleType": "Custom Garment",
+      "baseColour": "Custom Palette",
+      "season": "All Season",
+      "usage": "Bespoke Couture",
+      "tags": [
+        "kids wear 5",
+        "custom garment",
+        "kids",
+        "bespoke",
+        "custom"
+      ],
+      "complexity": "Basic",
+      "fabricRecommendations": [
+        "Premium Cotton",
+        "Silk Blend",
+        "Linen",
+        "Crepe"
+      ],
+      "tailorRecommendations": [
+        "Bespoke Garment Craftsman"
+      ],
+      "estimatedStitchingCost": {
+        "min": 800,
+        "max": 2200,
+        "currency": "INR"
+      },
+      "deliveryTimeDays": {
+        "min": 3,
+        "max": 5
+      }
+    }
+  ]
+}

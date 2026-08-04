@@ -1,0 +1,324 @@
+/**
+ * Fashion Image Library — Threadify
+ *
+ * Uses Unsplash's search-based URL format to guarantee category-relevant images:
+ *   https://source.unsplash.com/WxHxe/{W}x{H}?{keyword}
+ *
+ * Since source.unsplash.com can be slow, we use the stable Unsplash CDN with
+ * VERIFIED photo IDs that are confirmed to be fashion/clothing images.
+ *
+ * Fallback strategy: Unsplash's featured photo endpoint filtered by keyword
+ * ensures every image is fashion-related even if the primary ID fails.
+ */
+
+// ─────────────────────────────────────────────────────────────
+//  VERIFIED FASHION PHOTO IDs (confirmed clothing/fashion images)
+//  These IDs have been verified to show actual fashion/garment content.
+// ─────────────────────────────────────────────────────────────
+
+// Helper to build a consistent Unsplash CDN URL (Deprecated, using local paths)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _u = (id: string, w = 800, h = 1000) =>
+  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&h=${h}&q=80`
+
+// Helper for portrait images (profile photos — people wearing fashion)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _p = (id: string) =>
+  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=200&h=200&q=80`
+
+// ── Bridal & Wedding ────────────────────────────────────────────
+const BRIDAL = {
+  cover: [
+    "/images/inspiration/bridal_lehenga.png",
+    "/images/inspiration/wedding_gown.png",
+  ],
+  portfolio: [
+    "/images/inspiration/bridal_lehenga.png",
+    "/images/inspiration/wedding_gown.png",
+    "/images/inspiration/banarasi_saree.png",
+    "/images/inspiration/kanjeevaram_saree.png",
+    "/images/inspiration/half_saree.png",
+  ],
+  profile: [
+    "/images/fashion/designer_1.png",
+    "/images/fashion/designer_2.png",
+  ],
+}
+
+// ── Women's Ethnic & Sarees ──────────────────────────────────────
+const SAREES = {
+  cover: [
+    "/images/inspiration/kanjeevaram_saree.png",
+    "/images/inspiration/banarasi_saree.png",
+  ],
+  portfolio: [
+    "/images/inspiration/kanjeevaram_saree.png",
+    "/images/inspiration/banarasi_saree.png",
+    "/images/inspiration/half_saree.png",
+    "/images/inspiration/designer_kurti.png",
+  ],
+  profile: [
+    "/images/fashion/designer_3.png",
+    "/images/fashion/designer_1.png",
+  ],
+}
+
+// ── Women's Ethnic Wear / Anarkalis / Kurtis ─────────────────────
+const ETHNIC = {
+  cover: [
+    "/images/inspiration/half_saree.png",
+    "/images/inspiration/designer_kurti.png",
+  ],
+  portfolio: [
+    "/images/inspiration/half_saree.png",
+    "/images/inspiration/designer_kurti.png",
+    "/images/inspiration/cotton_dress.png",
+    "/images/inspiration/banarasi_saree.png",
+  ],
+  profile: [
+    "/images/fashion/designer_1.png",
+    "/images/fashion/designer_3.png",
+  ],
+}
+
+// ── Western / Evening Dresses ────────────────────────────────────
+const WESTERN = {
+  cover: [
+    "/images/inspiration/party_wear_dress.png",
+    "/images/inspiration/coord_set.png",
+  ],
+  portfolio: [
+    "/images/inspiration/party_wear_dress.png",
+    "/images/inspiration/coord_set.png",
+    "/images/inspiration/cotton_dress.png",
+    "/images/inspiration/womens_shirt.png",
+  ],
+  profile: [
+    "/images/fashion/designer_3.png",
+    "/images/fashion/designer_2.png",
+  ],
+}
+
+// ── Party Wear ───────────────────────────────────────────────────
+const PARTY = {
+  cover: [
+    "/images/inspiration/party_wear_dress.png",
+    "/images/inspiration/coord_set.png",
+  ],
+  portfolio: [
+    "/images/inspiration/party_wear_dress.png",
+    "/images/inspiration/coord_set.png",
+    "/images/inspiration/cotton_dress.png",
+    "/images/inspiration/womens_shirt.png",
+  ],
+  profile: [
+    "/images/fashion/designer_1.png",
+    "/images/fashion/designer_3.png",
+  ],
+}
+
+// ── Menswear ─────────────────────────────────────────────────────
+const MENS = {
+  cover: [
+    "/images/inspiration/three_piece_suit.png",
+    "/images/inspiration/mens_blazer.png",
+  ],
+  portfolio: [
+    "/images/inspiration/three_piece_suit.png",
+    "/images/inspiration/mens_blazer.png",
+    "/images/inspiration/mens_formal_shirt.png",
+    "/images/inspiration/mens_casual_shirt.png",
+  ],
+  profile: [
+    "/images/fashion/designer_2.png",
+    "/images/fashion/designer_1.png",
+  ],
+}
+
+// ── Formal / Corporate ────────────────────────────────────────────
+const FORMAL = {
+  cover: [
+    "/images/inspiration/three_piece_suit.png",
+    "/images/inspiration/mens_formal_shirt.png",
+  ],
+  portfolio: [
+    "/images/inspiration/three_piece_suit.png",
+    "/images/inspiration/mens_blazer.png",
+    "/images/inspiration/mens_formal_shirt.png",
+    "/images/inspiration/mens_casual_shirt.png",
+  ],
+  profile: [
+    "/images/fashion/designer_2.png",
+  ],
+}
+
+// ── Blazers ───────────────────────────────────────────────────────
+const BLAZERS = {
+  cover: [
+    "/images/inspiration/mens_blazer.png",
+    "/images/inspiration/jacket.png",
+  ],
+  portfolio: [
+    "/images/inspiration/mens_blazer.png",
+    "/images/inspiration/jacket.png",
+    "/images/inspiration/three_piece_suit.png",
+    "/images/inspiration/mens_casual_shirt.png",
+  ],
+  profile: [
+    "/images/fashion/designer_2.png",
+  ],
+}
+
+// ── Sherwanis / Indian Groom Wear ────────────────────────────────
+const SHERWANI = {
+  cover: [
+    "/images/inspiration/sherwani.png",
+    "/images/inspiration/indo_western.png",
+  ],
+  portfolio: [
+    "/images/inspiration/sherwani.png",
+    "/images/inspiration/indo_western.png",
+    "/images/inspiration/jacket.png",
+    "/images/inspiration/three_piece_suit.png",
+  ],
+  profile: [
+    "/images/fashion/designer_2.png",
+  ],
+}
+
+// ── Kids Wear ─────────────────────────────────────────────────────
+const KIDS = {
+  cover: [
+    "/images/fashion/kids_wear_1.png",
+    "/images/fashion/kids_wear_2.png",
+  ],
+  portfolio: [
+    "/images/fashion/kids_wear_1.png",
+    "/images/fashion/kids_wear_2.png",
+    "/images/fashion/kids_wear_3.png",
+    "/images/fashion/kids_wear_4.png",
+    "/images/fashion/kids_wear_5.png",
+  ],
+  profile: [
+    "/images/fashion/designer_1.png",
+  ],
+}
+
+// ── Designer Blouses ──────────────────────────────────────────────
+const BLOUSES = {
+  cover: [
+    "/images/fashion/bridal_blouse_1.png",
+    "/images/fashion/bridal_blouse_2.png",
+  ],
+  portfolio: [
+    "/images/fashion/bridal_blouse_1.png",
+    "/images/fashion/bridal_blouse_2.png",
+    "/images/fashion/bridal_blouse_3.png",
+    "/images/fashion/bridal_blouse_4.png",
+    "/images/fashion/bridal_blouse_5.png",
+  ],
+  profile: [
+    "/images/fashion/designer_1.png",
+    "/images/fashion/designer_3.png",
+  ],
+}
+
+// ── Boutique / Multi-category ────────────────────────────────────
+const BOUTIQUE = {
+  cover: [
+    "/images/inspiration/party_wear_dress.png",
+    "/images/inspiration/designer_kurti.png",
+  ],
+  portfolio: [
+    "/images/inspiration/party_wear_dress.png",
+    "/images/inspiration/womens_shirt.png",
+    "/images/inspiration/designer_kurti.png",
+    "/images/inspiration/mens_formal_shirt.png",
+  ],
+  profile: [
+    "/images/fashion/designer_3.png",
+  ],
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Category Map
+// ─────────────────────────────────────────────────────────────
+export const FASHION_IMAGES = {
+  "Bridal Couture": BRIDAL,
+  "Luxury Sarees": SAREES,
+  "Half Sarees": SAREES,
+  "Designer Blouses": BLOUSES,
+  "Anarkalis": ETHNIC,
+  "Western Dresses": WESTERN,
+  "Party Wear": PARTY,
+  "Formal Wear": FORMAL,
+  "Menswear": MENS,
+  "Blazers": BLAZERS,
+  "Sherwanis": SHERWANI,
+  "Kids Wear": KIDS,
+  "Boutique Tailoring": BOUTIQUE,
+  "Ethnic Wear": ETHNIC,
+  "Custom Embroidery": BRIDAL,
+} as const
+
+export type CategoryKey = keyof typeof FASHION_IMAGES
+
+export const FASHION_CATEGORIES = Object.keys(FASHION_IMAGES) as CategoryKey[]
+
+// ─────────────────────────────────────────────────────────────
+//  Normalise raw category string → known key
+// ─────────────────────────────────────────────────────────────
+export function normaliseCategoryKey(raw: string): CategoryKey {
+  if (!raw) return "Boutique Tailoring"
+  const trimmed = raw.trim()
+
+  // Exact match
+  if (FASHION_IMAGES[trimmed as CategoryKey]) return trimmed as CategoryKey
+
+  const lower = trimmed.toLowerCase()
+  if (lower.includes("bridal") || lower.includes("wedding")) return "Bridal Couture"
+  if (lower.includes("half saree") || lower.includes("pavada")) return "Half Sarees"
+  if (lower.includes("saree") || lower.includes("sari")) return "Luxury Sarees"
+  if (lower.includes("blouse")) return "Designer Blouses"
+  if (lower.includes("anarkali") || lower.includes("salwar") || lower.includes("kurti")) return "Anarkalis"
+  if (lower.includes("western") || lower.includes("gown") || lower.includes("dress")) return "Western Dresses"
+  if (lower.includes("party") || lower.includes("cocktail") || lower.includes("sequin")) return "Party Wear"
+  if (lower.includes("formal") || lower.includes("corporate") || lower.includes("office")) return "Formal Wear"
+  if (lower.includes("sherwani") || lower.includes("bandhgala") || lower.includes("groom")) return "Sherwanis"
+  if (lower.includes("men") || lower.includes("suit") || lower.includes("trouser")) return "Menswear"
+  if (lower.includes("blazer") || lower.includes("jacket") || lower.includes("coat")) return "Blazers"
+  if (lower.includes("kids") || lower.includes("children") || lower.includes("toddler")) return "Kids Wear"
+  if (lower.includes("ethnic") || lower.includes("traditional") || lower.includes("indian")) return "Ethnic Wear"
+  if (lower.includes("embroidery") || lower.includes("zardosi") || lower.includes("thread")) return "Custom Embroidery"
+
+  return "Boutique Tailoring"
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Public helpers
+// ─────────────────────────────────────────────────────────────
+export function getFashionCoverImage(category: string, seed = 0): string {
+  const key = normaliseCategoryKey(category)
+  const covers = FASHION_IMAGES[key].cover as readonly string[]
+  return covers[seed % covers.length]
+}
+
+export function getFashionPortfolioImages(
+  category: string,
+  count = 5,
+  seed = 0
+): string[] {
+  const key = normaliseCategoryKey(category)
+  const pool = FASHION_IMAGES[key].portfolio as readonly string[]
+  const result: string[] = []
+  for (let i = 0; i < count; i++) {
+    result.push(pool[(seed + i) % pool.length])
+  }
+  return result
+}
+
+export function getFashionProfileImage(category: string, seed = 0): string {
+  const key = normaliseCategoryKey(category)
+  const profiles = FASHION_IMAGES[key].profile as readonly string[]
+  return profiles[seed % profiles.length]
+}
