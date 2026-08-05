@@ -101,7 +101,7 @@ export default function TailorLayout({
   }
 
   // Regex to match UUIDs: e.g. /tailor/123e4567-e89b-12d3-a456-426614174000
-  const isTailorPublicProfile = /^\/tailor\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}₹/i.test(pathname)
+  const isTailorPublicProfile = /^\/tailor\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(pathname)
 
   if (pathname === "/tailor/apply" || isTailorPublicProfile) {
     return <div className="min-h-screen bg-background">{children}</div>

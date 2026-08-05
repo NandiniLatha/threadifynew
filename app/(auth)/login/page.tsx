@@ -103,10 +103,13 @@ function LoginForm() {
 
         const role = profile?.role
         if (role === "admin") {
+          setIsLoading(false)
           router.push("/admin")
         } else if (role === "tailor") {
+          setIsLoading(false)
           router.push("/tailor/requests")
         } else {
+          setIsLoading(false)
           const nextUrl = searchParams.get("next")
           router.push(nextUrl || "/dashboard")
         }

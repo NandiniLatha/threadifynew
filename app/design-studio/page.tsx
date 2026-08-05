@@ -193,6 +193,9 @@ function DesignStudio() {
     setIsSubmitting(true)
     setStatusMsg(null)
 
+    // Guard against concurrent double-submissions
+    if (isSubmitting) return
+
     try {
       // Determine whether imagePreview is a URL or a base64 data URI
       const isUrl = imagePreview.startsWith("http")

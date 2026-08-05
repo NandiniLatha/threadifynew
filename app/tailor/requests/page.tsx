@@ -158,7 +158,7 @@ export default function TailorRequests() {
       ) : requests.length === 0 ? (
         <div className="text-center py-16 bg-card border border-border border-dashed rounded-3xl space-y-4">
           <Scissors className="w-12 h-12 text-muted-foreground/45 mx-auto" />
-          <h2 className="text-lg font-bold text-foreground">You haven't created a custom order yet. Yet</h2>
+          <h2 className="text-lg font-bold text-foreground">No open client requests right now.</h2>
           <p className="text-sm text-muted-foreground max-w-sm mx-auto">
             Check back soon! New custom design requirements from clients will appear here automatically.
           </p>
@@ -266,7 +266,7 @@ export default function TailorRequests() {
             <form onSubmit={handleQuoteSubmit} className="space-y-4">
               <div>
                 <label htmlFor="price" className="block text-xs font-semibold text-foreground mb-1">
-                  Price Quote Quote Price (₹)
+                  Quote Price (₹)
                 </label>
                 <input
                   id="price"

@@ -79,6 +79,7 @@ export default function SignupPage() {
           }
           // Refresh Next.js router so middleware picks up the new session cookie
           router.refresh()
+          setIsLoading(false)
           router.push(role === "tailor" ? "/tailor/requests" : "/dashboard")
         } else {
           // Email confirmation required
