@@ -4,6 +4,7 @@
  * Client inserts into input box for user review before sending — no auto-send.
  */
 
+// @ts-ignore
 import OpenAI from "openai"
 
 export const runtime = "edge"

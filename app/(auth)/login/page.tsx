@@ -28,6 +28,36 @@ function LoginForm() {
       : null
   )
 
+  const [isForgotMode, setIsForgotMode] = React.useState(false)
+  const [forgotSuccessMsg, setForgotSuccessMsg] = React.useState<string | null>(null)
+  const [isForgotLoading, setIsForgotLoading] = React.useState(false)
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setErrorMsg(null)
+    setForgotSuccessMsg(null)
+
+    if (!email) {
+      setErrorMsg("Please enter your email address to reset your password.")
+      return
+    }
+
+    setIsForgotLoading(true)
+    try {
+      const { forgotPassword } = await import("@/services/authService")
+      const result = await forgotPassword(email)
+      if (!result.error) {
+        setForgotSuccessMsg("Password reset email sent! Check your inbox for instructions.")
+      } else {
+        setErrorMsg(result.error.message || "Failed to send reset email.")
+      }
+    } catch {
+      setErrorMsg("Failed to process password reset request.")
+    } finally {
+      setIsForgotLoading(false)
+    }
+  }
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrorMsg(null)
@@ -58,8 +88,6 @@ function LoginForm() {
       }
 
       if (data.user) {
-        // Query the user profile for their role
-        // Retry once — handles the race condition where the DB trigger hasn't run yet
         let profile = null
         for (let attempt = 0; attempt < 2; attempt++) {
           const { data: p } = await supabase
@@ -71,7 +99,6 @@ function LoginForm() {
           if (attempt === 0) await new Promise(res => setTimeout(res, 800))
         }
 
-        // Refresh Next.js router so middleware picks up the new session cookie
         router.refresh()
 
         const role = profile?.role
@@ -80,7 +107,6 @@ function LoginForm() {
         } else if (role === "tailor") {
           router.push("/tailor/requests")
         } else {
-          // If a next parameter exists, navigate to it, otherwise go to dashboard
           const nextUrl = searchParams.get("next")
           router.push(nextUrl || "/dashboard")
         }
@@ -122,13 +148,25 @@ function LoginForm() {
             Threadify
           </a>
           <h2 className="mt-6 text-2xl font-serif font-bold text-foreground">
-            Sign in to your account
+            {isForgotMode ? "Reset your password" : "Sign in to your account"}
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Or{" "}
-            <a href="/signup" className="font-semibold text-primary hover:text-primary/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded px-1">
-              create a new account
-            </a>
+            {isForgotMode ? (
+              <button
+                type="button"
+                onClick={() => { setIsForgotMode(false); setErrorMsg(null); setForgotSuccessMsg(null); }}
+                className="font-semibold text-primary hover:text-primary/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded px-1"
+              >
+                Back to sign in
+              </button>
+            ) : (
+              <>
+                Or{" "}
+                <a href="/signup" className="font-semibold text-primary hover:text-primary/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded px-1">
+                  create a new account
+                </a>
+              </>
+            )}
           </p>
         </div>
       </div>
@@ -139,79 +177,137 @@ function LoginForm() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-card py-8 px-4 border border-border shadow-md rounded-3xl sm:px-10"
         >
-          <form className="space-y-6" onSubmit={handleLogin}>
-            {errorMsg && (
-              <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-                <span>{errorMsg}</span>
-              </div>
-            )}
+          {isForgotMode ? (
+            <form className="space-y-6" onSubmit={handleForgotPassword}>
+              {errorMsg && (
+                <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-foreground">
-                Email address
-              </label>
-              <div className="mt-1 relative">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 pl-10 border border-border rounded-xl bg-background text-foreground shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
-                  placeholder="name@example.com"
-                />
-                <Mail className="w-4 h-4 absolute left-3.5 top-3 text-muted-foreground" />
-              </div>
-            </div>
+              {forgotSuccessMsg && (
+                <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm flex items-start gap-3">
+                  <span>{forgotSuccessMsg}</span>
+                </div>
+              )}
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-foreground">
-                Password
-              </label>
-              <div className="mt-1 relative">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 pl-10 border border-border rounded-xl bg-background text-foreground shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
-                  placeholder="••••••••"
-                />
-                <Lock className="w-4 h-4 absolute left-3.5 top-3 text-muted-foreground" />
+              <div>
+                <label htmlFor="email" className="block text-sm font-semibold text-foreground">
+                  Email address
+                </label>
+                <div className="mt-1 relative">
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="appearance-none block w-full px-3 py-2 pl-10 border border-border rounded-xl bg-background text-foreground shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
+                    placeholder="name@example.com"
+                  />
+                  <Mail className="w-4 h-4 absolute left-3.5 top-3 text-muted-foreground" />
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-center justify-end">
-              <div className="text-sm">
-                <a href="#forgot" className="font-semibold text-primary hover:text-primary/80 transition-colors">
-                  Forgot password?
-                </a>
+              <div>
+                <Button
+                  type="submit"
+                  disabled={isForgotLoading}
+                  className="w-full flex justify-center py-2 h-11 text-sm font-semibold rounded-xl bg-primary text-primary-foreground hover:opacity-95 shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {isForgotLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Sending reset link...
+                    </>
+                  ) : (
+                    "Send Reset Link"
+                  )}
+                </Button>
               </div>
-            </div>
+            </form>
+          ) : (
+            <form className="space-y-6" onSubmit={handleLogin}>
+              {errorMsg && (
+                <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
 
-            <div>
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full flex justify-center py-2 h-11 text-sm font-semibold rounded-xl bg-primary text-primary-foreground hover:opacity-95 shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  "Sign In"
-                )}
-              </Button>
-            </div>
-          </form>
+              <div>
+                <label htmlFor="email" className="block text-sm font-semibold text-foreground">
+                  Email address
+                </label>
+                <div className="mt-1 relative">
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="appearance-none block w-full px-3 py-2 pl-10 border border-border rounded-xl bg-background text-foreground shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
+                    placeholder="name@example.com"
+                  />
+                  <Mail className="w-4 h-4 absolute left-3.5 top-3 text-muted-foreground" />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block text-sm font-semibold text-foreground">
+                  Password
+                </label>
+                <div className="mt-1 relative">
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="appearance-none block w-full px-3 py-2 pl-10 border border-border rounded-xl bg-background text-foreground shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
+                    placeholder="••••••••"
+                  />
+                  <Lock className="w-4 h-4 absolute left-3.5 top-3 text-muted-foreground" />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end">
+                <div className="text-sm">
+                  <button
+                    type="button"
+                    onClick={() => { setIsForgotMode(true); setErrorMsg(null); setForgotSuccessMsg(null); }}
+                    className="font-semibold text-primary hover:text-primary/80 transition-colors focus-visible:outline-none"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full flex justify-center py-2 h-11 text-sm font-semibold rounded-xl bg-primary text-primary-foreground hover:opacity-95 shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    "Sign In"
+                  )}
+                </Button>
+              </div>
+            </form>
+          )}
 
           <div className="mt-6">
             <div className="relative">

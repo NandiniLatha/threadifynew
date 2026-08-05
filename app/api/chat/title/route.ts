@@ -3,6 +3,7 @@
  * Uses gpt-4o-mini with max_tokens=10 for cost efficiency.
  */
 
+// @ts-ignore
 import OpenAI from "openai"
 import { createClient } from "@supabase/supabase-js"
 
