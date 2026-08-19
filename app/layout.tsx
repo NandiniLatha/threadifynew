@@ -6,7 +6,6 @@ import { ThemeProvider } from "@/components/shared/theme-provider"
 import { GoogleAnalytics } from "@/components/shared/GoogleAnalytics"
 import { GlobalAnimatedBackground } from "@/components/GlobalAnimatedBackground"
 import { InitialLoader } from "@/components/shared/InitialLoader"
-import { ThreadifyAIAssistant } from "@/components/ai/ThreadifyAIAssistant"
 
 
 
@@ -49,7 +48,6 @@ export default function RootLayout({
         >
           {children}
           <GlobalAnimatedBackground />
-          <ThreadifyAIAssistant />
         </ThemeProvider>
       </body>
     </html>

@@ -19,7 +19,6 @@ import {
 import { ThemeToggle } from "@/components/shared/theme-toggle"
 import { NotificationsBell } from "@/components/shared/NotificationsBell"
 import { Button } from "@/components/ui/button"
-import { ThreadifyAIAssistant } from "@/components/ai/ThreadifyAIAssistant"
 
 export default function TailorLayout({
   children,
@@ -235,7 +234,6 @@ export default function TailorLayout({
           {children}
         </div>
       </main>
-      <ThreadifyAIAssistant forcedRole="tailor" />
     </div>
   )
 }

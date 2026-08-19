@@ -17,11 +17,11 @@ import {
   X,
   Sparkles,
   Bell,
+  Ruler,
 } from "lucide-react"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
 import { NotificationsBell } from "@/components/shared/NotificationsBell"
 import { Button } from "@/components/ui/button"
-import { ThreadifyAIAssistant } from "@/components/ai/ThreadifyAIAssistant"
 
 export default function CustomerLayout({
   children,
@@ -109,6 +109,7 @@ export default function CustomerLayout({
     { name: "Messages", href: "/dashboard/messages", icon: MessageSquare },
     { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
     { name: "Wishlist", href: "/dashboard/wishlist", icon: Heart },
+    { name: "Measurements", href: "/dashboard/measurements", icon: Ruler },
     { name: "Payments", href: "/dashboard/payments", icon: CreditCard },
     { name: "Settings", href: "/dashboard/settings", icon: Settings },
   ]
@@ -251,7 +252,6 @@ export default function CustomerLayout({
           {children}
         </div>
       </main>
-      <ThreadifyAIAssistant forcedRole="customer" />
     </div>
   )
 }

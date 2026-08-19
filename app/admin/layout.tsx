@@ -15,7 +15,6 @@ import {
 } from "lucide-react"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
 import { Button } from "@/components/ui/button"
-import { ThreadifyAIAssistant } from "@/components/ai/ThreadifyAIAssistant"
 
 export default function AdminLayout({
   children,
@@ -148,7 +147,6 @@ export default function AdminLayout({
       <main className="flex-1 min-h-[calc(100vh-4rem)] md:min-h-screen bg-background relative overflow-y-auto z-10 p-6 md:p-10 container mx-auto max-w-5xl">
         {children}
       </main>
-      <ThreadifyAIAssistant forcedRole="admin" />
     </div>
   )
 }

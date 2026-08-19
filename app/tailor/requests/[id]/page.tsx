@@ -29,10 +29,17 @@ export default function TailorRequestDetails() {
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null)
 
   // Form states
-  const [price, setPrice] = React.useState("")
-  const [days, setDays] = React.useState("")
-  const [note, setNote] = React.useState("")
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [price,             setPrice]             = React.useState("")
+  const [days,              setDays]              = React.useState("")
+  const [note,              setNote]              = React.useState("")
+  const [completionDate,    setCompletionDate]    = React.useState("")
+  const [baseGarment,       setBaseGarment]       = React.useState("")
+  const [fabricCost,        setFabricCost]        = React.useState("")
+  const [stitchingCost,     setStitchingCost]     = React.useState("")
+  const [customCharges,     setCustomCharges]     = React.useState("")
+  const [deliveryCharges,   setDeliveryCharges]   = React.useState("")
+  const [showBreakdown,     setShowBreakdown]     = React.useState(false)
+  const [isSubmitting,      setIsSubmitting]      = React.useState(false)
 
   React.useEffect(() => {
     async function loadData() {
@@ -91,7 +98,19 @@ export default function TailorRequestDetails() {
 
   const handleSubmitQuote = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!price || !days) {
+
+    // Compute total from breakdown if entered
+    const breakdown = [
+      parseFloat(baseGarment)     || 0,
+      parseFloat(fabricCost)      || 0,
+      parseFloat(stitchingCost)   || 0,
+      parseFloat(customCharges)   || 0,
+      parseFloat(deliveryCharges) || 0,
+    ]
+    const breakdownTotal = breakdown.reduce((s, v) => s + v, 0)
+    const finalPrice = breakdownTotal > 0 ? breakdownTotal.toString() : price
+
+    if (!finalPrice || !days) {
       setErrorMsg("Please provide a price and estimated days.")
       return
     }
@@ -106,12 +125,19 @@ export default function TailorRequestDetails() {
       const { data, error } = await supabase
         .from("quotations")
         .insert({
-          request_id: id,
-          tailor_id: user.id,
-          price: parseFloat(price),
-          estimated_days: parseInt(days, 10),
-          note: note || "",
-          status: "pending"
+          request_id:             id,
+          tailor_id:              user.id,
+          price:                  parseFloat(finalPrice),
+          estimated_days:         parseInt(days, 10),
+          note:                   note || "",
+          status:                 "pending",
+          // Breakdown fields (new)
+          base_garment_price:     parseFloat(baseGarment)     || 0,
+          fabric_cost:            parseFloat(fabricCost)      || 0,
+          stitching_cost:         parseFloat(stitchingCost)   || 0,
+          customization_charges:  parseFloat(customCharges)   || 0,
+          delivery_charges:       parseFloat(deliveryCharges) || 0,
+          estimated_completion_date: completionDate || null,
         })
         .select()
         .single()
@@ -119,8 +145,9 @@ export default function TailorRequestDetails() {
       if (error) throw error
 
       setMyQuote(data)
-    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-      setErrorMsg(err.message || "Failed to submit quotation.")
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to submit quotation."
+      setErrorMsg(msg)
     } finally {
       setIsSubmitting(false)
     }
@@ -269,19 +296,19 @@ export default function TailorRequestDetails() {
               )}
 
               <form onSubmit={handleSubmitQuote} className="space-y-5">
+                {/* ── Total price OR auto-computed from breakdown ── */}
                 <div>
                   <label htmlFor="price" className="block text-sm font-bold text-foreground mb-1.5">
-                    Your Price Quote
+                    Total Price Quote
                   </label>
                   <div className="relative">
                     <input
                       id="price"
                       type="number"
-                      required
                       min={0}
                       value={price}
                       onChange={(e) => setPrice(e.target.value)}
-                      placeholder="e.g. 15000"
+                      placeholder={showBreakdown ? "Auto-calculated from breakdown" : "e.g. 15000"}
                       className="w-full h-11 px-3 pl-10 border border-border rounded-xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     />
                     <IndianRupee className="w-4 h-4 absolute left-3.5 top-3.5 text-muted-foreground" />
@@ -291,6 +318,58 @@ export default function TailorRequestDetails() {
                   </p>
                 </div>
 
+                {/* ── Price Breakdown toggle ── */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setShowBreakdown(!showBreakdown)}
+                    className="flex items-center gap-2 text-xs font-semibold text-primary hover:underline"
+                  >
+                    {showBreakdown ? "▲ Hide price breakdown" : "▼ Add itemized breakdown (recommended)"}
+                  </button>
+
+                  {showBreakdown && (
+                    <div className="mt-4 space-y-3 p-4 bg-muted/50 rounded-2xl border border-border">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Breakdown (optional)</p>
+                      {[
+                        { label: "Base Garment",       val: baseGarment,     set: setBaseGarment,     placeholder: "e.g. 5000" },
+                        { label: "Fabric Cost",         val: fabricCost,      set: setFabricCost,      placeholder: "e.g. 3000" },
+                        { label: "Stitching",           val: stitchingCost,   set: setStitchingCost,   placeholder: "e.g. 2000" },
+                        { label: "Customization / Work", val: customCharges,  set: setCustomCharges,   placeholder: "e.g. 2500" },
+                        { label: "Delivery Charges",   val: deliveryCharges, set: setDeliveryCharges, placeholder: "e.g. 200"  },
+                      ].map((field) => (
+                        <div key={field.label} className="flex items-center gap-3">
+                          <label className="w-36 shrink-0 text-xs font-medium text-muted-foreground">{field.label}</label>
+                          <div className="relative flex-1">
+                            <span className="absolute left-3 top-2.5 text-xs text-muted-foreground">₹</span>
+                            <input
+                              type="number"
+                              min={0}
+                              value={field.val}
+                              onChange={(e) => {
+                                field.set(e.target.value)
+                                // Auto-update total
+                                const vals = [
+                                  field.label === "Base Garment"        ? e.target.value : baseGarment,
+                                  field.label === "Fabric Cost"         ? e.target.value : fabricCost,
+                                  field.label === "Stitching"           ? e.target.value : stitchingCost,
+                                  field.label === "Customization / Work"? e.target.value : customCharges,
+                                  field.label === "Delivery Charges"    ? e.target.value : deliveryCharges,
+                                ]
+                                const total = vals.reduce((s, v) => s + (parseFloat(v) || 0), 0)
+                                if (total > 0) setPrice(total.toString())
+                              }}
+                              placeholder={field.placeholder}
+                              className="w-full h-9 px-3 pl-7 border border-border rounded-xl bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* ── Timeline ── */}
                 <div>
                   <label htmlFor="days" className="block text-sm font-bold text-foreground mb-1.5">
                     Estimated Time (Days)
@@ -310,15 +389,30 @@ export default function TailorRequestDetails() {
                   </div>
                 </div>
 
+                {/* ── Completion date ── */}
+                <div>
+                  <label htmlFor="completion_date" className="block text-sm font-bold text-foreground mb-1.5">
+                    Estimated Completion Date <span className="text-muted-foreground font-normal text-xs">(optional)</span>
+                  </label>
+                  <input
+                    id="completion_date"
+                    type="date"
+                    value={completionDate}
+                    onChange={(e) => setCompletionDate(e.target.value)}
+                    className="w-full h-11 px-3 border border-border rounded-xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+
+                {/* ── Note ── */}
                 <div>
                   <label htmlFor="note" className="block text-sm font-bold text-foreground mb-1.5">
-                    Message to Client (Optional)
+                    Message to Client <span className="text-muted-foreground font-normal text-xs">(optional)</span>
                   </label>
                   <textarea
                     id="note"
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    placeholder="Tell the client about your fabric choices, fitting adjustments, and expertise..."
+                    placeholder="Tell the client about your fabric choices, fitting process, and why you're the right fit..."
                     className="w-full h-28 p-3 border border-border rounded-xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
                   />
                 </div>

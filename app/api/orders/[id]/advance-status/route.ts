@@ -6,17 +6,37 @@ import { createNotification } from "@/app/api/notifications/helpers"
  * POST /api/orders/[id]/advance-status
  *
  * Called by the tailor to progress an order through production stages.
+ *
  * Valid transitions (enforced server-side):
- *   paid → in_production
- *   in_production → shipped
+ *   paid | confirmed → cutting
+ *   cutting          → stitching
+ *   stitching        → quality_check
+ *   quality_check    → ready
+ *   ready            → shipped
+ *   in_production    → shipped   (legacy compatibility)
  *
  * The 'shipped → delivered' transition is triggered by the customer
  * via POST /api/orders/[id]/confirm-delivery.
  */
 
 const ALLOWED_TRANSITIONS: Record<string, string> = {
-  paid: "in_production",
+  paid:          "cutting",
+  confirmed:     "cutting",
+  measurements_pending: "cutting",
+  cutting:       "stitching",
+  stitching:     "quality_check",
+  quality_check: "ready",
+  ready:         "shipped",
+  // Legacy support for old two-step flow
   in_production: "shipped",
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  cutting:       "✂️ Cutting has started on your garment.",
+  stitching:     "🧵 Your garment is now being stitched.",
+  quality_check: "🔍 Your garment is undergoing quality check.",
+  ready:         "✅ Your garment is ready! It will be shipped shortly.",
+  shipped:       "📦 Your garment has been shipped — get ready to confirm delivery!",
 }
 
 export async function POST(
@@ -55,7 +75,7 @@ export async function POST(
     }
 
     const currentStatus = designRequest.status
-    const nextStatus = ALLOWED_TRANSITIONS[currentStatus]
+    const nextStatus    = ALLOWED_TRANSITIONS[currentStatus]
 
     if (!nextStatus) {
       return NextResponse.json(
@@ -76,14 +96,14 @@ export async function POST(
     }
 
     // Notify the customer
-    const statusLabels: Record<string, string> = {
-      in_production: "Your garment is now In Production ✂️",
-      shipped: "Your garment has been Shipped 📦 — get ready to confirm delivery!",
-    }
+    const msg =
+      STATUS_LABELS[nextStatus] ??
+      `Your order status has been updated to ${nextStatus}.`
+
     await createNotification(
       supabase,
       designRequest.customer_id,
-      statusLabels[nextStatus] ?? `Your order status has been updated to ${nextStatus}.`,
+      msg,
       `/dashboard/orders/${requestId}`
     )
 

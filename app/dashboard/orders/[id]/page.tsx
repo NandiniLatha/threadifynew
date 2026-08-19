@@ -24,6 +24,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { StatusStepper } from "@/components/shared/StatusStepper"
+import { QuotationBreakdownCard } from "@/components/shared/QuotationBreakdownCard"
 import { ChatWindow } from "@/components/shared/ChatWindow"
 
 export default function CustomerOrderDetails() {
@@ -84,8 +85,8 @@ export default function CustomerOrderDetails() {
       }
       setRequest(reqData)
 
-      // Fetch all quotations while still in pending_bids
-      if (reqData.status === "pending_bids") {
+      // Fetch all quotations while request is in bidding or quoted stages
+      if (["pending_bids", "quoted"].includes(reqData.status)) {
         const { data: quotesData, error: quotesError } = await supabase
           .from("quotations")
           .select(`
@@ -211,15 +212,26 @@ export default function CustomerOrderDetails() {
 
   const getStatusDisplay = (status: string) => {
     const map: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-      draft:         { label: "Draft",                         color: "text-muted-foreground", icon: <Clock className="w-4 h-4" /> },
-      pending_bids:  { label: "Awaiting Quotes",                 color: "text-amber-600",        icon: <Clock className="w-4 h-4" /> },
-      assigned:      { label: "Tailor Assigned",               color: "text-primary",          icon: <User className="w-4 h-4" /> },
-      paid:          { label: "Paid — Awaiting Production",    color: "text-primary",          icon: <CreditCard className="w-4 h-4" /> },
-      in_production: { label: "In Production",                 color: "text-primary",          icon: <Scissors className="w-4 h-4" /> },
-      shipped:       { label: "Shipped",                       color: "text-blue-600",         icon: <Truck className="w-4 h-4" /> },
-      delivered:     { label: "Delivered",                     color: "text-emerald-600",      icon: <PackageCheck className="w-4 h-4" /> },
-      reviewed:      { label: "Completed & Reviewed",          color: "text-emerald-600",      icon: <Star className="w-4 h-4" /> },
-      cancelled:     { label: "Cancelled",                     color: "text-destructive",      icon: <AlertCircle className="w-4 h-4" /> },
+      draft:                { label: "Draft",                         color: "text-muted-foreground", icon: <Clock className="w-4 h-4" /> },
+      pending_bids:         { label: "Awaiting Quotes",               color: "text-amber-600",        icon: <Clock className="w-4 h-4" /> },
+      quoted:               { label: "Quote Received",                color: "text-amber-600",        icon: <Star className="w-4 h-4" /> },
+      quote_accepted:       { label: "Quote Accepted",                color: "text-primary",          icon: <CheckCircle className="w-4 h-4" /> },
+      payment_pending:      { label: "Payment Pending",               color: "text-amber-600",        icon: <CreditCard className="w-4 h-4" /> },
+      assigned:             { label: "Tailor Assigned",               color: "text-primary",          icon: <User className="w-4 h-4" /> },
+      paid:                 { label: "Paid — In Production",         color: "text-primary",          icon: <CreditCard className="w-4 h-4" /> },
+      confirmed:            { label: "Confirmed",                     color: "text-primary",          icon: <CheckCircle className="w-4 h-4" /> },
+      measurements_pending: { label: "Sending Measurements",          color: "text-amber-600",        icon: <Clock className="w-4 h-4" /> },
+      cutting:              { label: "Cutting",                       color: "text-primary",          icon: <Scissors className="w-4 h-4" /> },
+      stitching:            { label: "Stitching",                     color: "text-primary",          icon: <Scissors className="w-4 h-4" /> },
+      quality_check:        { label: "Quality Check",                 color: "text-primary",          icon: <CheckCircle className="w-4 h-4" /> },
+      ready:                { label: "Ready to Ship",                 color: "text-emerald-600",      icon: <PackageCheck className="w-4 h-4" /> },
+      in_production:        { label: "In Production",                 color: "text-primary",          icon: <Scissors className="w-4 h-4" /> },
+      shipped:              { label: "Shipped",                       color: "text-blue-600",         icon: <Truck className="w-4 h-4" /> },
+      delivered:            { label: "Delivered",                     color: "text-emerald-600",      icon: <PackageCheck className="w-4 h-4" /> },
+      completed:            { label: "Completed",                     color: "text-emerald-600",      icon: <CheckCircle className="w-4 h-4" /> },
+      reviewed:             { label: "Completed & Reviewed",          color: "text-emerald-600",      icon: <Star className="w-4 h-4" /> },
+      cancelled:            { label: "Cancelled",                     color: "text-destructive",      icon: <AlertCircle className="w-4 h-4" /> },
+      rejected:             { label: "Rejected",                      color: "text-destructive",      icon: <AlertCircle className="w-4 h-4" /> },
     }
     return map[status] ?? map.draft
   }
@@ -256,7 +268,8 @@ export default function CustomerOrderDetails() {
   }
 
   const statusInfo = getStatusDisplay(request.status)
-  const isActiveOrder = !["pending_bids", "draft"].includes(request.status)
+  const ACTIVE_STATUSES = ["paid", "confirmed", "measurements_pending", "cutting", "stitching", "quality_check", "ready", "in_production", "shipped", "delivered", "completed", "reviewed"]
+  const isActiveOrder = ACTIVE_STATUSES.includes(request.status)
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
@@ -426,6 +439,75 @@ export default function CustomerOrderDetails() {
             </>
           )}
 
+          {/* ── QUOTED: single quote received, awaiting customer decision ── */}
+          {request.status === "quoted" && (
+            <>
+              <h2 className="text-xl font-serif font-bold text-foreground mb-4">Quote Received</h2>
+              <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-sm text-amber-700 dark:text-amber-400 mb-4">
+                A tailor has submitted a quote for your request. Review the details below and accept to confirm.
+              </div>
+
+              {acceptError && (
+                <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-2xl mb-4">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{acceptError}</span>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                {quotations.map(quote => (
+                  <div key={quote.id} className="bg-card border border-border rounded-3xl p-5 shadow-sm space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                          {quote.tailor?.name?.charAt(0) || "T"}
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm text-foreground">{quote.tailor?.name || "Verified Tailor"}</p>
+                          <div className="flex items-center gap-1 text-xs text-amber-500 font-medium">
+                            <Star className="w-3.5 h-3.5 fill-current" />
+                            {quote.profile?.avg_rating?.toFixed(1) || "5.0"} Rating
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-lg text-primary">{formatINR(quote.price)}</p>
+                        <p className="text-xs text-muted-foreground">{quote.estimated_days} days</p>
+                      </div>
+                    </div>
+
+                    <QuotationBreakdownCard quote={quote} />
+
+                    <div className="space-y-2 pt-2">
+                      <div className="flex gap-3">
+                        <Button
+                          className="flex-1 bg-primary text-primary-foreground font-semibold rounded-xl"
+                          onClick={() => handleAcceptAndPay(quote)}
+                          disabled={acceptingId !== null}
+                        >
+                          {acceptingId === quote.id ? (
+                            <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Processing…</>
+                          ) : (
+                            "Accept & Pay (Simulated)"
+                          )}
+                        </Button>
+                        <Link href="/dashboard/messages" className="flex-1">
+                          <Button variant="outline" className="w-full font-semibold rounded-xl gap-2" disabled={acceptingId !== null}>
+                            <MessageSquare className="w-4 h-4" /> Message
+                          </Button>
+                        </Link>
+                      </div>
+                      <p className="flex items-start gap-1.5 text-[11px] text-muted-foreground leading-relaxed">
+                        <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                        Simulated payment — Razorpay integration coming soon. No real charge will be made.
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
           {/* ── ACTIVE ORDER: show status & actions ── */}
           {isActiveOrder && (
             <div className="space-y-6">
@@ -448,23 +530,27 @@ export default function CustomerOrderDetails() {
                   </Link>
                 </div>
 
-                {/* Order details */}
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground">Agreed Price</span>
-                    <span className="font-semibold">{formatINR(request.accepted_quotation?.price || 0)}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground">Estimated Time</span>
-                    <span className="font-semibold">{request.accepted_quotation?.estimated_days || 0} days</span>
-                  </div>
-                  {request.amount_paid > 0 && (
+                {/* Order details / breakdown */}
+                {request.accepted_quotation ? (
+                  <QuotationBreakdownCard quote={request.accepted_quotation} />
+                ) : (
+                  <div className="space-y-3">
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-muted-foreground">Amount Paid</span>
-                      <span className="font-semibold text-emerald-600">{formatINR(request.amount_paid)}</span>
+                      <span className="text-muted-foreground">Agreed Price</span>
+                      <span className="font-semibold">{formatINR(request.accepted_quotation?.price || 0)}</span>
                     </div>
-                  )}
-                </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Estimated Time</span>
+                      <span className="font-semibold">{request.accepted_quotation?.estimated_days || 0} days</span>
+                    </div>
+                    {request.amount_paid > 0 && (
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-muted-foreground">Amount Paid</span>
+                        <span className="font-semibold text-emerald-600">{formatINR(request.amount_paid)}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Status-specific customer actions */}
 
