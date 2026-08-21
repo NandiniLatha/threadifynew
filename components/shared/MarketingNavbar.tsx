@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import { duration, easing } from "@/lib/motion"
 import { Menu, X } from "lucide-react"
@@ -59,13 +60,20 @@ export function MarketingNavbar() {
       >
         <div className="container mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
           <a href="#" className="flex items-center space-x-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded">
-            <motion.span 
+            <motion.div
               animate={{ scale: isScrolled ? 0.9 : 1 }}
               transition={{ duration: duration.base, ...easing.spring }}
-              className="font-serif text-2xl font-bold tracking-tight text-foreground hover:text-primary origin-left transition-colors"
+              className="origin-left"
             >
-              Threadify
-            </motion.span>
+              <Image
+                src="/brand/threadify-logo.svg"
+                alt="Threadify — Your Style, Our Stitch"
+                width={180}
+                height={45}
+                priority
+                className="h-9 w-auto dark:invert"
+              />
+            </motion.div>
           </a>
 
           {/* Desktop Nav Links */}

@@ -51,6 +51,13 @@ export default function WearOutfitPage() {
   const [review, setReview] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [copying, setCopying] = useState(false);
+  const [canShare, setCanShare] = useState(false);
+
+  useEffect(() => {
+    if (typeof navigator !== "undefined" && "share" in navigator) {
+      setCanShare(true);
+    }
+  }, []);
 
   const mockOutfitImages = [
     "/images/fashion/designer_1.webp",
@@ -167,7 +174,7 @@ export default function WearOutfitPage() {
                   </motion.div>
                 ) : (
                   <motion.div key="share" initial={{ y: 20 }} animate={{ y: 0 }} exit={{ y: -20 }} className="flex items-center gap-2">
-                    {typeof navigator !== "undefined" && "share" in navigator ? <Share2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />} Share
+                    {canShare ? <Share2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />} Share
                   </motion.div>
                 )}
               </AnimatePresence>

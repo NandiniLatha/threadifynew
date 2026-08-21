@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { Instagram, Facebook, Twitter, Mail } from "lucide-react"
 import { motion } from "framer-motion"
@@ -41,9 +42,13 @@ export function Footer() {
       <div className="container mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 relative z-10">
         {/* Logo & Brand Note */}
         <div className="lg:col-span-2 space-y-6">
-          <span className="font-serif text-2xl font-bold tracking-tight text-background dark:text-foreground flex items-center gap-2">
-            Threadify
-          </span>
+          <Image
+            src="/brand/threadify-logo-light.svg"
+            alt="Threadify — Your Style, Our Stitch"
+            width={200}
+            height={50}
+            className="h-10 w-auto dark:brightness-90"
+          />
           <p className="text-background/70 dark:text-muted-foreground text-sm max-w-xs leading-relaxed">
             Everyday fashion custom-made to fit you and only you. Powered by AI diagnostics and vetted master tailors.
           </p>

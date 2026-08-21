@@ -26,8 +26,23 @@ const manrope = Manrope({
 })
 
 export const metadata: Metadata = {
-  title: "Threadify - AI-Powered Custom Fashion Marketplace",
+  title: "Threadify — Your Style, Our Stitch",
   description: "See It. Stitch It. Wear It. Connect with verified tailors, get AI analysis of your fashion inspiration, and track your custom orders.",
+  icons: {
+    icon: "/icon.png",
+    apple: "/apple-icon.png",
+  },
+  openGraph: {
+    title: "Threadify — Your Style, Our Stitch",
+    description: "See It. Stitch It. Wear It. Connect with verified tailors, get AI analysis of your fashion inspiration, and track your custom orders.",
+    siteName: "Threadify",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Threadify — Your Style, Our Stitch",
+    description: "See It. Stitch It. Wear It. Connect with verified tailors and track your custom orders.",
+  },
 }
 
 export default function RootLayout({

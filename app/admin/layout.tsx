@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
@@ -62,9 +63,9 @@ export default function AdminLayout({
       {/* Mobile Top Header */}
       <header className="md:hidden sticky top-0 z-40 w-full border-b border-border bg-background/80 backdrop-blur-md h-16 flex items-center justify-between px-4">
         <Link href="/" className="flex items-center space-x-2">
-          <span className="font-serif text-xl font-bold text-foreground">Threadify</span>
-          <span className="text-[10px] bg-destructive/10 text-destructive px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Admin</span>
-        </Link>
+            <Image src="/brand/threadify-logo.svg" alt="Threadify" width={140} height={36} className="h-8 w-auto dark:invert" />
+            <span className="text-[10px] bg-destructive/10 text-destructive px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Admin</span>
+          </Link>
         <div className="flex items-center space-x-2">
           <ThemeToggle />
           <button
@@ -85,7 +86,7 @@ export default function AdminLayout({
           {/* Sidebar Brand header */}
           <div className="h-16 border-b border-border items-center px-6 hidden md:flex justify-between">
             <Link href="/" className="flex items-center space-x-2">
-              <span className="font-serif text-2xl font-bold text-foreground">Threadify</span>
+              <Image src="/brand/threadify-logo.svg" alt="Threadify" width={140} height={36} className="h-8 w-auto dark:invert" />
             </Link>
             <ThemeToggle />
           </div>

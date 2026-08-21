@@ -1,0 +1,12 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" aria-label="Threadify icon">
+  <!-- Orange circle background -->
+  <rect width="64" height="64" rx="14" fill="#FF7A00"/>
+  <!-- Needle body -->
+  <rect x="30" y="8" width="4" height="34" rx="2" fill="#ffffff"/>
+  <!-- Needle tip -->
+  <polygon points="30,42 34,42 32,54" fill="#ffffff"/>
+  <!-- Needle eye -->
+  <ellipse cx="32" cy="14" rx="4" ry="5.5" fill="none" stroke="#ffffff" stroke-width="2.5"/>
+  <!-- Thread arc -->
+  <path d="M32,12 C32,12 12,4 18,22 C22,34 44,10 50,22 C56,34 38,46 32,40" stroke="#FFF8F0" stroke-width="2.2" fill="none" stroke-linecap="round" opacity="0.85"/>
+</svg>
