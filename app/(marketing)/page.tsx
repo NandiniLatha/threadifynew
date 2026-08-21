@@ -3,7 +3,7 @@
 import * as React from "react"
 import Image from "next/image"
 import dynamic from "next/dynamic"
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion"
+import { motion } from "framer-motion"
 import { Footer } from "@/components/shared/Footer"
 import { easing } from "@/lib/motion"
 import { MarketingNavbar } from "@/components/shared/MarketingNavbar"
@@ -11,16 +11,11 @@ import DesignerCard from "@/components/explore/DesignerCard"
 import { getTailorConfig } from "@/lib/data/tailor-config"
 import { getFashionPortfolioImages, getFashionCoverImage } from "@/lib/data/fashion-images"
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion"
-import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
-import {
-  Upload, Wand2, FileText, UserCheck, Package, Sparkles,
-  ShieldCheck, MessageSquare, Scissors, ArrowRight, X, Star,
-  Loader2, CheckCircle
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Scissors, ArrowRight, Star } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
-import { InteractiveProcessCard } from "@/components/InteractiveProcessCard"
+import { HowItWorksJourney } from "@/components/luxury/HowItWorksJourney"
+import { WhyThreadifySection } from "@/components/luxury/WhyThreadifySection"
+
 // ─── Dynamic imports — split heavy sections into separate JS chunks ──────────
 // Each lazy-loaded section only downloads when first rendered (below the fold).
 const CinematicHero = dynamic(
@@ -72,18 +67,7 @@ const Divider = () => (
 )
 
 export default function MarketingPage() {
-  const router = useRouter()
-  const supabase = createClient()
   const shouldReduceMotion = usePrefersReducedMotion()
-  
-  const { scrollYProgress } = useScroll()
-  const yParallax = useTransform(scrollYProgress, [0, 1], [0, -150])
-
-  // Interactive Features State
-  const [activeFeature, setActiveFeature] = React.useState<string | null>(null)
-  const [modalOpen, setModalOpen] = React.useState(false)
-  const [notifyLoading, setNotifyLoading] = React.useState(false)
-  const [notifySuccess, setNotifySuccess] = React.useState(false)
 
   // ─── Memoised motion variants (stable across re-renders) ────────────────
   const luxuryReveal = React.useMemo(() => ({
@@ -104,24 +88,6 @@ export default function MarketingPage() {
       transition: { staggerChildren: shouldReduceMotion ? 0 : 0.15 },
     },
   }), [shouldReduceMotion])
-
-  const steps = React.useMemo(() => [
-    { title: "Upload Inspiration", description: "Submit a photo, sketch, or link of the garment you desire.", icon: Upload, href: "/how-it-works/upload" },
-    { title: "Customize Design", description: "Our AI details fabric, cut, and patterns for your approval.", icon: Wand2, href: "/how-it-works/customize" },
-    { title: "Receive Price Quotes", description: "Get transparent quotes from expert tailors in our network.", icon: FileText, href: "/how-it-works/quotations" },
-    { title: "Choose Tailor", description: "Review ratings, portfolios, and choose the perfect fit.", icon: UserCheck, href: "/how-it-works/choose-tailor" },
-    { title: "Track Production", description: "Receive updates and photos during the tailoring process.", icon: Package, href: "/how-it-works/track" },
-    { title: "Wear Your Outfit", description: "Delivered to your door with a perfect fit guarantee.", icon: Sparkles, href: "/how-it-works/wear" },
-  ], [])
-
-  const features = React.useMemo(() => [
-    { title: "AI Design Recognition", description: "Scan any image to identify fabrics, seam structures, and styling details automatically.", icon: Wand2, actionType: "link", href: "/design-studio" },
-    { title: "Verified Master Tailors", description: "Every tailor undergoes rigorous craftsmanship evaluation and verification.", icon: Scissors, actionType: "link", href: "/explore" },
-    { title: "Secure Payments", description: "Funds are held in secure escrow and only released after you confirm the final fit.", icon: ShieldCheck, actionType: "modal", modalId: "secure_payments" },
-    { title: "Live Chat & Consultations", description: "Direct message your tailor to collaborate on adjustments and check details.", icon: MessageSquare, actionType: "link", href: "/dashboard/messages", requiresAuth: true },
-    { title: "Real-Time Tracking", description: "See the stages of production from pattern drafting to final pressing.", icon: Package, actionType: "link", href: "/dashboard/orders", requiresAuth: true },
-    { title: "Personalized Fashion", description: "Every garment is made-to-measure for your unique silhouette and style.", icon: Sparkles, actionType: "link", href: "/dashboard/custom-design", requiresAuth: true },
-  ], [])
 
   const tailors = React.useMemo(() => [
     {
@@ -171,23 +137,6 @@ export default function MarketingPage() {
     { quote: "The transparency of escrow payments made the process stress-free. Suresh Master Tailor kept me updated with pictures throughout the entire tailoring.", name: "Sneha Patel", role: "Fashion Blogger", beforeImg: getFashionCoverImage("Western Dresses", 0), afterImg: getFashionCoverImage("Western Dresses", 1) }
   ]
 
-  const handleFeatureClick = async (feature: any) => {
-    if (feature.actionType === "modal") {
-      setModalOpen(true)
-      setNotifySuccess(false)
-      return
-    }
-    setActiveFeature(feature.title)
-    if (feature.requiresAuth) {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        if (feature.href) router.push(`/login?next=${encodeURIComponent(feature.href)}`)
-        return
-      }
-    }
-    if (feature.href) router.push(feature.href)
-  }
-
   return (
     <div className="relative min-h-screen overflow-x-hidden selection:bg-primary/20 selection:text-primary">
       <MarketingNavbar />
@@ -201,41 +150,7 @@ export default function MarketingPage() {
       <Divider />
 
       {/* 3. How It Works Section */}
-      <section id="how-it-works" className="py-24 px-4 md:px-8 relative z-10">
-        <motion.div style={{ y: shouldReduceMotion ? 0 : yParallax }} className="container mx-auto max-w-6xl">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={luxuryReveal} className="text-center max-w-3xl mx-auto mb-20">
-            <h2 className="font-serif text-5xl md:text-7xl font-bold text-foreground tracking-tight">The Process</h2>
-            <p className="text-muted-foreground mt-6 text-lg md:text-xl font-light">A seamless journey to absolute sartorial perfection.</p>
-          </motion.div>
-
-          <motion.div variants={staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {steps.map((step, idx) => (
-              <InteractiveProcessCard
-                key={idx}
-                stepNumber={idx + 1}
-                title={step.title}
-                description={step.description}
-                href={step.href}
-                variants={luxuryReveal}
-                className="group relative flex flex-col p-10 rounded-[2rem] border border-border/30 bg-background/40 backdrop-blur-md hover:border-primary/40 transition-colors duration-500 overflow-hidden w-full h-full"
-              >
-                <div className="absolute -right-4 -top-4 font-serif text-[8rem] font-bold text-muted-foreground/5 group-hover:text-primary/10 transition-colors duration-700 pointer-events-none">
-                  {idx + 1}
-                </div>
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-transparent text-primary flex items-center justify-center mb-8 shadow-inner">
-                  <step.icon className="w-6 h-6" />
-                </div>
-                <h3 className="text-2xl font-serif font-bold text-foreground mb-3 group-hover:text-primary transition-colors duration-300">
-                  {step.title}
-                </h3>
-                <p className="text-muted-foreground font-light leading-relaxed">
-                  {step.description}
-                </p>
-              </InteractiveProcessCard>
-            ))}
-          </motion.div>
-        </motion.div>
-      </section>
+      <HowItWorksJourney />
 
       <Divider />
 
@@ -284,63 +199,7 @@ export default function MarketingPage() {
       <Divider />
 
       {/* 6. Features Grid */}
-      <section id="features" className="py-24 px-4 md:px-8 relative z-10">
-        <div className="container mx-auto max-w-6xl">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={luxuryReveal} className="text-center max-w-2xl mx-auto mb-20">
-            <h2 className="font-serif text-5xl md:text-7xl font-bold text-foreground tracking-tight">Craftsmanship meets Intelligence</h2>
-            <p className="text-muted-foreground mt-6 text-lg font-light">State of the art technology elevating traditional bespoke tailoring.</p>
-          </motion.div>
-
-          <AnimatePresence>
-            {modalOpen && (
-              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-xl">
-                <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="bg-background border border-border/50 rounded-[2rem] p-10 shadow-2xl max-w-md w-full relative">
-                  <button onClick={() => setModalOpen(false)} className="absolute top-6 right-6 p-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-colors focus-visible:outline-none">
-                    <X className="w-5 h-5" />
-                  </button>
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-transparent text-primary flex items-center justify-center mb-8 shadow-inner">
-                    <ShieldCheck className="w-8 h-8" />
-                  </div>
-                  <h3 className="font-serif text-3xl font-bold text-foreground mb-4">Secure Secure Payment</h3>
-                  <p className="text-muted-foreground text-sm mb-10 leading-relaxed font-light">
-                    We&apos;re finalizing our Razorpay integration. Your funds will be held in a secure vault and released exclusively upon your confirmation of the final fit.
-                  </p>
-                  {notifySuccess ? (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 rounded-xl bg-primary/10 border border-primary/20 text-primary text-sm flex items-center gap-3 font-medium">
-                      <CheckCircle className="w-5 h-5" />
-                      <span>You&apos;re on the exclusive list.</span>
-                    </motion.div>
-                  ) : (
-                    <Button onClick={() => { setNotifyLoading(true); setTimeout(() => { setNotifyLoading(false); setNotifySuccess(true) }, 1200) }} disabled={notifyLoading} className="w-full h-14 bg-primary text-primary-foreground font-serif text-base font-bold rounded-xl shadow-lg hover:shadow-primary/20 transition-all">
-                      {notifyLoading ? <Loader2 className="w-5 h-5 mr-3 animate-spin" /> : null}
-                      Request Early Access
-                    </Button>
-                  )}
-                </motion.div>
-              </div>
-            )}
-          </AnimatePresence>
-
-          <motion.div variants={staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, idx) => (
-              <motion.button key={idx} variants={luxuryReveal} onClick={() => handleFeatureClick(feature)} className="group flex flex-col items-start text-left p-8 rounded-[2rem] border border-border/30 bg-background/30 backdrop-blur-sm hover:border-primary/40 hover:bg-background/60 transition-all duration-500 w-full overflow-hidden relative">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-transparent text-primary flex items-center justify-center mb-6 shadow-inner group-hover:scale-110 transition-transform duration-500">
-                  <feature.icon className="w-6 h-6" />
-                </div>
-                <h3 className="text-lg font-serif font-bold text-foreground mb-3 group-hover:text-primary transition-colors flex items-center justify-between w-full">
-                  {feature.title}
-                  {activeFeature === feature.title && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
-                </h3>
-                <p className="text-muted-foreground text-sm font-light leading-relaxed">{feature.description}</p>
-                
-                <div className="absolute right-6 bottom-6 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 duration-500">
-                  <ArrowRight className="w-5 h-5 text-primary" />
-                </div>
-              </motion.button>
-            ))}
-          </motion.div>
-        </div>
-      </section>
+      <WhyThreadifySection />
 
       <Divider />
 
