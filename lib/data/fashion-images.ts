@@ -16,15 +16,6 @@
 //  These IDs have been verified to show actual fashion/garment content.
 // ─────────────────────────────────────────────────────────────
 
-// Helper to build a consistent Unsplash CDN URL (Deprecated, using local paths)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _u = (id: string, w = 800, h = 1000) =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&h=${h}&q=80`
-
-// Helper for portrait images (profile photos — people wearing fashion)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _p = (id: string) =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=200&h=200&q=80`
 
 // ── Bridal & Wedding ────────────────────────────────────────────
 const BRIDAL = {

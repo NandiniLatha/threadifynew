@@ -49,7 +49,7 @@ export async function POST(request: Request) {
 
     let imageUrl = isExternalUrl
       ? imageSource
-      : "https://images.unsplash.com/photo-1596451190630-186aff535bf2?auto=format&fit=crop&w=800&q=80"
+      : "/images/features/feature_1_ai_scan.jpg"
 
     if (!isExternalUrl && process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
       try {

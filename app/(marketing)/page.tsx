@@ -53,7 +53,7 @@ function FallbackImage({ src, alt, ...props }: any) {
       {...props}
       src={imgSrc}
       alt={alt}
-      onError={() => setImgSrc("https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=800&h=600&q=80")}
+      onError={() => setImgSrc("/images/hero-editorial.png")}
     />
   )
 }

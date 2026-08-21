@@ -372,13 +372,13 @@ export default function TailorProfilePage() {
                 <div className="border border-border p-4 rounded-2xl flex flex-col items-center gap-2">
                     <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Before (Inspiration)</span>
                     <div className="w-full aspect-[4/5] bg-muted rounded-xl relative overflow-hidden">
-                        <Image src={config?.beforeAfterPairs?.[0]?.inspirationImg || "https://images.unsplash.com/photo-1596451190630-186aff535bf2?auto=format&fit=crop&w=800&q=80"} alt="Inspiration" fill className="object-cover opacity-80" />
+                        <Image src={config?.beforeAfterPairs?.[0]?.inspirationImg || "/images/features/feature_1_ai_scan.jpg"} alt="Inspiration" fill className="object-cover opacity-80" />
                     </div>
                 </div>
                 <div className="border border-border p-4 rounded-2xl flex flex-col items-center gap-2">
                     <span className="text-xs font-bold uppercase tracking-wider text-primary">After (Completed Garment)</span>
                     <div className="w-full aspect-[4/5] bg-muted rounded-xl relative overflow-hidden shadow-md">
-                        <Image src={config?.beforeAfterPairs?.[0]?.resultImg || "https://images.unsplash.com/photo-1583391733956-6c79a17a8ee2?auto=format&fit=crop&w=800&q=80"} alt="Completed" fill className="object-cover" />
+                        <Image src={config?.beforeAfterPairs?.[0]?.resultImg || "/images/features/feature_2_tailor.jpg"} alt="Completed" fill className="object-cover" />
                     </div>
                 </div>
               </div>

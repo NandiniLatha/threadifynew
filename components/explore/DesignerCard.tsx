@@ -799,7 +799,7 @@ function DesignerCard({
         {/* ── Cover Image 220px ─────────────────────────────── */}
         <div className="relative w-full overflow-hidden shrink-0" style={{ height: 220 }}>
           <LuxuryImage
-            src={config.coverImage || portfolioImages[0] || "https://images.unsplash.com/photo-1583391733956-6c79a17a8ee2?auto=format&fit=crop&w=800&h=600&q=80"}
+            src={config.coverImage || portfolioImages[0] || "/images/hero-editorial.png"}
             alt={`${name} cover`}
             fill
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.07]"

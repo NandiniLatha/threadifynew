@@ -48,7 +48,7 @@ export async function POST(request: Request) {
         }
       } else {
         // Fallback for demo environments without Cloudinary setup
-        attachmentUrl = "https://images.unsplash.com/photo-1596451190630-186aff535bf2?auto=format&fit=crop&w=800&q=80"
+        attachmentUrl = "/images/features/feature_4_chat.jpg"
       }
     }
 
