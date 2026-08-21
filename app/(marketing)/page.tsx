@@ -18,13 +18,7 @@ import { WhyThreadifySection } from "@/components/luxury/WhyThreadifySection"
 
 // ─── Dynamic imports — split heavy sections into separate JS chunks ──────────
 // Each lazy-loaded section only downloads when first rendered (below the fold).
-const CinematicHero = dynamic(
-  () => import("@/components/CinematicHero").then((m) => ({ default: m.CinematicHero })),
-  {
-    ssr: false,
-    loading: () => <div className="h-screen w-full bg-background/50 animate-pulse rounded-3xl" />,
-  }
-)
+import { CinematicHero } from "@/components/CinematicHero"
 
 const PremiumPortfolioGallery = dynamic(
   () => import("@/components/PremiumPortfolioGallery").then((m) => ({ default: m.PremiumPortfolioGallery })),
@@ -53,7 +47,7 @@ function FallbackImage({ src, alt, ...props }: any) {
       {...props}
       src={imgSrc}
       alt={alt}
-      onError={() => setImgSrc("/images/hero-editorial.png")}
+      onError={() => setImgSrc("/images/hero-editorial.webp")}
     />
   )
 }

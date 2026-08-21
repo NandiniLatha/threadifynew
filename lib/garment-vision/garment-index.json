@@ -38,7 +38,7 @@
   "records": [
     {
       "id": "1163",
-      "imagePath": "/images/1163.jpg",
+      "imagePath": "/images/inspiration/mens_casual_shirt.webp",
       "productName": "Nike Men Solid Blue Round Neck T-shirt",
       "gender": "Men",
       "masterCategory": "Apparel",
@@ -79,7 +79,7 @@
     },
     {
       "id": "1525",
-      "imagePath": "/images/1525.jpg",
+      "imagePath": "/images/inspiration/designer_kurti.webp",
       "productName": "Biba Women Red Printed Cotton Kurti",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -121,7 +121,7 @@
     },
     {
       "id": "1526",
-      "imagePath": "/images/1526.jpg",
+      "imagePath": "/images/inspiration/three_piece_suit.webp",
       "productName": "Park Avenue Women Black Trousers",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -162,7 +162,7 @@
     },
     {
       "id": "1527",
-      "imagePath": "/images/1527.jpg",
+      "imagePath": "/images/inspiration/coord_set.webp",
       "productName": "Raymond Men White Formal Cotton Shirt",
       "gender": "Men",
       "masterCategory": "Apparel",
@@ -203,7 +203,7 @@
     },
     {
       "id": "1528",
-      "imagePath": "/images/1528.jpg",
+      "imagePath": "/images/inspiration/half_saree.webp",
       "productName": "FabAlley Women Navy Blue A-Line Dress",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -244,7 +244,7 @@
     },
     {
       "id": "1529",
-      "imagePath": "/images/1529.jpg",
+      "imagePath": "/images/inspiration/womens_shirt.webp",
       "productName": "Fabindia Emerald Green Silk Saree",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -286,7 +286,7 @@
     },
     {
       "id": "1530",
-      "imagePath": "/images/1530.jpg",
+      "imagePath": "/images/inspiration/mens_formal_shirt.webp",
       "productName": "Louis Philippe Men Charcoal Slim Fit Blazer",
       "gender": "Men",
       "masterCategory": "Apparel",
@@ -328,7 +328,7 @@
     },
     {
       "id": "1531",
-      "imagePath": "/images/1531.jpg",
+      "imagePath": "/images/inspiration/mens_casual_shirt.webp",
       "productName": "Zivame Women Pink Satin Nightdress",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -369,7 +369,7 @@
     },
     {
       "id": "1541",
-      "imagePath": "/images/1541.jpg",
+      "imagePath": "/images/inspiration/mens_casual_shirt.webp",
       "productName": "Manyavar Men Maroon Embroidered Sherwani",
       "gender": "Men",
       "masterCategory": "Apparel",
@@ -410,7 +410,7 @@
     },
     {
       "id": "1542",
-      "imagePath": "/images/1542.jpg",
+      "imagePath": "/images/inspiration/mens_formal_shirt.webp",
       "productName": "Anita Dongre Crimson Zardozi Bridal Lehenga",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -452,7 +452,7 @@
     },
     {
       "id": "builtin_banarasi_saree_png",
-      "imagePath": "/images/inspiration/banarasi_saree.png",
+      "imagePath": "/images/inspiration/banarasi_saree.webp",
       "productName": "BANARASI SAREE",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -491,7 +491,7 @@
     },
     {
       "id": "builtin_bridal_lehenga_png",
-      "imagePath": "/images/inspiration/bridal_lehenga.png",
+      "imagePath": "/images/inspiration/bridal_lehenga.webp",
       "productName": "BRIDAL LEHENGA",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -530,7 +530,7 @@
     },
     {
       "id": "builtin_coord_set_png",
-      "imagePath": "/images/inspiration/coord_set.png",
+      "imagePath": "/images/inspiration/coord_set.webp",
       "productName": "COORD SET",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -568,7 +568,7 @@
     },
     {
       "id": "builtin_cotton_dress_png",
-      "imagePath": "/images/inspiration/cotton_dress.png",
+      "imagePath": "/images/inspiration/cotton_dress.webp",
       "productName": "COTTON DRESS",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -606,7 +606,7 @@
     },
     {
       "id": "builtin_designer_kurti_png",
-      "imagePath": "/images/inspiration/designer_kurti.png",
+      "imagePath": "/images/inspiration/designer_kurti.webp",
       "productName": "DESIGNER KURTI",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -645,7 +645,7 @@
     },
     {
       "id": "builtin_half_saree_png",
-      "imagePath": "/images/inspiration/half_saree.png",
+      "imagePath": "/images/inspiration/half_saree.webp",
       "productName": "HALF SAREE",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -684,7 +684,7 @@
     },
     {
       "id": "builtin_indo_western_png",
-      "imagePath": "/images/inspiration/indo_western.png",
+      "imagePath": "/images/inspiration/indo_western.webp",
       "productName": "INDO WESTERN",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -722,7 +722,7 @@
     },
     {
       "id": "builtin_jacket_png",
-      "imagePath": "/images/inspiration/jacket.png",
+      "imagePath": "/images/inspiration/jacket.webp",
       "productName": "JACKET",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -761,7 +761,7 @@
     },
     {
       "id": "builtin_kanjeevaram_saree_png",
-      "imagePath": "/images/inspiration/kanjeevaram_saree.png",
+      "imagePath": "/images/inspiration/kanjeevaram_saree.webp",
       "productName": "KANJEEVARAM SAREE",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -800,7 +800,7 @@
     },
     {
       "id": "builtin_mens_blazer_png",
-      "imagePath": "/images/inspiration/mens_blazer.png",
+      "imagePath": "/images/inspiration/mens_blazer.webp",
       "productName": "MENS BLAZER",
       "gender": "Men",
       "masterCategory": "Apparel",
@@ -839,7 +839,7 @@
     },
     {
       "id": "builtin_mens_casual_shirt_png",
-      "imagePath": "/images/inspiration/mens_casual_shirt.png",
+      "imagePath": "/images/inspiration/mens_casual_shirt.webp",
       "productName": "MENS CASUAL SHIRT",
       "gender": "Men",
       "masterCategory": "Apparel",
@@ -877,7 +877,7 @@
     },
     {
       "id": "builtin_mens_formal_shirt_png",
-      "imagePath": "/images/inspiration/mens_formal_shirt.png",
+      "imagePath": "/images/inspiration/mens_formal_shirt.webp",
       "productName": "MENS FORMAL SHIRT",
       "gender": "Men",
       "masterCategory": "Apparel",
@@ -915,7 +915,7 @@
     },
     {
       "id": "builtin_party_wear_dress_png",
-      "imagePath": "/images/inspiration/party_wear_dress.png",
+      "imagePath": "/images/inspiration/party_wear_dress.webp",
       "productName": "PARTY WEAR DRESS",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -953,7 +953,7 @@
     },
     {
       "id": "builtin_sherwani_png",
-      "imagePath": "/images/inspiration/sherwani.png",
+      "imagePath": "/images/inspiration/sherwani.webp",
       "productName": "SHERWANI",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -991,7 +991,7 @@
     },
     {
       "id": "builtin_three_piece_suit_png",
-      "imagePath": "/images/inspiration/three_piece_suit.png",
+      "imagePath": "/images/inspiration/three_piece_suit.webp",
       "productName": "THREE PIECE SUIT",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -1030,7 +1030,7 @@
     },
     {
       "id": "builtin_wedding_gown_png",
-      "imagePath": "/images/inspiration/wedding_gown.png",
+      "imagePath": "/images/inspiration/wedding_gown.webp",
       "productName": "WEDDING GOWN",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -1068,7 +1068,7 @@
     },
     {
       "id": "builtin_womens_shirt_png",
-      "imagePath": "/images/inspiration/womens_shirt.png",
+      "imagePath": "/images/inspiration/womens_shirt.webp",
       "productName": "WOMENS SHIRT",
       "gender": "Men",
       "masterCategory": "Apparel",
@@ -1106,7 +1106,7 @@
     },
     {
       "id": "builtin_bridal_blouse_1_png",
-      "imagePath": "/images/fashion/bridal_blouse_1.png",
+      "imagePath": "/images/fashion/bridal_blouse_1.webp",
       "productName": "BRIDAL BLOUSE 1",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -1144,7 +1144,7 @@
     },
     {
       "id": "builtin_bridal_blouse_2_png",
-      "imagePath": "/images/fashion/bridal_blouse_2.png",
+      "imagePath": "/images/fashion/bridal_blouse_2.webp",
       "productName": "BRIDAL BLOUSE 2",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -1182,7 +1182,7 @@
     },
     {
       "id": "builtin_bridal_blouse_3_png",
-      "imagePath": "/images/fashion/bridal_blouse_3.png",
+      "imagePath": "/images/fashion/bridal_blouse_3.webp",
       "productName": "BRIDAL BLOUSE 3",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -1220,7 +1220,7 @@
     },
     {
       "id": "builtin_bridal_blouse_4_png",
-      "imagePath": "/images/fashion/bridal_blouse_4.png",
+      "imagePath": "/images/fashion/bridal_blouse_4.webp",
       "productName": "BRIDAL BLOUSE 4",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -1258,7 +1258,7 @@
     },
     {
       "id": "builtin_bridal_blouse_5_png",
-      "imagePath": "/images/fashion/bridal_blouse_5.png",
+      "imagePath": "/images/fashion/bridal_blouse_5.webp",
       "productName": "BRIDAL BLOUSE 5",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -1296,7 +1296,7 @@
     },
     {
       "id": "builtin_designer_1_png",
-      "imagePath": "/images/fashion/designer_1.png",
+      "imagePath": "/images/fashion/designer_1.webp",
       "productName": "DESIGNER 1",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -1334,7 +1334,7 @@
     },
     {
       "id": "builtin_designer_2_png",
-      "imagePath": "/images/fashion/designer_2.png",
+      "imagePath": "/images/fashion/designer_2.webp",
       "productName": "DESIGNER 2",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -1372,7 +1372,7 @@
     },
     {
       "id": "builtin_designer_3_png",
-      "imagePath": "/images/fashion/designer_3.png",
+      "imagePath": "/images/fashion/designer_3.webp",
       "productName": "DESIGNER 3",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -1410,7 +1410,7 @@
     },
     {
       "id": "builtin_kids_wear_1_png",
-      "imagePath": "/images/fashion/kids_wear_1.png",
+      "imagePath": "/images/fashion/kids_wear_1.webp",
       "productName": "KIDS WEAR 1",
       "gender": "Kids",
       "masterCategory": "Apparel",
@@ -1448,7 +1448,7 @@
     },
     {
       "id": "builtin_kids_wear_2_png",
-      "imagePath": "/images/fashion/kids_wear_2.png",
+      "imagePath": "/images/fashion/kids_wear_2.webp",
       "productName": "KIDS WEAR 2",
       "gender": "Kids",
       "masterCategory": "Apparel",
@@ -1486,7 +1486,7 @@
     },
     {
       "id": "builtin_kids_wear_3_png",
-      "imagePath": "/images/fashion/kids_wear_3.png",
+      "imagePath": "/images/fashion/kids_wear_3.webp",
       "productName": "KIDS WEAR 3",
       "gender": "Kids",
       "masterCategory": "Apparel",
@@ -1524,7 +1524,7 @@
     },
     {
       "id": "builtin_kids_wear_4_png",
-      "imagePath": "/images/fashion/kids_wear_4.png",
+      "imagePath": "/images/fashion/kids_wear_4.webp",
       "productName": "KIDS WEAR 4",
       "gender": "Kids",
       "masterCategory": "Apparel",
@@ -1562,7 +1562,7 @@
     },
     {
       "id": "builtin_kids_wear_5_png",
-      "imagePath": "/images/fashion/kids_wear_5.png",
+      "imagePath": "/images/fashion/kids_wear_5.webp",
       "productName": "KIDS WEAR 5",
       "gender": "Kids",
       "masterCategory": "Apparel",

@@ -157,7 +157,7 @@ function DesignStudio() {
     // we simulate url capture and set a mock preview with labels to keep experience seamless
     setStatusMsg(null)
     setInspirationItem(null)
-    setImagePreview("/images/features/feature_1_ai_scan.jpg")
+    setImagePreview("/images/features/feature_1_ai_scan.webp")
     setTags(["Vintage Coat", "Patterned Wool", "Streetwear", "Fall Season"])
     setUrlInput("")
   }

@@ -632,8 +632,8 @@ function DesignerCard({
   const portfolioImages = images.length > 0
     ? images
     : [
-        config.coverImage || "/images/inspiration/bridal_lehenga.png",
-        config.profileImage || "/images/fashion/designer_1.png",
+        config.coverImage || "/images/inspiration/bridal_lehenga.webp",
+        config.profileImage || "/images/fashion/designer_1.webp",
       ]
 
   const displayImages = portfolioImages.slice(0, 4)
@@ -799,7 +799,7 @@ function DesignerCard({
         {/* ── Cover Image 220px ─────────────────────────────── */}
         <div className="relative w-full overflow-hidden shrink-0" style={{ height: 220 }}>
           <LuxuryImage
-            src={config.coverImage || portfolioImages[0] || "/images/hero-editorial.png"}
+            src={config.coverImage || portfolioImages[0] || "/images/hero-editorial.webp"}
             alt={`${name} cover`}
             fill
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.07]"
@@ -887,7 +887,7 @@ function DesignerCard({
           >
             <div className="absolute inset-0 rounded-[18px] overflow-hidden">
               <LuxuryImage
-                src={config.profileImage || "/images/fashion/designer_1.png"}
+                src={config.profileImage || "/images/fashion/designer_1.webp"}
                 alt={name}
                 fill
                 className="object-cover"

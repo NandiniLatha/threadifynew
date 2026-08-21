@@ -49,7 +49,7 @@ export async function POST(request: Request) {
 
     let imageUrl = isExternalUrl
       ? imageSource
-      : "/images/features/feature_1_ai_scan.jpg"
+      : "/images/features/feature_1_ai_scan.webp"
 
     if (!isExternalUrl && process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
       try {

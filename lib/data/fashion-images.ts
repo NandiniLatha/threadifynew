@@ -20,214 +20,214 @@
 // ── Bridal & Wedding ────────────────────────────────────────────
 const BRIDAL = {
   cover: [
-    "/images/inspiration/bridal_lehenga.png",
-    "/images/inspiration/wedding_gown.png",
+    "/images/inspiration/bridal_lehenga.webp",
+    "/images/inspiration/wedding_gown.webp",
   ],
   portfolio: [
-    "/images/inspiration/bridal_lehenga.png",
-    "/images/inspiration/wedding_gown.png",
-    "/images/inspiration/banarasi_saree.png",
-    "/images/inspiration/kanjeevaram_saree.png",
-    "/images/inspiration/half_saree.png",
+    "/images/inspiration/bridal_lehenga.webp",
+    "/images/inspiration/wedding_gown.webp",
+    "/images/inspiration/banarasi_saree.webp",
+    "/images/inspiration/kanjeevaram_saree.webp",
+    "/images/inspiration/half_saree.webp",
   ],
   profile: [
-    "/images/fashion/designer_1.png",
-    "/images/fashion/designer_2.png",
+    "/images/fashion/designer_1.webp",
+    "/images/fashion/designer_2.webp",
   ],
 }
 
 // ── Women's Ethnic & Sarees ──────────────────────────────────────
 const SAREES = {
   cover: [
-    "/images/inspiration/kanjeevaram_saree.png",
-    "/images/inspiration/banarasi_saree.png",
+    "/images/inspiration/kanjeevaram_saree.webp",
+    "/images/inspiration/banarasi_saree.webp",
   ],
   portfolio: [
-    "/images/inspiration/kanjeevaram_saree.png",
-    "/images/inspiration/banarasi_saree.png",
-    "/images/inspiration/half_saree.png",
-    "/images/inspiration/designer_kurti.png",
+    "/images/inspiration/kanjeevaram_saree.webp",
+    "/images/inspiration/banarasi_saree.webp",
+    "/images/inspiration/half_saree.webp",
+    "/images/inspiration/designer_kurti.webp",
   ],
   profile: [
-    "/images/fashion/designer_3.png",
-    "/images/fashion/designer_1.png",
+    "/images/fashion/designer_3.webp",
+    "/images/fashion/designer_1.webp",
   ],
 }
 
 // ── Women's Ethnic Wear / Anarkalis / Kurtis ─────────────────────
 const ETHNIC = {
   cover: [
-    "/images/inspiration/half_saree.png",
-    "/images/inspiration/designer_kurti.png",
+    "/images/inspiration/half_saree.webp",
+    "/images/inspiration/designer_kurti.webp",
   ],
   portfolio: [
-    "/images/inspiration/half_saree.png",
-    "/images/inspiration/designer_kurti.png",
-    "/images/inspiration/cotton_dress.png",
-    "/images/inspiration/banarasi_saree.png",
+    "/images/inspiration/half_saree.webp",
+    "/images/inspiration/designer_kurti.webp",
+    "/images/inspiration/cotton_dress.webp",
+    "/images/inspiration/banarasi_saree.webp",
   ],
   profile: [
-    "/images/fashion/designer_1.png",
-    "/images/fashion/designer_3.png",
+    "/images/fashion/designer_1.webp",
+    "/images/fashion/designer_3.webp",
   ],
 }
 
 // ── Western / Evening Dresses ────────────────────────────────────
 const WESTERN = {
   cover: [
-    "/images/inspiration/party_wear_dress.png",
-    "/images/inspiration/coord_set.png",
+    "/images/inspiration/party_wear_dress.webp",
+    "/images/inspiration/coord_set.webp",
   ],
   portfolio: [
-    "/images/inspiration/party_wear_dress.png",
-    "/images/inspiration/coord_set.png",
-    "/images/inspiration/cotton_dress.png",
-    "/images/inspiration/womens_shirt.png",
+    "/images/inspiration/party_wear_dress.webp",
+    "/images/inspiration/coord_set.webp",
+    "/images/inspiration/cotton_dress.webp",
+    "/images/inspiration/womens_shirt.webp",
   ],
   profile: [
-    "/images/fashion/designer_3.png",
-    "/images/fashion/designer_2.png",
+    "/images/fashion/designer_3.webp",
+    "/images/fashion/designer_2.webp",
   ],
 }
 
 // ── Party Wear ───────────────────────────────────────────────────
 const PARTY = {
   cover: [
-    "/images/inspiration/party_wear_dress.png",
-    "/images/inspiration/coord_set.png",
+    "/images/inspiration/party_wear_dress.webp",
+    "/images/inspiration/coord_set.webp",
   ],
   portfolio: [
-    "/images/inspiration/party_wear_dress.png",
-    "/images/inspiration/coord_set.png",
-    "/images/inspiration/cotton_dress.png",
-    "/images/inspiration/womens_shirt.png",
+    "/images/inspiration/party_wear_dress.webp",
+    "/images/inspiration/coord_set.webp",
+    "/images/inspiration/cotton_dress.webp",
+    "/images/inspiration/womens_shirt.webp",
   ],
   profile: [
-    "/images/fashion/designer_1.png",
-    "/images/fashion/designer_3.png",
+    "/images/fashion/designer_1.webp",
+    "/images/fashion/designer_3.webp",
   ],
 }
 
 // ── Menswear ─────────────────────────────────────────────────────
 const MENS = {
   cover: [
-    "/images/inspiration/three_piece_suit.png",
-    "/images/inspiration/mens_blazer.png",
+    "/images/inspiration/three_piece_suit.webp",
+    "/images/inspiration/mens_blazer.webp",
   ],
   portfolio: [
-    "/images/inspiration/three_piece_suit.png",
-    "/images/inspiration/mens_blazer.png",
-    "/images/inspiration/mens_formal_shirt.png",
-    "/images/inspiration/mens_casual_shirt.png",
+    "/images/inspiration/three_piece_suit.webp",
+    "/images/inspiration/mens_blazer.webp",
+    "/images/inspiration/mens_formal_shirt.webp",
+    "/images/inspiration/mens_casual_shirt.webp",
   ],
   profile: [
-    "/images/fashion/designer_2.png",
-    "/images/fashion/designer_1.png",
+    "/images/fashion/designer_2.webp",
+    "/images/fashion/designer_1.webp",
   ],
 }
 
 // ── Formal / Corporate ────────────────────────────────────────────
 const FORMAL = {
   cover: [
-    "/images/inspiration/three_piece_suit.png",
-    "/images/inspiration/mens_formal_shirt.png",
+    "/images/inspiration/three_piece_suit.webp",
+    "/images/inspiration/mens_formal_shirt.webp",
   ],
   portfolio: [
-    "/images/inspiration/three_piece_suit.png",
-    "/images/inspiration/mens_blazer.png",
-    "/images/inspiration/mens_formal_shirt.png",
-    "/images/inspiration/mens_casual_shirt.png",
+    "/images/inspiration/three_piece_suit.webp",
+    "/images/inspiration/mens_blazer.webp",
+    "/images/inspiration/mens_formal_shirt.webp",
+    "/images/inspiration/mens_casual_shirt.webp",
   ],
   profile: [
-    "/images/fashion/designer_2.png",
+    "/images/fashion/designer_2.webp",
   ],
 }
 
 // ── Blazers ───────────────────────────────────────────────────────
 const BLAZERS = {
   cover: [
-    "/images/inspiration/mens_blazer.png",
-    "/images/inspiration/jacket.png",
+    "/images/inspiration/mens_blazer.webp",
+    "/images/inspiration/jacket.webp",
   ],
   portfolio: [
-    "/images/inspiration/mens_blazer.png",
-    "/images/inspiration/jacket.png",
-    "/images/inspiration/three_piece_suit.png",
-    "/images/inspiration/mens_casual_shirt.png",
+    "/images/inspiration/mens_blazer.webp",
+    "/images/inspiration/jacket.webp",
+    "/images/inspiration/three_piece_suit.webp",
+    "/images/inspiration/mens_casual_shirt.webp",
   ],
   profile: [
-    "/images/fashion/designer_2.png",
+    "/images/fashion/designer_2.webp",
   ],
 }
 
 // ── Sherwanis / Indian Groom Wear ────────────────────────────────
 const SHERWANI = {
   cover: [
-    "/images/inspiration/sherwani.png",
-    "/images/inspiration/indo_western.png",
+    "/images/inspiration/sherwani.webp",
+    "/images/inspiration/indo_western.webp",
   ],
   portfolio: [
-    "/images/inspiration/sherwani.png",
-    "/images/inspiration/indo_western.png",
-    "/images/inspiration/jacket.png",
-    "/images/inspiration/three_piece_suit.png",
+    "/images/inspiration/sherwani.webp",
+    "/images/inspiration/indo_western.webp",
+    "/images/inspiration/jacket.webp",
+    "/images/inspiration/three_piece_suit.webp",
   ],
   profile: [
-    "/images/fashion/designer_2.png",
+    "/images/fashion/designer_2.webp",
   ],
 }
 
 // ── Kids Wear ─────────────────────────────────────────────────────
 const KIDS = {
   cover: [
-    "/images/fashion/kids_wear_1.png",
-    "/images/fashion/kids_wear_2.png",
+    "/images/fashion/kids_wear_1.webp",
+    "/images/fashion/kids_wear_2.webp",
   ],
   portfolio: [
-    "/images/fashion/kids_wear_1.png",
-    "/images/fashion/kids_wear_2.png",
-    "/images/fashion/kids_wear_3.png",
-    "/images/fashion/kids_wear_4.png",
-    "/images/fashion/kids_wear_5.png",
+    "/images/fashion/kids_wear_1.webp",
+    "/images/fashion/kids_wear_2.webp",
+    "/images/fashion/kids_wear_3.webp",
+    "/images/fashion/kids_wear_4.webp",
+    "/images/fashion/kids_wear_5.webp",
   ],
   profile: [
-    "/images/fashion/designer_1.png",
+    "/images/fashion/designer_1.webp",
   ],
 }
 
 // ── Designer Blouses ──────────────────────────────────────────────
 const BLOUSES = {
   cover: [
-    "/images/fashion/bridal_blouse_1.png",
-    "/images/fashion/bridal_blouse_2.png",
+    "/images/fashion/bridal_blouse_1.webp",
+    "/images/fashion/bridal_blouse_2.webp",
   ],
   portfolio: [
-    "/images/fashion/bridal_blouse_1.png",
-    "/images/fashion/bridal_blouse_2.png",
-    "/images/fashion/bridal_blouse_3.png",
-    "/images/fashion/bridal_blouse_4.png",
-    "/images/fashion/bridal_blouse_5.png",
+    "/images/fashion/bridal_blouse_1.webp",
+    "/images/fashion/bridal_blouse_2.webp",
+    "/images/fashion/bridal_blouse_3.webp",
+    "/images/fashion/bridal_blouse_4.webp",
+    "/images/fashion/bridal_blouse_5.webp",
   ],
   profile: [
-    "/images/fashion/designer_1.png",
-    "/images/fashion/designer_3.png",
+    "/images/fashion/designer_1.webp",
+    "/images/fashion/designer_3.webp",
   ],
 }
 
 // ── Boutique / Multi-category ────────────────────────────────────
 const BOUTIQUE = {
   cover: [
-    "/images/inspiration/party_wear_dress.png",
-    "/images/inspiration/designer_kurti.png",
+    "/images/inspiration/party_wear_dress.webp",
+    "/images/inspiration/designer_kurti.webp",
   ],
   portfolio: [
-    "/images/inspiration/party_wear_dress.png",
-    "/images/inspiration/womens_shirt.png",
-    "/images/inspiration/designer_kurti.png",
-    "/images/inspiration/mens_formal_shirt.png",
+    "/images/inspiration/party_wear_dress.webp",
+    "/images/inspiration/womens_shirt.webp",
+    "/images/inspiration/designer_kurti.webp",
+    "/images/inspiration/mens_formal_shirt.webp",
   ],
   profile: [
-    "/images/fashion/designer_3.png",
+    "/images/fashion/designer_3.webp",
   ],
 }
 

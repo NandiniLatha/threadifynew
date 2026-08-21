@@ -262,7 +262,7 @@ export function CinematicHero() {
 
               {/* Primary Editorial Image */}
               <Image
-                src="/images/hero-editorial.png"
+                src="/images/hero-editorial.webp"
                 alt="Threadify Bespoke Tailoring Editorial Showcase"
                 fill
                 priority

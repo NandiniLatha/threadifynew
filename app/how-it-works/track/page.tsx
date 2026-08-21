@@ -10,8 +10,8 @@ import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 const stages = [
   { id: "confirmed", label: "Order Confirmed", date: "Oct 12, 10:00 AM", completed: true },
-  { id: "fabric", label: "Fabric Purchased", date: "Oct 13, 2:30 PM", completed: true, photos: ["/images/inspiration/menswear.png"] },
-  { id: "cutting", label: "Cutting & Pattern", date: "Oct 14, 11:15 AM", completed: true, photos: ["/images/inspiration/designer_sarees.png"] },
+  { id: "fabric", label: "Fabric Purchased", date: "Oct 13, 2:30 PM", completed: true, photos: ["/images/inspiration/three_piece_suit.webp"] },
+  { id: "cutting", label: "Cutting & Pattern", date: "Oct 14, 11:15 AM", completed: true, photos: ["/images/inspiration/kanjeevaram_saree.webp"] },
   { id: "stitching", label: "Stitching", date: "In Progress", completed: false },
   { id: "quality", label: "Quality Check", date: null, completed: false },
   { id: "packaging", label: "Packaging", date: null, completed: false },

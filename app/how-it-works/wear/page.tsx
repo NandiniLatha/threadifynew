@@ -53,8 +53,8 @@ export default function WearOutfitPage() {
   const [copying, setCopying] = useState(false);
 
   const mockOutfitImages = [
-    "/images/fashion/designer_1.png",
-    "/images/fashion/designer_2.png",
+    "/images/fashion/designer_1.webp",
+    "/images/fashion/designer_2.webp",
   ];
 
   const handleShare = async () => {

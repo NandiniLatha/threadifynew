@@ -288,7 +288,7 @@ export function AboutFounder() {
 
                 {/* Profile Photo */}
                 <Image
-                  src="/images/founder.jpg"
+                  src="/images/founder.webp"
                   alt="Threadify Founder Portrait"
                   fill
                   className="object-cover rounded-[26px]"

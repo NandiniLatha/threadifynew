@@ -48,7 +48,7 @@ export async function POST(request: Request) {
         }
       } else {
         // Fallback for demo environments without Cloudinary setup
-        attachmentUrl = "/images/features/feature_4_chat.jpg"
+        attachmentUrl = "/images/features/feature_4_chat.webp"
       }
     }
 
