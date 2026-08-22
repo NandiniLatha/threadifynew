@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import http from "http";
-import OpenAI from "openai";
 import { analyzeInspirationImage, GraniteDetectionResult } from "@/lib/garment-vision/analyzer";
 
 const GARMENT_VISION_PROMPT = `Inspect this clothing/fashion image carefully. Return ONLY a raw JSON object with this exact schema:
@@ -72,38 +71,47 @@ function callOllamaNative(url: string, payload: any): Promise<string> {
 }
 
 /**
- * Call OpenAI Vision API (gpt-4o-mini) for production / cloud serverless evaluation
+ * Call Cloudflare Workers AI (@cf/meta/llama-3.2-11b-vision-instruct) for production / cloud evaluation
  */
-async function analyzeWithOpenAiVision(base64Data: string): Promise<GraniteDetectionResult | undefined> {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey || apiKey.startsWith("sk-your")) {
+async function analyzeWithCloudflareVision(base64Data: string): Promise<GraniteDetectionResult | undefined> {
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+
+  if (!accountId || !apiToken) {
     return undefined;
   }
 
   try {
-    const openaiClient = new OpenAI({ apiKey });
-    const response = await openaiClient.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: GARMENT_VISION_PROMPT },
-            {
-              type: "image_url",
-              image_url: {
-                url: `data:image/jpeg;base64,${base64Data}`,
-              },
-            },
-          ],
-        },
-      ],
-      response_format: { type: "json_object" },
-      max_tokens: 300,
-      temperature: 0.1,
+    const endpoint = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/@cf/meta/llama-3.2-11b-vision-instruct`;
+    const imageBytes = Array.from(Buffer.from(base64Data, "base64"));
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        prompt: GARMENT_VISION_PROMPT,
+        image: imageBytes,
+        max_tokens: 300,
+        temperature: 0.1,
+      }),
     });
 
-    const outputText = response.choices[0]?.message?.content || "";
+    if (!response.ok) {
+      // 401, 403, 429, or 5xx -> Return undefined safely to trigger fallback without crashing
+      return undefined;
+    }
+
+    const resData = await response.json();
+    const outputText =
+      resData?.result?.description ||
+      resData?.result?.response ||
+      resData?.result?.text ||
+      (typeof resData?.result === "string" ? resData.result : "") ||
+      "";
+
     const jsonMatch = outputText.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
@@ -191,29 +199,29 @@ export async function POST(request: Request) {
       process.env.VERCEL_ENV
     );
 
-    const hasRealOpenAiKey = Boolean(
-      process.env.OPENAI_API_KEY &&
-      !process.env.OPENAI_API_KEY.startsWith("sk-your")
+    const hasCloudflareConfig = Boolean(
+      process.env.CLOUDFLARE_ACCOUNT_ID &&
+      process.env.CLOUDFLARE_API_TOKEN
     );
 
     const ollamaBaseUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
 
     if (isVercel) {
-      // PRODUCTION GATEWAY (Vercel Serverless): Use OpenAI Vision directly
-      graniteDetection = await analyzeWithOpenAiVision(base64Data);
+      // PRODUCTION GATEWAY (Vercel Serverless): Use Cloudflare Workers AI directly
+      graniteDetection = await analyzeWithCloudflareVision(base64Data);
     } else {
       // LOCAL DEVELOPMENT GATEWAY: Use local Ollama Granite 3.2 Vision first
       graniteDetection = await analyzeWithLocalOllama(base64Data, ollamaBaseUrl);
 
-      // If local Ollama fails or is offline, attempt OpenAI Vision if a valid key is provided
-      if (!graniteDetection && hasRealOpenAiKey) {
-        graniteDetection = await analyzeWithOpenAiVision(base64Data);
+      // If local Ollama is offline or fails, attempt Cloudflare Workers AI if credentials are configured
+      if (!graniteDetection && hasCloudflareConfig) {
+        graniteDetection = await analyzeWithCloudflareVision(base64Data);
       }
     }
 
     let rawLabels: string[] = [];
 
-    // Extract labels if Granite / OpenAI vision detection succeeded
+    // Extract labels if Granite / Cloudflare vision detection succeeded
     if (graniteDetection && graniteDetection.garmentType && graniteDetection.garmentType !== "Unknown") {
       if (graniteDetection.garmentType) rawLabels.push(graniteDetection.garmentType);
       if (graniteDetection.category && graniteDetection.category !== "Unknown") rawLabels.push(graniteDetection.category);
