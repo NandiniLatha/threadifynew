@@ -26,6 +26,7 @@
     "Sherwani",
     "Lehenga",
     "Saree",
+    "Half Saree",
     "Custom Garment",
     "Dress",
     "Kurti",
@@ -650,26 +651,33 @@
       "gender": "Women",
       "masterCategory": "Apparel",
       "subCategory": "Inspiration Garment",
-      "articleType": "Saree",
+      "articleType": "Half Saree",
       "baseColour": "Custom Palette",
       "season": "All Season",
       "usage": "Bespoke Couture",
       "tags": [
         "half saree",
-        "saree",
+        "langa voni",
+        "pattu pavadai",
+        "voni",
+        "davani",
+        "south indian traditional",
+        "ethnic",
         "women",
         "bespoke",
         "custom"
       ],
-      "complexity": "High",
+      "complexity": "Bespoke Luxury",
       "fabricRecommendations": [
-        "Silk",
-        "Chiffon",
-        "Georgette",
+        "Kanchipuram Silk",
+        "Raw Silk",
+        "Brocade",
+        "Pattu",
         "Organza",
-        "Raw Silk"
+        "Chiffon"
       ],
       "tailorRecommendations": [
+        "Master South Indian Bridal & Half-Saree Specialist",
         "Master Ethnic Specialist & Zardozi Artisan"
       ],
       "estimatedStitchingCost": {
