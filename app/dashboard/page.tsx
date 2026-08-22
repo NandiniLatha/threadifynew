@@ -44,31 +44,48 @@ export default function CustomerDashboardOverview() {
           .single()
         if (profile?.name) setUserName(profile.name.split(" ")[0])
 
-        // Fetch all design_requests for this customer in one shot
+        // Fetch all design_requests for this customer
         const { data: requests } = await supabase
           .from("design_requests")
           .select("id, status")
           .eq("customer_id", user.id)
-          .not("status", "in", '("cancelled","rejected","reviewed","completed","draft")')
 
         const allReqs = requests ?? []
 
-        const activeStatuses = ["paid", "confirmed", "measurements_pending", "cutting", "stitching", "quality_check", "ready", "shipped", "delivered", "in_production"]
-        const activeOrders   = allReqs.filter(r => activeStatuses.includes(r.status)).length
-        const pendingReqs    = allReqs.filter(r => r.status === "pending_bids").length
-        const pendingQuotes  = allReqs.filter(r => ["quoted"].includes(r.status)).length
+        // Active Orders: assigned (quote accepted), paid, in production, or shipped
+        const activeStatuses = ["assigned", "paid", "in_production", "shipped"]
+        const activeOrders = allReqs.filter(r => activeStatuses.includes(r.status)).length
 
-        // Unread messages (simple count of messages received)
-        const { count: unreadCount } = await supabase
-          .from("messages")
-          .select("id", { count: "exact", head: true })
-          .neq("sender_id", user.id)
+        // Pending Requests: awaiting initial quotes from tailors
+        const pendingReqs = allReqs.filter(r => r.status === "pending_bids").length
+
+        // Quotes to Review: count of pending quotations submitted by tailors on user's design requests
+        const reqIds = allReqs.map(r => r.id)
+        let pendingQuotesCount = 0
+        if (reqIds.length > 0) {
+          const { count } = await supabase
+            .from("quotations")
+            .select("id", { count: "exact", head: true })
+            .in("request_id", reqIds)
+            .eq("bid_status", "pending")
+          pendingQuotesCount = count ?? 0
+        }
+
+        // Unread messages count for this specific customer
+        const { data: userConvs } = await supabase
+          .from("conversations")
+          .select("customer_unread")
+          .eq("customer_id", user.id)
+
+        const unreadCount = userConvs
+          ? userConvs.reduce((acc, c) => acc + (c.customer_unread || 0), 0)
+          : 0
 
         setStats({
           activeOrders,
           pendingRequests: pendingReqs,
-          pendingQuotes:   pendingQuotes,
-          unreadMessages:  unreadCount ?? 0,
+          pendingQuotes:   pendingQuotesCount,
+          unreadMessages:  unreadCount,
         })
       } catch {
         setStats({ activeOrders: 0, pendingRequests: 0, pendingQuotes: 0, unreadMessages: 0 })

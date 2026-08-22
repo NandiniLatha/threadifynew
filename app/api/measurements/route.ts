@@ -23,7 +23,7 @@ export async function GET() {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
     return NextResponse.json({ measurements: data || [] })
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Unexpected error." }, { status: 500 })
   }
 }
@@ -36,6 +36,8 @@ export async function GET() {
  * {
  *   label: string,              -- e.g. "My Blouse Measurements"
  *   garment_type: string,       -- "blouse" | "shirt" | "dress" | "general"
+ *   size?: string | null,       -- "XS" | "S" | "M" | "L" | "XL" | "XXL"
+ *   measurement_source?: string,-- "custom" | "standard" | "standard_adjusted"
  *   chest?: number,
  *   waist?: number,
  *   hips?: number,
@@ -45,7 +47,7 @@ export async function GET() {
  *   neck?: number,
  *   height?: number,
  *   weight?: number,
- *   custom?: Record<string, number>,  -- garment-specific custom fields
+ *   custom?: Record<string, unknown>, -- garment-specific custom fields
  *   is_default?: boolean
  * }
  */
@@ -62,6 +64,8 @@ export async function POST(request: Request) {
     const {
       label,
       garment_type,
+      size,
+      measurement_source,
       chest,
       waist,
       hips,
@@ -104,6 +108,8 @@ export async function POST(request: Request) {
         weight:        weight        ? Number(weight)        : null,
         custom: {
           garment_type: garment_type || "general",
+          size: size || null,
+          measurement_source: measurement_source || "custom",
           ...(custom || {}),
         },
         is_default: is_default || false,
@@ -114,7 +120,7 @@ export async function POST(request: Request) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
     return NextResponse.json({ success: true, measurement: data })
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Unexpected error." }, { status: 500 })
   }
 }
@@ -144,7 +150,7 @@ export async function PUT(request: Request) {
     // Verify ownership
     const { data: existing } = await supabase
       .from("measurements")
-      .select("id")
+      .select("id, custom")
       .eq("id", id)
       .eq("user_id", user.id)
       .single()
@@ -168,11 +174,16 @@ export async function PUT(request: Request) {
       if (fields[f] !== undefined) updates[f] = fields[f] ? Number(fields[f]) : null
     }
     if (fields.label) updates.label = fields.label
-    if (fields.custom || fields.garment_type) {
-      updates.custom = {
-        garment_type: fields.garment_type || "general",
-        ...(fields.custom || {}),
-      }
+
+    const existingCustom = (existing.custom || {}) as Record<string, unknown>
+    const incomingCustom = (fields.custom || {}) as Record<string, unknown>
+
+    updates.custom = {
+      ...existingCustom,
+      ...incomingCustom,
+      garment_type: fields.garment_type || incomingCustom.garment_type || existingCustom.garment_type || "general",
+      size: fields.size !== undefined ? fields.size : (incomingCustom.size ?? existingCustom.size ?? null),
+      measurement_source: fields.measurement_source || incomingCustom.measurement_source || existingCustom.measurement_source || "custom",
     }
 
     const { data, error } = await supabase
@@ -186,7 +197,7 @@ export async function PUT(request: Request) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
     return NextResponse.json({ success: true, measurement: data })
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Unexpected error." }, { status: 500 })
   }
 }
@@ -222,7 +233,7 @@ export async function DELETE(request: Request) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
     return NextResponse.json({ success: true })
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Unexpected error." }, { status: 500 })
   }
 }

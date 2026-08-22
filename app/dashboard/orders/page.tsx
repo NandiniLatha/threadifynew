@@ -24,7 +24,7 @@ interface CustomerOrder {
   budget_min: number
   budget_max: number
   deadline: string
-  status: "Requested" | "Paid" | "In Production" | "Shipped" | "Delivered" | "Reviewed"
+  status: "Awaiting Quotes" | "Quote Accepted" | "Paid" | "In Production" | "Shipped" | "Delivered" | "Reviewed" | "Cancelled"
   notes?: string
 }
 
@@ -60,12 +60,15 @@ export default function CustomerOrders() {
               status: string
               notes?: string
             }) => {
-              let uiStatus: CustomerOrder["status"] = "Requested"
-              if (item.status === "pending_bids") uiStatus = "Requested"
-              else if (item.status === "assigned") uiStatus = "Paid"
+              let uiStatus: CustomerOrder["status"] = "Awaiting Quotes"
+              if (item.status === "pending_bids") uiStatus = "Awaiting Quotes"
+              else if (item.status === "assigned") uiStatus = "Quote Accepted"
+              else if (item.status === "paid") uiStatus = "Paid"
               else if (item.status === "in_production") uiStatus = "In Production"
+              else if (item.status === "shipped") uiStatus = "Shipped"
               else if (item.status === "delivered") uiStatus = "Delivered"
-              else if (item.status === "cancelled") uiStatus = "Requested" // fallback
+              else if (item.status === "reviewed") uiStatus = "Reviewed"
+              else if (item.status === "cancelled") uiStatus = "Cancelled"
               return {
                 id: item.id,
                 image_url: item.image_url,
@@ -92,16 +95,21 @@ export default function CustomerOrders() {
 
   const getStatusColor = (status: CustomerOrder["status"]) => {
     switch (status) {
-      case "Requested":
-        return "bg-blue-500/10 text-blue-500 border-blue-500/20"
+      case "Awaiting Quotes":
+        return "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
+      case "Quote Accepted":
+        return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
       case "Paid":
         return "bg-purple-500/10 text-purple-500 border-purple-500/20"
       case "In Production":
-        return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+        return "bg-primary/10 text-primary border-primary/20"
       case "Shipped":
         return "bg-indigo-500/10 text-indigo-500 border-indigo-500/20"
       case "Delivered":
+      case "Reviewed":
         return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+      case "Cancelled":
+        return "bg-destructive/10 text-destructive border-destructive/20"
       default:
         return "bg-muted text-muted-foreground"
     }
