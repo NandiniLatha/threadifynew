@@ -1,4 +1,4 @@
-import { formatINR } from "@/lib/utils/currency";
+import { calculateRealisticPrice } from "@/lib/pricing/pricing-engine";
 
 export interface TailorQuote {
   id: string;
@@ -39,90 +39,52 @@ export interface DesignConfig {
 
 /**
  * Analyzes customer design configuration and dynamically generates 4 tailored quotes
- * matching specialist tailors, accurate material/labor cost breakdowns, and delivery estimates.
+ * matching specialist tailors, powered by the canonical Threadify Bespoke Pricing Engine.
  */
 export function generateDynamicQuotes(config?: DesignConfig | null): TailorQuote[] {
-  const fabric = (config?.fabric || "Silk").toLowerCase();
+  const fabric = config?.fabric || "Silk";
   const style = (config?.style || "A-Line").toLowerCase();
-  const pattern = (config?.pattern || "Solid").toLowerCase();
-  const notes = (config?.specialRequirements || "").toLowerCase();
+  const pattern = config?.pattern || "Solid";
+  const notes = config?.specialRequirements || "";
 
-  // Determine garment category
-  type Category = "bridal" | "suit" | "ethnic" | "dress" | "jacket" | "casual";
-  let category: Category = "casual";
+  // Derive canonical garment type from configuration style & notes
+  let canonicalGarment = "Dress";
+  let poolCategory: "bridal" | "suit" | "default" = "default";
 
-  if (style.includes("lehenga") || style.includes("bridal") || style.includes("gown") || notes.includes("wedding") || notes.includes("bridal")) {
-    category = "bridal";
+  if (style.includes("lehenga") || style.includes("bridal") || style.includes("gown") || notes.toLowerCase().includes("wedding") || notes.toLowerCase().includes("bridal")) {
+    canonicalGarment = style.includes("gown") ? "Gown" : "Lehenga Choli";
+    poolCategory = "bridal";
   } else if (style.includes("suit") || style.includes("blazer") || style.includes("tuxedo") || style.includes("indo-western")) {
-    category = "suit";
-  } else if (style.includes("jacket") || style.includes("coat")) {
-    category = "jacket";
-  } else if (style.includes("anarkali") || style.includes("kurti") || style.includes("saree") || fabric.includes("silk") || pattern.includes("paisley")) {
-    category = "ethnic";
-  } else if (style.includes("dress") || fabric.includes("velvet") || fabric.includes("georgette")) {
-    category = "dress";
-  } else {
-    category = "casual";
+    canonicalGarment = "Suit";
+    poolCategory = "suit";
+  } else if (style.includes("saree") || style.includes("half saree") || style.includes("langa voni")) {
+    canonicalGarment = style.includes("half") ? "Half Saree" : "Saree";
+    poolCategory = "bridal";
+  } else if (style.includes("kurti") || style.includes("anarkali")) {
+    canonicalGarment = style.includes("anarkali") ? "Salwar Kameez" : "Kurti";
+    poolCategory = "default";
+  } else if (style.includes("shirt")) {
+    canonicalGarment = "Shirt";
+    poolCategory = "default";
   }
 
-  // Base pricing matrix (in INR)
-  let baseMaterial = 400;
-  let baseLabor = 600;
-  let minDays = 6;
-  let maxDays = 9;
+  // Calculate pricing via single source of truth: Threadify Bespoke Pricing Engine
+  const pricingResult = calculateRealisticPrice({
+    garmentType: canonicalGarment,
+    fabricSelected: fabric,
+    pattern: pattern,
+    style: config?.style,
+    customizationNotes: notes,
+  });
 
-  switch (category) {
-    case "bridal":
-      baseMaterial = 6500;
-      baseLabor = 8500;
-      minDays = 20;
-      maxDays = 35;
-      break;
-    case "suit":
-      baseMaterial = 2200;
-      baseLabor = 3200;
-      minDays = 10;
-      maxDays = 14;
-      break;
-    case "dress":
-      baseMaterial = 1800;
-      baseLabor = 2400;
-      minDays = 8;
-      maxDays = 12;
-      break;
-    case "ethnic":
-      baseMaterial = 1100;
-      baseLabor = 1500;
-      minDays = 6;
-      maxDays = 9;
-      break;
-    case "jacket":
-      baseMaterial = 1600;
-      baseLabor = 2200;
-      minDays = 9;
-      maxDays = 13;
-      break;
-    default:
-      baseMaterial = 500;
-      baseLabor = 700;
-      minDays = 5;
-      maxDays = 7;
-      break;
-  }
-
-  // Fabric multiplier
-  let fabricMultiplier = 1.0;
-  if (fabric.includes("silk") || fabric.includes("velvet") || fabric.includes("wool")) {
-    fabricMultiplier = 1.45;
-  } else if (fabric.includes("linen") || fabric.includes("georgette") || fabric.includes("chiffon") || fabric.includes("crepe")) {
-    fabricMultiplier = 1.2;
-  }
-
-  // Embroidery / Special customization surcharge
-  let customizationAddon = 0;
-  if (pattern.includes("floral") || pattern.includes("paisley") || notes.includes("embroidery") || notes.includes("beadwork") || notes.includes("hidden pockets") || notes.includes("lining")) {
-    customizationAddon = Math.round(baseLabor * 0.25);
-  }
+  const baseLabor = Math.round((pricingResult.stitchingCost.min + pricingResult.stitchingCost.max) / 2);
+  const baseMaterial = pricingResult.fabricCost
+    ? Math.round((pricingResult.fabricCost.min + pricingResult.fabricCost.max) / 2)
+    : 600;
+  const customizationAddon = pricingResult.additionalWorkCost
+    ? Math.round((pricingResult.additionalWorkCost.min + pricingResult.additionalWorkCost.max) / 2)
+    : 0;
+  const baseDays = pricingResult.turnaroundDays.min;
 
   // Tailor Profiles Pool by Category
   const tailorPools = {
@@ -326,14 +288,14 @@ export function generateDynamicQuotes(config?: DesignConfig | null): TailorQuote
     ],
   };
 
-  const selectedPool = category === "bridal" ? tailorPools.bridal : category === "suit" ? tailorPools.suit : tailorPools.default;
+  const selectedPool = poolCategory === "bridal" ? tailorPools.bridal : poolCategory === "suit" ? tailorPools.suit : tailorPools.default;
 
   return selectedPool.map((t, idx) => {
-    const rawMat = Math.round(baseMaterial * fabricMultiplier * t.marginRatio);
+    const rawMat = Math.round(baseMaterial * t.marginRatio);
     const rawLabor = Math.round(baseLabor * t.marginRatio);
     const rawCustom = Math.round(customizationAddon * t.marginRatio);
     const total = rawMat + rawLabor + rawCustom;
-    const estDays = Math.max(3, minDays + t.daysOffset);
+    const estDays = Math.max(3, baseDays + t.daysOffset);
 
     return {
       id: `q_${t.id}_${idx}`,

@@ -9,8 +9,6 @@ import OpenAI from "openai"
 
 export const runtime = "edge"
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-
 export async function POST(req: Request) {
   try {
     const formData = await req.formData()
@@ -33,6 +31,7 @@ export async function POST(req: Request) {
       })
     }
 
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
     const file = new File([audio], "audio.webm", { type: audio.type || "audio/webm" })
 
     const transcription = await openai.audio.transcriptions.create({

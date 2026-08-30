@@ -141,15 +141,15 @@ export default function CustomerDashboardOverview() {
       {/* Welcome header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl font-bold text-foreground">
-            Welcome back, {isLoading ? "…" : userName} 👋
+          <h1 className="font-serif text-3xl font-bold tracking-tight text-foreground">
+            Welcome back, {isLoading ? "…" : userName}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Your custom fashion studio — all your orders and requests in one place.
+            Your bespoke wardrobe atelier — manage active commissions, quotes, and measurements.
           </p>
         </div>
         <Link href="/design-studio">
-          <Button className="bg-primary text-primary-foreground font-semibold h-11 rounded-2xl shadow flex items-center gap-2 px-5">
+          <Button className="h-11 px-5 text-sm font-semibold flex items-center gap-2 shadow-sm">
             <Sparkles className="w-4 h-4" />
             New Design Request
           </Button>
@@ -160,7 +160,7 @@ export default function CustomerDashboardOverview() {
       {isLoading ? (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-28 rounded-3xl" />
+            <Skeleton key={i} className="h-28 rounded-2xl" />
           ))}
         </div>
       ) : (
@@ -171,13 +171,13 @@ export default function CustomerDashboardOverview() {
               <Link
                 key={card.label}
                 href={card.href}
-                className="group p-5 bg-card border border-border rounded-3xl shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-200 flex flex-col gap-3"
+                className="group p-5 bg-card border border-border rounded-2xl shadow-sm hover:shadow hover:border-primary/30 transition-all flex flex-col gap-3"
               >
-                <div className={`w-10 h-10 rounded-2xl ${card.bg} flex items-center justify-center`}>
-                  <Icon className={`w-5 h-5 ${card.color}`} />
+                <div className={`w-9 h-9 rounded-xl ${card.bg} flex items-center justify-center`}>
+                  <Icon className={`w-4.5 h-4.5 ${card.color}`} />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-foreground">{card.value}</p>
+                  <p className="text-2xl font-serif font-bold text-foreground">{card.value}</p>
                   <p className="text-xs text-muted-foreground font-medium mt-0.5">{card.label}</p>
                 </div>
                 <div className={`flex items-center gap-1 text-xs font-semibold ${card.color} group-hover:underline`}>
@@ -192,56 +192,56 @@ export default function CustomerDashboardOverview() {
       {/* Quick action cards */}
       <div>
         <h2 className="font-serif text-lg font-bold text-foreground mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Design Studio */}
-          <div className="p-6 bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-3xl shadow-sm space-y-3">
-            <div className="w-10 h-10 rounded-2xl bg-primary/15 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-primary" />
+          <div className="p-6 bg-card border border-primary/20 rounded-2xl shadow-sm space-y-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Sparkles className="w-4.5 h-4.5 text-primary" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground">Design Studio</h3>
               <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-                Upload an inspiration photo and let our AI analyze your style.
+                Upload inspiration photos for automatic vision analysis and price estimates.
               </p>
             </div>
-            <Link href="/design-studio">
-              <Button size="sm" className="bg-primary text-primary-foreground font-semibold h-9 rounded-xl text-xs w-full mt-1">
+            <Link href="/design-studio" className="block pt-1">
+              <Button size="sm" className="w-full text-xs font-semibold">
                 Open Studio
               </Button>
             </Link>
           </div>
 
           {/* My Requests */}
-          <div className="p-6 bg-card border border-border rounded-3xl shadow-sm space-y-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center">
-              <Scissors className="w-5 h-5 text-amber-600" />
+          <div className="p-6 bg-card border border-border rounded-2xl shadow-sm space-y-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center">
+              <Scissors className="w-4.5 h-4.5 text-amber-600" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground">My Requests</h3>
               <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-                Review incoming quotes from tailors and accept the best fit.
+                Review tailor quotations and accept proposals for production.
               </p>
             </div>
-            <Link href="/dashboard/requests">
-              <Button size="sm" variant="outline" className="border-border hover:bg-muted font-semibold h-9 rounded-xl text-xs w-full mt-1">
+            <Link href="/dashboard/requests" className="block pt-1">
+              <Button size="sm" variant="outline" className="w-full text-xs font-semibold">
                 View Requests
               </Button>
             </Link>
           </div>
 
           {/* Measurements */}
-          <div className="p-6 bg-card border border-border rounded-3xl shadow-sm space-y-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
-              <Ruler className="w-5 h-5 text-emerald-600" />
+          <div className="p-6 bg-card border border-border rounded-2xl shadow-sm space-y-3">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+              <Ruler className="w-4.5 h-4.5 text-emerald-600" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground">Body Measurements</h3>
               <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-                Save your dimensions so tailors can craft a perfect custom fit.
+                Store your measurement profiles so tailors can ensure an exact bespoke fit.
               </p>
             </div>
-            <Link href="/dashboard/measurements">
-              <Button size="sm" variant="outline" className="border-border hover:bg-muted font-semibold h-9 rounded-xl text-xs w-full mt-1">
+            <Link href="/dashboard/measurements" className="block pt-1">
+              <Button size="sm" variant="outline" className="w-full text-xs font-semibold">
                 Manage Measurements
               </Button>
             </Link>

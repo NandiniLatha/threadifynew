@@ -93,13 +93,9 @@ export async function findClosestMatches(
   // Sort descending by similarity score
   results.sort((a, b) => b.similarityScore - a.similarityScore);
 
-  // If no direct matches, return top representative garments as default high-confidence candidates
+  // If no direct matches, return empty array (do not fabricate false catalog matches)
   if (results.length === 0) {
-    return allRecords.slice(0, limit).map((garment) => ({
-      garment,
-      similarityScore: 0.85,
-      matchReasons: ["Library baseline garment profile"],
-    }));
+    return [];
   }
 
   return results.slice(0, limit);

@@ -39,7 +39,7 @@
   "records": [
     {
       "id": "1163",
-      "imagePath": "/images/inspiration/mens_casual_shirt.webp",
+      "imagePath": "",
       "productName": "Nike Men Solid Blue Round Neck T-shirt",
       "gender": "Men",
       "masterCategory": "Apparel",
@@ -80,7 +80,7 @@
     },
     {
       "id": "1525",
-      "imagePath": "/images/inspiration/designer_kurti.webp",
+      "imagePath": "",
       "productName": "Biba Women Red Printed Cotton Kurti",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -122,7 +122,7 @@
     },
     {
       "id": "1526",
-      "imagePath": "/images/inspiration/three_piece_suit.webp",
+      "imagePath": "",
       "productName": "Park Avenue Women Black Trousers",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -163,7 +163,7 @@
     },
     {
       "id": "1527",
-      "imagePath": "/images/inspiration/coord_set.webp",
+      "imagePath": "",
       "productName": "Raymond Men White Formal Cotton Shirt",
       "gender": "Men",
       "masterCategory": "Apparel",
@@ -204,7 +204,7 @@
     },
     {
       "id": "1528",
-      "imagePath": "/images/inspiration/half_saree.webp",
+      "imagePath": "",
       "productName": "FabAlley Women Navy Blue A-Line Dress",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -245,7 +245,7 @@
     },
     {
       "id": "1529",
-      "imagePath": "/images/inspiration/womens_shirt.webp",
+      "imagePath": "",
       "productName": "Fabindia Emerald Green Silk Saree",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -287,7 +287,7 @@
     },
     {
       "id": "1530",
-      "imagePath": "/images/inspiration/mens_formal_shirt.webp",
+      "imagePath": "",
       "productName": "Louis Philippe Men Charcoal Slim Fit Blazer",
       "gender": "Men",
       "masterCategory": "Apparel",
@@ -329,7 +329,7 @@
     },
     {
       "id": "1531",
-      "imagePath": "/images/inspiration/mens_casual_shirt.webp",
+      "imagePath": "",
       "productName": "Zivame Women Pink Satin Nightdress",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -370,7 +370,7 @@
     },
     {
       "id": "1541",
-      "imagePath": "/images/inspiration/mens_casual_shirt.webp",
+      "imagePath": "",
       "productName": "Manyavar Men Maroon Embroidered Sherwani",
       "gender": "Men",
       "masterCategory": "Apparel",
@@ -411,7 +411,7 @@
     },
     {
       "id": "1542",
-      "imagePath": "/images/inspiration/mens_formal_shirt.webp",
+      "imagePath": "",
       "productName": "Anita Dongre Crimson Zardozi Bridal Lehenga",
       "gender": "Women",
       "masterCategory": "Apparel",
@@ -497,13 +497,13 @@
       "gender": "Women",
       "masterCategory": "Apparel",
       "subCategory": "Inspiration Garment",
-      "articleType": "Lehenga",
+      "articleType": "Lehenga Choli",
       "baseColour": "Custom Palette",
       "season": "All Season",
       "usage": "Bespoke Couture",
       "tags": [
         "bridal lehenga",
-        "lehenga",
+        "lehenga choli",
         "women",
         "bespoke",
         "custom"
@@ -813,12 +813,13 @@
       "gender": "Men",
       "masterCategory": "Apparel",
       "subCategory": "Inspiration Garment",
-      "articleType": "Blazer",
+      "articleType": "Suit",
       "baseColour": "Custom Palette",
       "season": "All Season",
       "usage": "Bespoke Couture",
       "tags": [
         "mens blazer",
+        "suit",
         "blazer",
         "men",
         "bespoke",
@@ -852,13 +853,13 @@
       "gender": "Men",
       "masterCategory": "Apparel",
       "subCategory": "Inspiration Garment",
-      "articleType": "Custom Garment",
+      "articleType": "Shirt",
       "baseColour": "Custom Palette",
       "season": "All Season",
       "usage": "Bespoke Couture",
       "tags": [
         "mens casual shirt",
-        "custom garment",
+        "shirt",
         "men",
         "bespoke",
         "custom"
@@ -890,13 +891,13 @@
       "gender": "Men",
       "masterCategory": "Apparel",
       "subCategory": "Inspiration Garment",
-      "articleType": "Custom Garment",
+      "articleType": "Shirt",
       "baseColour": "Custom Palette",
       "season": "All Season",
       "usage": "Bespoke Couture",
       "tags": [
         "mens formal shirt",
-        "custom garment",
+        "shirt",
         "men",
         "bespoke",
         "custom"
@@ -963,7 +964,7 @@
       "id": "builtin_sherwani_png",
       "imagePath": "/images/inspiration/sherwani.webp",
       "productName": "SHERWANI",
-      "gender": "Women",
+      "gender": "Men",
       "masterCategory": "Apparel",
       "subCategory": "Inspiration Garment",
       "articleType": "Sherwani",
@@ -973,7 +974,7 @@
       "tags": [
         "sherwani",
         "sherwani",
-        "women",
+        "men",
         "bespoke",
         "custom"
       ],
@@ -1001,7 +1002,7 @@
       "id": "builtin_three_piece_suit_png",
       "imagePath": "/images/inspiration/three_piece_suit.webp",
       "productName": "THREE PIECE SUIT",
-      "gender": "Women",
+      "gender": "Men",
       "masterCategory": "Apparel",
       "subCategory": "Inspiration Garment",
       "articleType": "Suit",
@@ -1011,7 +1012,7 @@
       "tags": [
         "three piece suit",
         "suit",
-        "women",
+        "men",
         "bespoke",
         "custom"
       ],

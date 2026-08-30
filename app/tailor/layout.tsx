@@ -224,14 +224,9 @@ export default function TailorLayout({
       <main
         id="main-content"
         tabIndex={-1}
-        className="flex-1 min-h-[calc(100vh-4rem)] md:min-h-screen bg-background relative overflow-y-auto z-10"
+        className="flex-1 min-h-[calc(100vh-4rem)] md:min-h-screen bg-background relative overflow-y-auto"
       >
-        {/* Visual background gradient elements */}
-        <div className="absolute inset-0 z-0 opacity-5 pointer-events-none" aria-hidden="true">
-          <div className="absolute top-10 left-10 w-96 h-96 rounded-full bg-radial from-rust/30 to-transparent blur-3xl" />
-          <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-radial from-terracotta/30 to-transparent blur-3xl" />
-        </div>
-        <div className="relative z-10 p-6 md:p-10 container mx-auto max-w-5xl">
+        <div className="p-6 md:p-10 container mx-auto max-w-5xl">
           {children}
         </div>
       </main>

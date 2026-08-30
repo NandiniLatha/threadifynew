@@ -77,7 +77,7 @@ export default function TailorRequestDetails() {
         // Check if tailor already placed a quote — explicit columns only
         const { data: quoteData, error: quoteError } = await supabase
           .from("quotations")
-          .select("id, price, delivery_days, note, status")
+          .select("id, price, estimated_days, note, status")
           .eq("request_id", id)
           .eq("tailor_id", user.id)
           .single()

@@ -64,20 +64,46 @@ export interface GarmentSuggestions {
   dynamicQuotes: DynamicQuoteItem[];
 }
 
+export type VisionDetectionStatus = "CLEAR_GARMENT" | "UNCLEAR_IMAGE" | "NO_GARMENT";
+
+export type WearerCategory = "Men's Wear" | "Women's Wear" | "Kids Wear" | "Unisex" | "Unknown";
+export type StyleCategory = "Ethnic Wear" | "Western Wear" | "Indo-Western" | "Unknown";
+export type SleeveAttribute = "Sleeveless" | "Short Sleeve" | "Half Sleeve" | "3/4 Sleeve" | "Full Sleeve" | "Unknown";
+export type NecklineAttribute = "Round" | "V-Neck" | "Boat Neck" | "Square Neck" | "Collar" | "High Neck" | "Sweetheart" | "Unknown";
+export type FitAttribute = "Regular" | "Slim" | "Loose" | "Relaxed" | "Flared" | "Unknown";
+export type LengthAttribute = "Short" | "Knee" | "Midi" | "Ankle" | "Full Length" | "Unknown";
+export type PatternAttribute = "Plain" | "Printed" | "Striped" | "Checked" | "Floral" | "Geometric" | "Embroidered" | "Embellished" | "Unknown";
+export type WorkAttribute = "Embroidery" | "Zari" | "Beading" | "Sequins" | "Print" | "Applique" | "Plain" | "Unknown";
+export type ComplexityGrade = "Basic" | "Moderate" | "Detailed" | "Bridal";
+export type OccasionType = "Casual" | "Formal" | "Festive" | "Party" | "Wedding" | "Bridal" | "Traditional" | "Everyday" | "Unknown";
+
 export interface VisionAnalysisResult {
   garmentType: string;
   category: string;
   gender: string;
   colour: string;
+  colors?: string[];
   pattern: string;
   sleeveType: string;
+  sleeves?: SleeveAttribute;
   neckline: string;
   style: string;
+  wearerCategory?: WearerCategory;
+  styleCategory?: StyleCategory;
+  fit?: FitAttribute;
+  length?: LengthAttribute;
+  work?: WorkAttribute;
   complexity: string;
+  occasion?: OccasionType;
+  tailoringRequirements?: string[];
   confidenceScore: number;
   labels: string[];
   matchedGarments: GarmentSimilarityMatch[];
   suggestions: GarmentSuggestions;
+  detectionStatus?: VisionDetectionStatus;
+  userMessage?: string;
+  classifierSource?: string;
+  isConfident?: boolean;
 }
 
 export interface GarmentIndexCache {

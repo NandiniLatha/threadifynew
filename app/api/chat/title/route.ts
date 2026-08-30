@@ -9,8 +9,6 @@ import { createClient } from "@supabase/supabase-js"
 
 export const runtime = "edge"
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-
 export async function POST(req: Request) {
   try {
     const { userMessage, assistantReply, conversationId, userId } = await req.json()
@@ -23,6 +21,7 @@ export async function POST(req: Request) {
 
     // Only call OpenAI if key is configured
     if (process.env.OPENAI_API_KEY && !process.env.OPENAI_API_KEY.startsWith("sk-your")) {
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         max_tokens: 12,
@@ -42,7 +41,7 @@ export async function POST(req: Request) {
       title = completion.choices[0]?.message?.content?.trim() || title
     } else {
       // Mock title from user message
-      const words = userMessage.split(" ").slice(0, 4).join(" ")
+      const words = (userMessage || "New Chat").split(" ").slice(0, 4).join(" ")
       title = words.length > 3 ? words + "…" : words
     }
 

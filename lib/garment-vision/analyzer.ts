@@ -28,14 +28,14 @@ function deriveGarmentAttributes(labels: string[], matchedGarment?: any) {
   const labelText = (labels || []).join(" ").toLowerCase();
 
   let garmentType = matchedGarment?.articleType || "Custom Garment";
-  let category = matchedGarment?.subCategory || "Indian Traditional Wear";
-  let gender = matchedGarment?.gender || "Women";
+  let category = matchedGarment?.subCategory || "Custom Apparel";
+  let gender = matchedGarment?.gender || "Unknown";
   let colour = matchedGarment?.baseColour || "Custom Palette";
   let pattern = "Unknown";
   let sleeveType = "Unknown";
   let neckline = "Unknown";
-  let style = "Traditional";
-  let complexity = matchedGarment?.complexity || "Moderate";
+  let style = "Custom Style";
+  let complexity = matchedGarment?.complexity || "Basic";
 
   // Distinguish Indian Traditional & Contemporary Garments
   if (

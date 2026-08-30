@@ -49,7 +49,7 @@ function callOllamaNative(url: string, payload: any): Promise<string> {
         "Content-Type": "application/json",
         "Content-Length": Buffer.byteLength(dataString),
       },
-      timeout: 0,
+      timeout: 3000,
     };
 
     const req = http.request(options, (res) => {
@@ -62,6 +62,11 @@ function callOllamaNative(url: string, payload: any): Promise<string> {
           reject(new Error(`Ollama returned status ${res.statusCode}: ${body}`));
         }
       });
+    });
+
+    req.on("timeout", () => {
+      req.destroy();
+      reject(new Error("Ollama request timed out"));
     });
 
     req.on("error", (err) => reject(err));

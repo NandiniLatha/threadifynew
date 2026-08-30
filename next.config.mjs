@@ -74,6 +74,17 @@ const nextConfig = {
       },
     ];
   },
+
+  // ─── Webpack Configuration for ONNX / Transformers ───────────────────────
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      sharp$: false,
+      "onnxruntime-node$": false,
+    };
+    return config;
+  },
 };
 
 export default nextConfig;
+
