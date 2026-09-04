@@ -2,8 +2,8 @@
 
 import React, { useState, useMemo, useCallback } from "react"
 import { Search, Star, Sparkles, TrendingUp, Trophy, Zap, Clock } from "lucide-react"
-import DesignerCard from "@/components/explore/DesignerCard"
-import EmptyState from "@/components/explore/EmptyState"
+import DesignerCard from "@/components/shared/explore/DesignerCard"
+import EmptyState from "@/components/shared/explore/EmptyState"
 import { TailorConfig, CATEGORIES } from "@/lib/data/tailor-config"
 import Image from "next/image"
 import Link from "next/link"
