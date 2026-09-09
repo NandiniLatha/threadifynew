@@ -177,7 +177,7 @@ function deriveGarmentAttributes(labels: string[], matchedGarment?: any) {
 export async function analyzeInspirationImage(
   options: AnalyzeOptions
 ): Promise<VisionAnalysisResult> {
-  const initialLabels = options.labels || ["Bespoke Garment", "Designer Wear", "Tailored Apparel"];
+  const initialLabels = options.labels || [];
   const g = options.graniteDetection;
 
   // 1. Compare with Garment Vision Library
@@ -190,17 +190,19 @@ export async function analyzeInspirationImage(
   // 2. Extract Garment Attributes
   const derived = deriveGarmentAttributes(initialLabels, bestMatch);
 
+  const isVisionFailure = !g && (!initialLabels || initialLabels.length === 0);
+
   // Overlay Granite's actual AI vision detection when available and valid
-  const garmentType = (g?.garmentType && g.garmentType !== "Unknown") ? g.garmentType : derived.garmentType;
-  const category = (g?.category && g.category !== "Unknown") ? g.category : derived.category;
-  const gender = (g?.gender && g.gender !== "Unknown") ? g.gender : derived.gender;
-  const colour = (g?.colour && g.colour !== "Unknown") ? g.colour : derived.colour;
-  const pattern = (g?.pattern && g.pattern !== "Unknown") ? g.pattern : derived.pattern;
-  const sleeveType = (g?.sleeveType && g.sleeveType !== "Unknown") ? g.sleeveType : derived.sleeveType;
-  const neckline = (g?.neckline && g.neckline !== "Unknown") ? g.neckline : derived.neckline;
-  const style = (g?.style && g.style !== "Unknown") ? g.style : derived.style;
-  const complexity = (g?.complexity && g.complexity !== "Unknown") ? g.complexity : derived.complexity;
-  const confidenceScore = g?.confidenceScore ? Math.min(1, Math.max(0, g.confidenceScore / 100)) : 0.94;
+  const garmentType = isVisionFailure ? "Unknown" : ((g?.garmentType && g.garmentType !== "Unknown") ? g.garmentType : derived.garmentType);
+  const category = isVisionFailure ? "Unknown" : ((g?.category && g.category !== "Unknown") ? g.category : derived.category);
+  const gender = isVisionFailure ? "Unknown" : ((g?.gender && g.gender !== "Unknown") ? g.gender : derived.gender);
+  const colour = isVisionFailure ? "Unknown" : ((g?.colour && g.colour !== "Unknown") ? g.colour : derived.colour);
+  const pattern = isVisionFailure ? "Unknown" : ((g?.pattern && g.pattern !== "Unknown") ? g.pattern : derived.pattern);
+  const sleeveType = isVisionFailure ? "Unknown" : ((g?.sleeveType && g.sleeveType !== "Unknown") ? g.sleeveType : derived.sleeveType);
+  const neckline = isVisionFailure ? "Unknown" : ((g?.neckline && g.neckline !== "Unknown") ? g.neckline : derived.neckline);
+  const style = isVisionFailure ? "Unknown" : ((g?.style && g.style !== "Unknown") ? g.style : derived.style);
+  const complexity = isVisionFailure ? "Unknown" : ((g?.complexity && g.complexity !== "Unknown") ? g.complexity : derived.complexity);
+  const confidenceScore = isVisionFailure ? 0.0 : (g?.confidenceScore ? Math.min(1, Math.max(0, g.confidenceScore / 100)) : 0.85);
 
   // 3. Fabric Recommendations
   const suggestedFabric = bestMatch?.fabricRecommendations || [
@@ -283,7 +285,7 @@ export async function analyzeInspirationImage(
     style,
     complexity,
     confidenceScore,
-    labels: enrichedLabels.length > 0 ? enrichedLabels : [garmentType, category, colour],
+    labels: enrichedLabels,
     matchedGarments,
     suggestions,
   };

@@ -81,7 +81,7 @@ export default function CustomerMessages() {
           orderId:     req.id,
           tailorName:  req.tailor?.name    ?? "Tailor",
           tailorRating: Number(req.tailor?.tailor_profiles?.[0]?.avg_rating ?? 5.0),
-          garmentType: req.ai_tags?.[0]   ?? "Custom Garment",
+          garmentType: req.ai_tags?.[0]   ?? "Custom Clothing",
           image_url:   req.image_url      ?? "",
           status:      req.status         ?? "paid",
           lastActivity: req.created_at

@@ -22,6 +22,27 @@ export default function InspirationGalleryPage() {
   const [loadedImages, setLoadedImages] = React.useState<Record<string, boolean>>({})
   const [savedItems, setSavedItems] = React.useState<Record<string, boolean>>({})
   const [likedItems, setLikedItems] = React.useState<Record<string, boolean>>({})
+  const [isSyncing, setIsSyncing] = React.useState<Record<string, boolean>>({})
+
+  React.useEffect(() => {
+    async function loadSavedInspirations() {
+      try {
+        const response = await fetch('/api/wishlist/inspiration')
+        if (response.ok) {
+          const { savedIds } = await response.json()
+          const savedMap: Record<string, boolean> = {}
+          savedIds.forEach((id: string) => {
+            savedMap[id] = true
+          })
+          setSavedItems(savedMap)
+          setLikedItems(savedMap) // Treat liked and saved as the same for this flow
+        }
+      } catch (err) {
+        console.error("Failed to load saved inspirations", err)
+      }
+    }
+    loadSavedInspirations()
+  }, [])
 
   const filteredItems = inspirationGallery.filter((item) => {
     const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -44,15 +65,41 @@ export default function InspirationGalleryPage() {
     }
   }, [selectedImage])
 
-  const toggleSave = (e: React.MouseEvent, id: string) => {
+  const toggleSave = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation()
-    setSavedItems(prev => ({ ...prev, [id]: !prev[id] }))
+    if (isSyncing[id]) return
+
+    const isCurrentlySaved = savedItems[id]
+    const action = isCurrentlySaved ? 'unsave' : 'save'
+
+    // Optimistic update
+    setSavedItems(prev => ({ ...prev, [id]: !isCurrentlySaved }))
+    setLikedItems(prev => ({ ...prev, [id]: !isCurrentlySaved }))
+    setIsSyncing(prev => ({ ...prev, [id]: true }))
+
+    try {
+      const response = await fetch('/api/wishlist/inspiration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inspirationId: id, action })
+      })
+
+      if (!response.ok) {
+        // Revert on failure
+        setSavedItems(prev => ({ ...prev, [id]: isCurrentlySaved }))
+        setLikedItems(prev => ({ ...prev, [id]: isCurrentlySaved }))
+      }
+    } catch (err) {
+      console.error("Failed to toggle save state", err)
+      // Revert on error
+      setSavedItems(prev => ({ ...prev, [id]: isCurrentlySaved }))
+      setLikedItems(prev => ({ ...prev, [id]: isCurrentlySaved }))
+    } finally {
+      setIsSyncing(prev => ({ ...prev, [id]: false }))
+    }
   }
 
-  const toggleLike = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation()
-    setLikedItems(prev => ({ ...prev, [id]: !prev[id] }))
-  }
+  const toggleLike = toggleSave // Map both like and save to the same function for this flow
 
   return (
     <div className="min-h-screen bg-white dark:bg-black relative selection:bg-orange-500/20 selection:text-orange-600 font-sans">

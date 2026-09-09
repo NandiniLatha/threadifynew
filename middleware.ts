@@ -101,7 +101,7 @@ export async function middleware(request: NextRequest) {
     // Route Enforcement
     if (isDashboardRoute && role !== "customer") {
       const url = request.nextUrl.clone()
-      url.pathname = role === "tailor" ? "/tailor/requests" : role === "admin" ? "/admin" : "/login"
+      url.pathname = role === "tailor" ? "/tailor" : role === "admin" ? "/admin" : "/login"
       return NextResponse.redirect(url)
     }
 
@@ -113,7 +113,7 @@ export async function middleware(request: NextRequest) {
 
     if (isAdminRoute && role !== "admin") {
       const url = request.nextUrl.clone()
-      url.pathname = role === "tailor" ? "/tailor/requests" : "/dashboard"
+      url.pathname = role === "tailor" ? "/tailor" : "/dashboard"
       return NextResponse.redirect(url)
     }
   }
@@ -124,7 +124,7 @@ export async function middleware(request: NextRequest) {
     // role was already fetched above — reuse it, no second DB call
     if (role) {
       const url = request.nextUrl.clone()
-      url.pathname = role === "tailor" ? "/tailor/requests" : role === "admin" ? "/admin" : "/dashboard"
+      url.pathname = role === "tailor" ? "/tailor" : role === "admin" ? "/admin" : "/dashboard"
       return NextResponse.redirect(url)
     }
   }

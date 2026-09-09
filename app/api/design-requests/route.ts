@@ -29,7 +29,10 @@ export async function POST(request: Request) {
       budgetMax,
       deadline,
       notes,
+      customization,
       isDraft,
+      tailorId,
+      draftId,
     } = await request.json()
 
     // Accept either a base64 data URI (user upload) or a direct URL (inspiration gallery)
@@ -66,6 +69,16 @@ export async function POST(request: Request) {
       }
     }
 
+    // Combine customization into notes
+    let combinedNotes = notes || "";
+    if (customization && Object.keys(customization).length > 0) {
+      const customString = Object.entries(customization)
+        .filter(([_, v]) => v)
+        .map(([k, v]) => `${k.toUpperCase()}: ${v}`)
+        .join(' | ');
+      combinedNotes = combinedNotes ? `[Customization: ${customString}]\n\n${combinedNotes}` : `[Customization: ${customString}]`;
+    }
+
     if (isDraft) {
       // Save in wishlist_items table
       const { error } = await supabase.from("wishlist_items").insert({
@@ -75,7 +88,7 @@ export async function POST(request: Request) {
         budget_min: budgetMin ? parseFloat(budgetMin) : null,
         budget_max: budgetMax ? parseFloat(budgetMax) : null,
         deadline: deadline || null,
-        notes: notes || "",
+        notes: combinedNotes,
       })
 
       if (error) {
@@ -100,12 +113,23 @@ export async function POST(request: Request) {
         budget_min: parseFloat(budgetMin),
         budget_max: parseFloat(budgetMax),
         deadline: deadline,
-        status: "pending_bids",
-        notes: notes || "",
+        // Direct commission: assign immediately to the chosen tailor
+        // General broadcast: leave tailor_id null and open to all bids
+        tailor_id: tailorId || null,
+        status: tailorId ? "assigned" : "pending_bids",
+        notes: combinedNotes,
       })
 
       if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 })
+      }
+
+      // If this request originated from a saved draft, clean up the original draft safely
+      if (draftId) {
+        await supabase
+          .from("wishlist_items")
+          .delete()
+          .match({ id: draftId, customer_id: user.id })
       }
 
       return NextResponse.json({ success: true, message: "Design request submitted successfully!" })

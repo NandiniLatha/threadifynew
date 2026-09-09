@@ -143,7 +143,7 @@ export default function CustomerRequests() {
                 <div className="flex-1 min-w-0 space-y-3">
                   <div className="flex items-start justify-between gap-3 flex-wrap">
                     <h2 className="text-sm font-bold text-foreground truncate">
-                      {req.ai_tags[0] || "Custom Garment Request"}
+                      {req.ai_tags[0] || "Custom Clothing Request"}
                     </h2>
                     <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${color} shrink-0`}>
                       {label}

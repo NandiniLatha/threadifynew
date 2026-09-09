@@ -20,8 +20,11 @@ import {
   Scissors,
   Layers,
   ArrowRight,
+  UserCheck,
+  BadgeCheck,
 } from "lucide-react"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
+import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { getInspirationById, type InspirationItem } from "@/lib/data/inspiration-gallery"
 import { motion, AnimatePresence } from "framer-motion"
@@ -30,6 +33,59 @@ import { duration, easing } from "@/lib/motion"
 
 import { useGarmentClassifier } from "@/hooks/useGarmentClassifier"
 import { useFashionRag } from "@/hooks/useFashionRag"
+
+const options = {
+  fabric: {
+    title: "Fabric",
+    customLabel: "+ Custom Fabric",
+    placeholder: "Enter fabric name",
+    items: ["Silk", "Cotton", "Linen", "Velvet", "Wool Blend"],
+  },
+  color: {
+    title: "Color",
+    customLabel: "+ Custom Color",
+    placeholder: "Enter preferred color",
+    items: ["Midnight Blue", "Crimson Red", "Emerald Green", "Ivory White", "Charcoal"],
+  },
+  pattern: {
+    title: "Pattern",
+    customLabel: "+ Custom Pattern",
+    placeholder: "Enter preferred pattern",
+    items: ["Solid", "Floral", "Geometric", "Striped", "Paisley"],
+  },
+  style: {
+    title: "Cut & Style",
+    customLabel: "+ Custom Style",
+    placeholder: "Enter preferred style",
+    items: ["A-Line", "Straight Cut", "Anarkali", "Lehenga", "Indo-Western", "Gown"],
+  },
+  sleeve: {
+    title: "Sleeves",
+    customLabel: "+ Custom Sleeve",
+    placeholder: "Enter sleeve style (e.g. Butterfly, Cape)",
+    items: ["Sleeveless", "Short", "Three-Quarter", "Full Length", "Bell"],
+  },
+  collar: {
+    title: "Collar / Neckline",
+    customLabel: "+ Custom Neckline",
+    placeholder: "Enter neckline style",
+    items: ["V-Neck", "Round", "Mandarin", "Sweetheart", "High Neck"],
+  },
+  size: {
+    title: "Size",
+    customLabel: "+ Custom Size",
+    placeholder: "Enter your size",
+    items: ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"],
+  },
+  fit: {
+    title: "Fit",
+    customLabel: "+ Custom Fit",
+    placeholder: "Enter fit preference",
+    items: ["Slim Fit", "Regular Fit", "Loose Fit", "Oversized", "Tailored Fit"],
+  },
+};
+
+type OptionCategory = keyof typeof options;
 
 function DesignStudio() {
   const searchParams = useSearchParams()
@@ -47,8 +103,55 @@ function DesignStudio() {
   const [deadline, setDeadline] = React.useState("")
   const [notes, setNotes] = React.useState("")
 
+  // Customization Options
+  const [selectedOptions, setSelectedOptions] = React.useState<Record<OptionCategory, string>>({
+    fabric: "Silk",
+    color: "Midnight Blue",
+    pattern: "Solid",
+    style: "A-Line",
+    sleeve: "Sleeveless",
+    collar: "V-Neck",
+    size: "M",
+    fit: "Tailored Fit",
+  })
+  const [customValues, setCustomValues] = React.useState<Record<OptionCategory, string>>({
+    fabric: "",
+    color: "",
+    pattern: "",
+    style: "",
+    sleeve: "",
+    collar: "",
+    size: "",
+    fit: "",
+  })
+
+  // Helper to resolve the final value (custom or predefined)
+  const getResolvedValue = (category: OptionCategory): string => {
+    const sel = selectedOptions[category]
+    const customLabel = options[category].customLabel
+    if (sel === customLabel) {
+      const customVal = customValues[category]?.trim()
+      return customVal ? customVal.slice(0, 100) : customLabel.replace("+ ", "")
+    }
+    return sel
+  }
+
+  const handleSelectOption = (category: OptionCategory, value: string) => {
+    setSelectedOptions((prev) => ({ ...prev, [category]: value }))
+  }
+
+  const handleCustomInputChange = (category: OptionCategory, val: string) => {
+    const trimmedVal = val.slice(0, 100)
+    setCustomValues((prev) => ({ ...prev, [category]: trimmedVal }))
+  }
+
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [statusMsg, setStatusMsg] = React.useState<{ type: "success" | "error" | "info"; text: string } | null>(null)
+
+  // Preferred tailor commissioning
+  const [preferredTailorId, setPreferredTailorId] = React.useState<string | null>(null)
+  const [preferredTailorName, setPreferredTailorName] = React.useState<string | null>(null)
+  const [isFetchingTailor, setIsFetchingTailor] = React.useState(false)
 
   // Custom Hooks for Vision & RAG orchestration
   const {
@@ -66,18 +169,70 @@ function DesignStudio() {
 
   // Tracks which inspiration item was pre-loaded (if any) for the banner display
   const [inspirationItem, setInspirationItem] = React.useState<InspirationItem | null>(null)
+  
+  // Tracks if we are loading a draft
+  const [isDraftLoading, setIsDraftLoading] = React.useState(false)
+  const [loadedDraftId, setLoadedDraftId] = React.useState<string | null>(null)
 
-  // On mount: read ?inspiration= query param and pre-fill if valid
+  // On mount: read query params and pre-fill accordingly
   React.useEffect(() => {
+    // Handle ?inspiration= param
     const inspirationId = searchParams.get("inspiration")
-    if (!inspirationId) return
+    if (inspirationId) {
+      const item = getInspirationById(inspirationId)
+      if (item) {
+        setInspirationItem(item)
+        setImagePreview(item.image)
+        setTags(item.tags)
+      }
+    }
 
-    const item = getInspirationById(inspirationId)
-    if (!item) return
+    // Handle ?preferredTailor= param
+    const tailorId = searchParams.get("preferredTailor")
+    if (tailorId) {
+      setPreferredTailorId(tailorId)
+      setIsFetchingTailor(true)
 
-    setInspirationItem(item)
-    setImagePreview(item.image)
-    setTags(item.tags)
+      const supabase = createClient()
+      supabase
+        .from("tailor_profiles")
+        .select("user:users!user_id(name)")
+        .eq("user_id", tailorId)
+        .single()
+        .then(({ data, error }) => {
+          if (error || !data) {
+            setPreferredTailorName("Selected Tailor")
+          } else {
+            const name = (data.user as { name?: string | null } | null)?.name
+            setPreferredTailorName(name ?? "Selected Tailor")
+          }
+          setIsFetchingTailor(false)
+        })
+    }
+
+    // Handle ?draftId= param
+    const draftId = searchParams.get("draftId")
+    if (draftId) {
+      setLoadedDraftId(draftId)
+      setIsDraftLoading(true)
+      const supabase = createClient()
+      supabase
+        .from("wishlist_items")
+        .select("*")
+        .eq("id", draftId)
+        .single()
+        .then(({ data, error }) => {
+          if (!error && data) {
+            setImagePreview(data.image_url)
+            if (data.ai_tags) setTags(data.ai_tags)
+            if (data.budget_min) setBudgetMin(data.budget_min.toString())
+            if (data.budget_max) setBudgetMax(data.budget_max.toString())
+            if (data.deadline) setDeadline(data.deadline)
+            if (data.notes) setNotes(data.notes)
+          }
+          setIsDraftLoading(false)
+        })
+    }
   }, [searchParams])
 
   // Drag handlers
@@ -155,7 +310,7 @@ function DesignStudio() {
     setStatusMsg(null)
     setInspirationItem(null)
     setImagePreview("/images/features/feature_1_ai_scan.webp")
-    setTags(["Custom Garment", "Streetwear", "Bespoke Request"])
+    setTags(["Custom Clothing", "Streetwear", "Bespoke Request"])
     setUrlInput("")
   }
 
@@ -205,7 +360,20 @@ function DesignStudio() {
           budgetMax: budgetMax || "0",
           deadline: deadline || "",
           notes,
+          customization: {
+            fabric: getResolvedValue("fabric"),
+            color: getResolvedValue("color"),
+            pattern: getResolvedValue("pattern"),
+            style: getResolvedValue("style"),
+            sleeve: getResolvedValue("sleeve"),
+            collar: getResolvedValue("collar"),
+            size: getResolvedValue("size"),
+            fit: getResolvedValue("fit"),
+          },
           isDraft,
+          draftId: loadedDraftId,
+          // Include tailorId for direct commissions (live submissions only; drafts go to wishlist_items which has no tailor_id)
+          ...(!isDraft && preferredTailorId ? { tailorId: preferredTailorId } : {}),
         }),
       })
 
@@ -215,6 +383,8 @@ function DesignStudio() {
           type: "success",
           text: isDraft
             ? "Draft successfully saved to your wishlist!"
+            : preferredTailorId && preferredTailorName
+            ? `Your commission has been sent directly to ${preferredTailorName}. They will review your specifications and respond shortly.`
             : "Design request submitted! Matched tailors have been notified and will review your specifications.",
         })
         if (!isDraft) {
@@ -270,12 +440,45 @@ function DesignStudio() {
             <span>Bespoke Design Studio</span>
           </div>
           <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight text-foreground">
-            Custom Garment Request
+            Custom Clothing Request
           </h1>
           <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
             Upload your inspiration photo. Our vision system inspects garment architecture, silhouette, and craft details to match you with specialized master tailors.
           </p>
         </div>
+
+        {/* Commissioning Banner — shown when a specific tailor is pre-selected */}
+        {(preferredTailorId) && (
+          <div className="mb-4 flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl bg-primary/5 border border-primary/20 text-sm shadow-sm">
+            <div className="flex items-center gap-3 min-w-0">
+              {/* Tailor avatar initial */}
+              <div className="w-8 h-8 rounded-full bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
+                {isFetchingTailor ? (
+                  <Loader2 className="w-3.5 h-3.5 text-primary animate-spin" />
+                ) : (
+                  <span className="font-serif font-bold text-primary text-sm leading-none">
+                    {preferredTailorName?.[0]?.toUpperCase() ?? "T"}
+                  </span>
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-primary/70">Commissioning</span>
+                  <BadgeCheck className="w-3.5 h-3.5 text-primary shrink-0" />
+                </div>
+                <span className="font-semibold text-foreground truncate block">
+                  {isFetchingTailor ? "Loading tailor details…" : (preferredTailorName ?? "Selected Tailor")}
+                </span>
+              </div>
+            </div>
+            <a
+              href={`/tailor/${preferredTailorId}`}
+              className="text-xs font-semibold text-primary hover:text-primary/70 transition-colors shrink-0 hidden sm:inline"
+            >
+              View Profile →
+            </a>
+          </div>
+        )}
 
         {/* Pre-fill banner from gallery */}
         {inspirationItem && (
@@ -595,13 +798,79 @@ function DesignStudio() {
               </div>
             )}
 
-            {/* 4. Production Details & Submission Form */}
-            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4">
+            {/* 3. Customize Design */}
+            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-6">
               <h2 className="text-base font-bold text-foreground flex items-center gap-2">
                 <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold">
                   {process.env.NEXT_PUBLIC_RAG_ENABLED === "true" && ragState.status !== "idle" ? "4" : "3"}
                 </span>
-                <span>Production &amp; Timeline Details</span>
+                <span>Customize Design</span>
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {(Object.keys(options) as OptionCategory[]).map((category) => {
+                  const configGroup = options[category]
+                  const isCustomSelected = selectedOptions[category] === configGroup.customLabel
+                  const allChips = [...configGroup.items, configGroup.customLabel]
+
+                  return (
+                    <div key={category} className="space-y-3">
+                      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        {configGroup.title}
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {allChips.map((opt) => {
+                          const isSelected = selectedOptions[category] === opt
+                          return (
+                            <button
+                              key={opt}
+                              type="button"
+                              onClick={() => handleSelectOption(category, opt)}
+                              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border ${
+                                isSelected
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "bg-background border-border text-foreground hover:border-primary/50"
+                              }`}
+                            >
+                              {opt}
+                            </button>
+                          )
+                        })}
+                      </div>
+
+                      {/* Inline custom value text input */}
+                      <AnimatePresence>
+                        {isCustomSelected && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-hidden pt-2"
+                          >
+                            <input
+                              type="text"
+                              maxLength={100}
+                              value={customValues[category]}
+                              onChange={(e) => handleCustomInputChange(category, e.target.value)}
+                              placeholder={configGroup.placeholder}
+                              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                            />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* 4. Production Details & Submission Form */}
+            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4">
+              <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold">
+                  {process.env.NEXT_PUBLIC_RAG_ENABLED === "true" && ragState.status !== "idle" ? "5" : "4"}
+                </span>
+                <span>Get Your Price</span>
               </h2>
 
               {/* Budget Range */}
@@ -692,7 +961,13 @@ function DesignStudio() {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Submitting Request...
+                      {preferredTailorId ? "Sending Commission…" : "Submitting Request..."}
+                    </>
+                  ) : preferredTailorId && preferredTailorName ? (
+                    <>
+                      <UserCheck className="w-4 h-4 mr-1.5" />
+                      Commission {preferredTailorName.split(" ")[0]}
+                      <ArrowRight className="w-4 h-4 ml-1.5" />
                     </>
                   ) : (
                     <>

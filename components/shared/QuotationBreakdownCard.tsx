@@ -25,7 +25,7 @@ interface QuotationBreakdownCardProps {
  */
 export function QuotationBreakdownCard({ quote, className = "" }: QuotationBreakdownCardProps) {
   const lineItems = [
-    { label: "Base Garment",        amount: quote.base_garment_price    || 0 },
+    { label: "Base Item",        amount: quote.base_garment_price    || 0 },
     { label: "Fabric",              amount: quote.fabric_cost            || 0 },
     { label: "Stitching",           amount: quote.stitching_cost         || 0 },
     { label: "Customization",       amount: quote.customization_charges  || 0 },

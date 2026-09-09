@@ -1,17 +1,16 @@
 "use client";
-import Image from "next/image"
 
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, Package, Clock, Truck, Camera, MapPin } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Package, Clock, Truck, MapPin } from "lucide-react";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 const stages = [
   { id: "confirmed", label: "Order Confirmed", date: "Oct 12, 10:00 AM", completed: true },
-  { id: "fabric", label: "Fabric Purchased", date: "Oct 13, 2:30 PM", completed: true, photos: ["/images/inspiration/three_piece_suit.webp"] },
-  { id: "cutting", label: "Cutting & Pattern", date: "Oct 14, 11:15 AM", completed: true, photos: ["/images/inspiration/kanjeevaram_saree.webp"] },
+  { id: "fabric", label: "Fabric Purchased", date: "Oct 13, 2:30 PM", completed: true },
+  { id: "cutting", label: "Cutting & Pattern", date: "Oct 14, 11:15 AM", completed: true },
   { id: "stitching", label: "Stitching", date: "In Progress", completed: false },
   { id: "quality", label: "Quality Check", date: null, completed: false },
   { id: "packaging", label: "Packaging", date: null, completed: false },
@@ -115,26 +114,6 @@ export default function TrackProductionPage() {
                           <Clock className="w-3.5 h-3.5" /> {stage.date}
                         </p>
                       )}
-                      
-                      {/* Photo Updates */}
-                      <AnimatePresence>
-                        {isCompleted && stage.photos && (
-                          <motion.div 
-                            initial={{ opacity: 0, height: 0, marginTop: 0 }} 
-                            animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
-                            className="flex gap-2 overflow-hidden"
-                          >
-                            {stage.photos.map((photo, pIdx) => (
-                              <div key={pIdx} className="w-20 h-20 rounded-xl overflow-hidden border border-border group relative">
-                                <Image width={400} height={400} src={photo} alt={`${stage.label} update`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
-                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                  <Camera className="w-5 h-5 text-white" />
-                                </div>
-                              </div>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
                     </div>
                   </div>
                 );
@@ -176,7 +155,7 @@ export default function TrackProductionPage() {
 
           <div className="mt-auto bg-muted/20 border border-border rounded-[2rem] p-6 flex flex-col items-center justify-center text-center">
             <Truck className="w-8 h-8 text-muted-foreground mb-3" />
-            <p className="text-sm text-muted-foreground font-medium mb-1">Shipping via Express Courier</p>
+            <p className="text-sm text-muted-foreground font-medium mb-1">Shipping via Delivery Service</p>
             <p className="text-xs text-muted-foreground">Tracking ID will be generated upon Shipped.</p>
           </div>
         </div>

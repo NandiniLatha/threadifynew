@@ -299,7 +299,7 @@ export default function QuotationsPage() {
                         <CheckCircle2 className="w-4 h-4 animate-bounce" /> Accepted
                       </>
                     ) : (
-                      "Accept Quote"
+                      "Accept Price"
                     )}
                   </Button>
                 </div>

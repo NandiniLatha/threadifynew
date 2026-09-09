@@ -21,13 +21,16 @@ import { createNotification } from "@/app/api/notifications/helpers"
 
 const ALLOWED_TRANSITIONS: Record<string, string> = {
   paid:          "cutting",
-  confirmed:     "cutting",
-  measurements_pending: "cutting",
   cutting:       "stitching",
   stitching:     "quality_check",
   quality_check: "ready",
   ready:         "shipped",
-  // Legacy support for old two-step flow
+  shipped:       "delivered",
+  delivered:     "completed",
+  
+  // Legacy support
+  confirmed:     "cutting",
+  measurements_pending: "cutting",
   in_production: "shipped",
 }
 
@@ -59,7 +62,7 @@ export async function POST(
     // Fetch the design request — verify tailor ownership
     const { data: designRequest, error: reqErr } = await supabase
       .from("design_requests")
-      .select("id, status, tailor_id, customer_id")
+      .select("id, status, tailor_id, customer_id, production_evidence_status")
       .eq("id", requestId)
       .single()
 
@@ -74,6 +77,13 @@ export async function POST(
       )
     }
 
+    if (designRequest.production_evidence_status !== "none") {
+      return NextResponse.json(
+        { error: "Cannot advance status while awaiting customer approval or requested changes." },
+        { status: 403 }
+      )
+    }
+
     const currentStatus = designRequest.status
     const nextStatus    = ALLOWED_TRANSITIONS[currentStatus]
 
@@ -82,6 +92,43 @@ export async function POST(
         { error: `No valid transition from status '${currentStatus}'.` },
         { status: 409 }
       )
+    }
+
+    // Enforce payment verification before starting production
+    if (currentStatus === "paid" || currentStatus === "confirmed") {
+      const { data: payment, error: paymentErr } = await supabase
+        .from("payments")
+        .select("id")
+        .eq("order_id", requestId)
+        .eq("payment_status", "completed")
+        .maybeSingle()
+
+      if (paymentErr || !payment) {
+        return NextResponse.json(
+          { error: "Advance payment has not been successfully verified. Cannot start production." },
+          { status: 403 }
+        )
+      }
+    }
+
+    // Enforce that evidence was uploaded and approved for mandatory stages
+    const STAGES_REQUIRING_EVIDENCE = ["cutting", "stitching"]
+    if (STAGES_REQUIRING_EVIDENCE.includes(currentStatus)) {
+      const { data: photos, error: photoErr } = await supabase
+        .from("design_request_images")
+        .select("id")
+        .eq("request_id", requestId)
+        .eq("is_primary", false)
+        .eq("production_stage", currentStatus)
+        .limit(1)
+        .maybeSingle()
+
+      if (photoErr || !photos) {
+        return NextResponse.json(
+          { error: `You must upload progress photos for the '${currentStatus}' stage and receive customer approval before advancing.` },
+          { status: 403 }
+        )
+      }
     }
 
     // Update status

@@ -75,7 +75,7 @@ export default function CustomerPayments() {
             const isReleased = ["delivered", "reviewed"].includes(req.status)
             return {
               id: req.id,
-              garmentName: req.ai_tags?.[0] || "Custom Garment",
+              garmentName: req.ai_tags?.[0] || "Custom Clothing",
               tailorName: "Studio Tailor",
               amount: quote ? Number(quote.price) * 100 : 0,
               status: isReleased ? "released" : "in_escrow",

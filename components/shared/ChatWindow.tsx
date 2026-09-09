@@ -74,8 +74,10 @@ export function ChatWindow({
     loadMessages()
 
     // Realtime Postgres-backed Channel subscription
+    // Use a truly unique name so StrictMode rapid re-mounting doesn't reuse the same string
+    const uniqueChannelName = `chat:${orderId}-${Math.random().toString(36).substring(2)}`
     const channel = supabase
-      .channel(`chat:${orderId}`)
+      .channel(uniqueChannelName)
       .on(
         "postgres_changes",
         {

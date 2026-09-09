@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
+import { GoogleGenAI } from "@google/genai";
 import http from "http";
 import { analyzeInspirationImage, GraniteDetectionResult } from "@/lib/garment-vision/analyzer";
 
-const GARMENT_VISION_PROMPT = `Inspect this clothing/fashion image carefully. Return ONLY a raw JSON object with this exact schema:
+const GARMENT_VISION_PROMPT = `Inspect this clothing/fashion image carefully. Return a JSON object with this exact schema:
 
 {
   "garmentType": "string",
@@ -19,149 +20,52 @@ const GARMENT_VISION_PROMPT = `Inspect this clothing/fashion image carefully. Re
 }
 
 Rules:
-- garmentType: primary visible garment or outfit (e.g. Saree, Half Saree, Lehenga Choli, Salwar Kameez, Anarkali, Kurti, Kurta, Blouse, Gown, Dress, Shirt, T-shirt, Jeans, Skirt, Trousers, Blazer, Suit, Sherwani, Dhoti, Indo-Western, Traditional Wear, Western Wear, Custom Garment, etc.).
-- category: general style category (e.g. Traditional Wear, Western Wear, Indo-Western, Ethnic Wear, Formal Wear, Casual Wear, etc.). Do NOT include gender in category unless the wearer's gender is visually clear.
-- gender: MUST ONLY be "Women" or "Men" if a human model/person of that gender is clearly visible wearing the item. If the image shows only a garment on a hanger, mannequin, flat lay, or if gender cannot be undeniably determined from visual features alone, return "Unknown".
-- colour: visible primary color(s).
-- pattern: pattern if visible, otherwise "Unknown".
-- sleeveType: sleeve style if visible, otherwise "Unknown".
-- neckline: neckline if visible, otherwise "Unknown".
+- Identify the actual visible garment and prioritize it over the background or person.
+- garmentType: primary visible garment or outfit (e.g. Saree, Lehenga Choli, Salwar Kameez, Kurti, Kurta, Sherwani, Dhoti, Suit, Dress, Shirt, T-shirt, Jeans, etc.).
+- category: general style category. Explicitly distinguish between Ethnic/Traditional vs Western/Formal/Casual.
+- gender: MUST ONLY be "Women" or "Men" if a human model of that gender is clearly visible. Do NOT infer gender from the appearance of a person if unclear. If on a hanger/flat lay, return "Unknown".
+- colour, pattern, sleeveType, neckline: describe only when visually supported. Do not invent attributes that cannot be visually determined. Otherwise "Unknown".
 - style: visual style description supported by the image, otherwise "Unknown".
 - complexity: "Simple", "Moderate", or "Elaborate".
-- confidenceScore: integer 0 to 100.
+- confidenceScore: integer 0 to 100. Return low confidence (e.g. < 50) when uncertain.
 - reason: short explanation of the visual evidence used for garment identification.
 
-CRITICAL: Never guess gender or assume gender from the garment category alone. If a person of a clear gender is not wearing the garment in the photo, return "Unknown" for gender.
-
-Return ONLY raw JSON. No markdown backticks. Return "Unknown" for unidentifiable attributes.`;
-
-function callOllamaNative(url: string, payload: any): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const dataString = JSON.stringify(payload);
-    const parsedUrl = new URL(url);
-
-    const options: http.RequestOptions = {
-      hostname: parsedUrl.hostname,
-      port: parsedUrl.port || 11434,
-      path: parsedUrl.pathname,
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Content-Length": Buffer.byteLength(dataString),
-      },
-      timeout: 3000,
-    };
-
-    const req = http.request(options, (res) => {
-      let body = "";
-      res.on("data", (chunk) => (body += chunk));
-      res.on("end", () => {
-        if (res.statusCode === 200) {
-          resolve(body);
-        } else {
-          reject(new Error(`Ollama returned status ${res.statusCode}: ${body}`));
-        }
-      });
-    });
-
-    req.on("timeout", () => {
-      req.destroy();
-      reject(new Error("Ollama request timed out"));
-    });
-
-    req.on("error", (err) => reject(err));
-    req.write(dataString);
-    req.end();
-  });
-}
+Return "Unknown" for unidentifiable attributes.`;
 
 /**
- * Call Cloudflare Workers AI (@cf/meta/llama-3.2-11b-vision-instruct) for production / cloud evaluation
+ * Call Gemini 2.5 Flash-Lite for Vision Analysis
  */
-async function analyzeWithCloudflareVision(base64Data: string): Promise<GraniteDetectionResult | undefined> {
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-  const apiToken = process.env.CLOUDFLARE_API_TOKEN;
-
-  if (!accountId || !apiToken) {
+async function analyzeWithGemini(base64Data: string, mimeType: string): Promise<GraniteDetectionResult | undefined> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  console.log(`[Gemini Route] API Key present: ${!!apiKey}`);
+  
+  if (!apiKey) {
     return undefined;
   }
 
   try {
-    const endpoint = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/@cf/meta/llama-3.2-11b-vision-instruct`;
-    const imageBytes = Array.from(Buffer.from(base64Data, "base64"));
-
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        prompt: GARMENT_VISION_PROMPT,
-        image: imageBytes,
-        max_tokens: 300,
-        temperature: 0.1,
-      }),
-    });
-
-    if (!response.ok) {
-      // 401, 403, 429, or 5xx -> Return undefined safely to trigger fallback without crashing
-      return undefined;
-    }
-
-    const resData = await response.json();
-    const outputText =
-      resData?.result?.description ||
-      resData?.result?.response ||
-      resData?.result?.text ||
-      (typeof resData?.result === "string" ? resData.result : "") ||
-      "";
-
-    const jsonMatch = outputText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      if (parsed && typeof parsed.garmentType === "string") {
-        return {
-          garmentType: parsed.garmentType,
-          category: parsed.category,
-          gender: parsed.gender,
-          colour: parsed.colour,
-          pattern: parsed.pattern,
-          sleeveType: parsed.sleeveType,
-          neckline: parsed.neckline,
-          style: parsed.style,
-          complexity: parsed.complexity,
-          confidenceScore: typeof parsed.confidenceScore === "number" ? parsed.confidenceScore : 90,
-          reason: parsed.reason,
-        };
+    const ai = new GoogleGenAI({ apiKey });
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash-lite",
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { text: GARMENT_VISION_PROMPT },
+            { inlineData: { data: base64Data, mimeType } }
+          ]
+        }
+      ],
+      config: {
+        responseMimeType: "application/json",
       }
-    }
-  } catch {
-    // Fail silently to trigger fallback
-  }
-
-  return undefined;
-}
-
-/**
- * Call Local Ollama Granite 3.2 Vision for local development evaluation
- */
-async function analyzeWithLocalOllama(base64Data: string, ollamaBaseUrl: string): Promise<GraniteDetectionResult | undefined> {
-  try {
-    const responseText = await callOllamaNative(`${ollamaBaseUrl}/api/generate`, {
-      model: "granite3.2-vision:2b",
-      prompt: GARMENT_VISION_PROMPT,
-      images: [base64Data],
-      stream: false,
-      keep_alive: "1h",
     });
 
-    const data = JSON.parse(responseText);
-    const outputText = data.response || "";
+    console.log("[Gemini Raw Response] text:", response.text);
 
-    const jsonMatch = outputText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
+    if (response.text) {
+      const parsed = JSON.parse(response.text);
+      console.log("[Gemini Parsed Object]:", parsed);
       if (parsed && typeof parsed.garmentType === "string") {
         return {
           garmentType: parsed.garmentType,
@@ -176,10 +80,14 @@ async function analyzeWithLocalOllama(base64Data: string, ollamaBaseUrl: string)
           confidenceScore: typeof parsed.confidenceScore === "number" ? parsed.confidenceScore : 85,
           reason: parsed.reason,
         };
+      } else {
+        console.log("[Gemini Validation Failed] Missing garmentType string");
       }
+    } else {
+      console.log("[Gemini Empty Response] response.text is falsy");
     }
-  } catch {
-    // Fail silently to trigger fallback
+  } catch (error) {
+    console.error("[Gemini Vision API Error]", error);
   }
 
   return undefined;
@@ -195,34 +103,12 @@ export async function POST(request: Request) {
       );
     }
 
+    const mimeMatch = imageBase64.match(/^data:(image\/\w+);base64,/);
+    const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
     const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
-    let graniteDetection: GraniteDetectionResult | undefined = undefined;
-
-    const isVercel = Boolean(
-      process.env.VERCEL ||
-      process.env.NEXT_PUBLIC_VERCEL_ENV ||
-      process.env.VERCEL_ENV
-    );
-
-    const hasCloudflareConfig = Boolean(
-      process.env.CLOUDFLARE_ACCOUNT_ID &&
-      process.env.CLOUDFLARE_API_TOKEN
-    );
-
-    const ollamaBaseUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
-
-    if (isVercel) {
-      // PRODUCTION GATEWAY (Vercel Serverless): Use Cloudflare Workers AI directly
-      graniteDetection = await analyzeWithCloudflareVision(base64Data);
-    } else {
-      // LOCAL DEVELOPMENT GATEWAY: Use local Ollama Granite 3.2 Vision first
-      graniteDetection = await analyzeWithLocalOllama(base64Data, ollamaBaseUrl);
-
-      // If local Ollama is offline or fails, attempt Cloudflare Workers AI if credentials are configured
-      if (!graniteDetection && hasCloudflareConfig) {
-        graniteDetection = await analyzeWithCloudflareVision(base64Data);
-      }
-    }
+    
+    // PRIMARY GATEWAY: Gemini 2.5 Flash-Lite
+    let graniteDetection = await analyzeWithGemini(base64Data, mimeType);
 
     let rawLabels: string[] = [];
 
@@ -258,20 +144,12 @@ export async function POST(request: Request) {
             const annotations = result.responses?.[0]?.labelAnnotations || [];
             rawLabels = annotations.map((ann: { description: string }) => ann.description);
           }
-        } catch {
-          // Graceful fallback
+        } catch (error) {
+          console.error("[Google Vision API Error]", error);
         }
       }
 
-      if (rawLabels.length === 0) {
-        rawLabels = [
-          "Coat",
-          "Tailored Suit",
-          "Bespoke Collar",
-          "Linen Pattern",
-          "Fall Wear",
-        ];
-      }
+      // Removed hardcoded fallback labels to avoid inventing fashion tags when vision fails
     }
 
     // Run Garment Vision Library analysis & tag formatting

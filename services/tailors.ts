@@ -55,7 +55,8 @@ export async function getTailors(
         featured, location, experience_years, starting_price,
         response_time_hrs, availability_status, specialty,
         measurement_options, created_at,
-        user:users!user_id (name)
+        user:users!user_id (name),
+        tailor_portfolio_items (public_url)
       `, { count: 'exact' })
       .eq('verification_status', 'approved')
       .order('featured',   { ascending: false })
@@ -89,7 +90,7 @@ export async function getTailors(
       bio:                 t.bio,
       verification_status: t.verification_status,
       avg_rating:          parseFloat(String(t.avg_rating)) || 5.0,
-      portfolio_images:    t.portfolio_images ?? [],
+      portfolio_images:    [...(t.tailor_portfolio_items ?? []).map((i: any) => i.public_url), ...(t.portfolio_images ?? [])],
       featured:            t.featured,
       location:            t.location,
       experience_years:    t.experience_years,
@@ -120,7 +121,8 @@ export async function getTailorById(
       supabase
         .from('tailor_profiles')
         .select(`
-          *, user:users!user_id (name, avatar_url)
+          *, user:users!user_id (name, avatar_url),
+          tailor_portfolio_items (public_url)
         `)
         .eq('user_id', tailorId)
         .single(),
@@ -154,7 +156,7 @@ export async function getTailorById(
       bio:                 t.bio,
       verification_status: t.verification_status,
       avg_rating:          parseFloat(String(t.avg_rating)) || 5.0,
-      portfolio_images:    t.portfolio_images ?? [],
+      portfolio_images:    [...(t.tailor_portfolio_items ?? []).map((i: any) => i.public_url), ...(t.portfolio_images ?? [])],
       featured:            t.featured,
       location:            t.location,
       experience_years:    t.experience_years,

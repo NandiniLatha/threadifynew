@@ -84,7 +84,7 @@ export default function TailorMessages() {
           const customer = customers?.find((c) => c.id === req.customer_id)
           return {
             orderId: req.id,
-            garmentName: req.ai_tags?.[0] || "Custom Garment",
+            garmentName: req.ai_tags?.[0] || "Custom Clothing",
             customerName: customer?.name || "Customer",
             image_url: req.image_url || "",
             status: req.status || "assigned",

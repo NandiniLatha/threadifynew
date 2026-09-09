@@ -42,19 +42,19 @@ function timeAgo(dateStr: string): string {
 
 function getNotifIcon(message: string) {
   const lower = message.toLowerCase()
-  if (lower.includes("quote") || lower.includes("quote") || lower.includes("quotation")) {
+  if (lower.includes("quote") || lower.includes("quotation")) {
     return (
-      <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
-        <svg className="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <div className="w-10 h-10 border border-border/40 rounded-full flex items-center justify-center shrink-0 bg-muted/20">
+        <svg className="w-4 h-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       </div>
     )
   }
-  if (lower.includes("ship") || lower.includes("deliver") || lower.includes("Shipped")) {
+  if (lower.includes("ship") || lower.includes("deliver") || lower.includes("shipped")) {
     return (
-      <div className="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
-        <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <div className="w-10 h-10 border border-border/40 rounded-full flex items-center justify-center shrink-0 bg-muted/20">
+        <svg className="w-4 h-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path d="M1 3h15v13H1zm15 4h4l3 3v6h-7V7z" /><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
         </svg>
       </div>
@@ -62,8 +62,8 @@ function getNotifIcon(message: string) {
   }
   if (lower.includes("message") || lower.includes("chat")) {
     return (
-      <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-        <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <div className="w-10 h-10 border border-border/40 rounded-full flex items-center justify-center shrink-0 bg-muted/20">
+        <svg className="w-4 h-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
         </svg>
       </div>
@@ -71,16 +71,16 @@ function getNotifIcon(message: string) {
   }
   if (lower.includes("order") || lower.includes("paid") || lower.includes("payment")) {
     return (
-      <div className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
-        <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <div className="w-10 h-10 border border-border/40 rounded-full flex items-center justify-center shrink-0 bg-muted/20">
+        <svg className="w-4 h-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       </div>
     )
   }
   return (
-    <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
-      <Bell className="w-4 h-4 text-muted-foreground" />
+    <div className="w-10 h-10 border border-border/40 rounded-full flex items-center justify-center shrink-0 bg-muted/20">
+      <Bell className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
     </div>
   )
 }
@@ -174,25 +174,19 @@ export default function NotificationsPage() {
     : notifications
 
   return (
-    <div className="space-y-8 max-w-2xl mx-auto">
+    <div className="space-y-10 max-w-3xl mx-auto">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-end justify-between gap-4 pb-6 border-b border-border/40">
         <div>
-          <h1 className="font-serif text-3xl font-bold text-foreground flex items-center gap-3">
-            <Bell className="w-7 h-7 text-primary" />
+          <h1 className="font-serif text-3xl font-bold text-foreground">
             Notifications
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Stay updated on quotes, order progress, and messages.
-          </p>
         </div>
         {unreadCount > 0 && (
-          <Button
-            variant="outline"
-            size="sm"
+          <button
             onClick={markAllRead}
             disabled={isMarkingAll}
-            className="shrink-0 rounded-xl border-border font-semibold gap-2 h-9"
+            className="text-xs font-bold uppercase tracking-widest text-primary hover:underline transition-all flex items-center gap-2"
           >
             {isMarkingAll ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -200,27 +194,33 @@ export default function NotificationsPage() {
               <CheckCheck className="w-3.5 h-3.5" />
             )}
             Mark all read
-          </Button>
+          </button>
         )}
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex gap-2">
+      <div className="flex gap-6 border-b border-border/20 pb-4">
         {(["all", "unread"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setFilter(tab)}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+            className={`text-sm font-bold uppercase tracking-wider transition-colors relative ${
               filter === tab
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                ? "text-foreground"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {tab === "all" ? "All" : "Unread"}
             {tab === "unread" && unreadCount > 0 && (
-              <span className="ml-2 text-[10px] bg-primary-foreground/20 px-1.5 py-0.5 rounded-full">
+              <span className="ml-1 text-[10px] bg-foreground text-background px-1.5 py-0.5 rounded-none">
                 {unreadCount}
               </span>
+            )}
+            {filter === tab && (
+              <motion.div
+                layoutId="notif-tab"
+                className="absolute -bottom-4 left-0 right-0 h-0.5 bg-foreground"
+              />
             )}
           </button>
         ))}
@@ -228,46 +228,47 @@ export default function NotificationsPage() {
 
       {/* Content */}
       {isLoading ? (
-        <div className="space-y-3">
+        <div className="space-y-6">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="flex items-start gap-4 p-4 bg-card border border-border rounded-2xl">
-              <Skeleton className="w-9 h-9 rounded-xl shrink-0" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-3.5 w-full" />
+            <div key={i} className="flex items-start gap-6 py-4 border-b border-border/20">
+              <Skeleton className="w-10 h-10 rounded-full shrink-0" />
+              <div className="flex-1 space-y-3">
+                <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-3 w-24" />
               </div>
             </div>
           ))}
         </div>
       ) : errorMsg ? (
-        <div className="p-4 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-2xl flex items-start gap-3">
+        <div className="p-4 bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-start gap-3">
           <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
           <span>{errorMsg}</span>
         </div>
       ) : displayed.length === 0 ? (
-        <div className="text-center py-20 bg-card border border-border border-dashed rounded-3xl space-y-4">
-          <BellOff className="w-12 h-12 text-muted-foreground/45 mx-auto" />
-          <h2 className="font-serif text-lg font-bold text-foreground">
-            {filter === "unread" ? "All caught up!" : "No notifications yet"}
-          </h2>
-          <p className="text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed">
-            {filter === "unread"
-              ? "You have no unread notifications at the moment."
-              : "Quote quotes, order updates, and messages will appear here."}
-          </p>
+        <div className="flex flex-col items-center justify-center py-32 space-y-6">
+          <BellOff className="w-8 h-8 text-muted-foreground" strokeWidth={1.5} />
+          <div className="text-center space-y-2">
+            <h2 className="font-serif text-2xl font-bold text-foreground">
+              {filter === "unread" ? "You're all caught up." : "No notifications yet."}
+            </h2>
+            <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
+              {filter === "unread"
+                ? "Check back later for updates on your commissions."
+                : "Quotes, order updates, and messages will appear here."}
+            </p>
+          </div>
           {filter === "unread" && (
             <Button
               variant="outline"
-              size="sm"
               onClick={() => setFilter("all")}
-              className="rounded-xl border-border font-semibold"
+              className="mt-4 rounded-none font-bold uppercase tracking-wider text-xs px-8"
             >
               View all notifications
             </Button>
           )}
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="divide-y divide-border/20">
           <AnimatePresence mode="popLayout">
             {displayed.map((notif, i) => (
               <motion.div
@@ -278,41 +279,36 @@ export default function NotificationsPage() {
                 animate="visible"
                 exit="exit"
                 layout
-                className={`group flex items-start gap-4 p-4 rounded-2xl border transition-colors ${
-                  notif.read
-                    ? "bg-card border-border"
-                    : "bg-primary/5 border-primary/20"
+                className={`group flex items-start gap-5 py-6 transition-colors ${
+                  !notif.read ? "bg-primary/5 -mx-6 px-6" : ""
                 }`}
               >
                 {/* Icon */}
                 {getNotifIcon(notif.message)}
 
                 {/* Content */}
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 mt-1">
                   <p
-                    className={`text-sm leading-relaxed ${
-                      notif.read ? "text-muted-foreground" : "text-foreground font-medium"
+                    className={`text-[15px] leading-relaxed ${
+                      notif.read ? "text-muted-foreground" : "text-foreground font-semibold"
                     }`}
                   >
                     {notif.message}
                   </p>
-                  <div className="flex items-center gap-3 mt-1.5">
-                    <p className="text-[11px] text-muted-foreground">
+                  <div className="flex items-center gap-3 mt-2">
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
                       {timeAgo(notif.created_at)}
                     </p>
-                    {!notif.read && (
-                      <span className="w-1.5 h-1.5 bg-primary rounded-full inline-block" />
-                    )}
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-3 shrink-0 mt-1">
                   {notif.link && (
                     <Link
                       href={notif.link}
                       onClick={() => markRead(notif.id)}
-                      className="p-2 rounded-xl hover:bg-muted text-muted-foreground hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      className="p-2 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                       aria-label="Go to notification link"
                     >
                       <ExternalLink className="w-4 h-4" />
@@ -321,7 +317,7 @@ export default function NotificationsPage() {
                   {!notif.read && (
                     <button
                       onClick={() => markRead(notif.id)}
-                      className="p-2 rounded-xl hover:bg-muted text-muted-foreground hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      className="p-2 rounded-full hover:bg-muted text-primary hover:text-primary/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                       aria-label="Mark as read"
                       title="Mark as read"
                     >

@@ -24,8 +24,9 @@ interface CustomerOrder {
   budget_min: number
   budget_max: number
   deadline: string
-  status: "Awaiting Quotes" | "Quote Accepted" | "Paid" | "In Production" | "Shipped" | "Delivered" | "Reviewed" | "Cancelled"
+  status: "Awaiting Quotes" | "Price Received" | "Price Accepted" | "Paid" | "In Production" | "Shipped" | "Delivered" | "Reviewed" | "Cancelled"
   notes?: string
+  display_price: string
 }
 
 export default function CustomerOrders() {
@@ -43,32 +44,38 @@ export default function CustomerOrders() {
         if (user) {
           const { data, error } = await supabase
             .from("design_requests")
-            .select("id, image_url, ai_tags, budget_min, budget_max, deadline, status, notes")
+            .select("id, image_url, ai_tags, budget_min, budget_max, deadline, status, notes, quotations!request_id(price, status)")
             .eq("customer_id", user.id)
             .order("created_at", { ascending: false })
 
           if (error) {
             setErrorMsg(error.message)
           } else {
-            const mapped: CustomerOrder[] = (data || []).map((item: {
-              id: string
-              image_url: string
-              ai_tags?: string[]
-              budget_min: number
-              budget_max: number
-              deadline: string
-              status: string
-              notes?: string
-            }) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const mapped: CustomerOrder[] = (data || []).map((item: any) => {
               let uiStatus: CustomerOrder["status"] = "Awaiting Quotes"
-              if (item.status === "pending_bids") uiStatus = "Awaiting Quotes"
-              else if (item.status === "assigned") uiStatus = "Quote Accepted"
+              
+              const hasQuotes = item.quotations && item.quotations.length > 0;
+              const acceptedQuote = item.quotations?.find((q: any) => q.status === "accepted");
+              const lowestQuote = hasQuotes ? Math.min(...item.quotations.map((q: any) => q.price)) : null;
+
+              if (item.status === "pending_bids" || item.status === "assigned") {
+                uiStatus = hasQuotes ? "Price Received" : "Awaiting Quotes"
+              }
               else if (item.status === "paid") uiStatus = "Paid"
               else if (item.status === "in_production") uiStatus = "In Production"
               else if (item.status === "shipped") uiStatus = "Shipped"
               else if (item.status === "delivered") uiStatus = "Delivered"
               else if (item.status === "reviewed") uiStatus = "Reviewed"
               else if (item.status === "cancelled") uiStatus = "Cancelled"
+
+              let displayPrice = item.budget_min && item.budget_max ? `${formatINR(item.budget_min)} - ${formatINR(item.budget_max)}` : "Budget TBD";
+              if (acceptedQuote) {
+                displayPrice = formatINR(acceptedQuote.price);
+              } else if (lowestQuote) {
+                displayPrice = item.quotations.length > 1 ? `From ${formatINR(lowestQuote)}` : formatINR(lowestQuote);
+              }
+
               return {
                 id: item.id,
                 image_url: item.image_url,
@@ -78,6 +85,7 @@ export default function CustomerOrders() {
                 deadline: item.deadline,
                 status: uiStatus,
                 notes: item.notes,
+                display_price: displayPrice,
               }
             })
             setOrders(mapped)
@@ -97,7 +105,9 @@ export default function CustomerOrders() {
     switch (status) {
       case "Awaiting Quotes":
         return "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
-      case "Quote Accepted":
+      case "Price Received":
+        return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+      case "Price Accepted":
         return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
       case "Paid":
         return "bg-purple-500/10 text-purple-500 border-purple-500/20"
@@ -193,7 +203,7 @@ export default function CustomerOrders() {
 
                 <div className="grid grid-cols-2 gap-4 pt-2 text-xs text-muted-foreground">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-foreground">{formatINR(ord.budget_min)} - {formatINR(ord.budget_max)}</span>
+                    <span className="font-bold text-foreground">{ord.display_price}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Calendar className="w-4 h-4 text-primary" />

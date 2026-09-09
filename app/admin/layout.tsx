@@ -13,6 +13,8 @@ import {
   Menu,
   X,
   Sparkles,
+  LayoutDashboard,
+  Scissors,
 } from "lucide-react"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
 import { Button } from "@/components/ui/button"
@@ -48,8 +50,10 @@ export default function AdminLayout({
   }, [])
 
   const menuItems = [
+    { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+    { name: "Tailors", href: "/admin/tailors", icon: Scissors },
     { name: "Tailor Verification", href: "/admin/tailor-verification", icon: UserCheck },
-    { name: "All Orders", href: "/admin/orders", icon: Package },
+    { name: "Requests & Orders", href: "/admin/orders", icon: Package },
     { name: "Disputes Board", href: "/admin/disputes", icon: AlertTriangle },
   ]
 

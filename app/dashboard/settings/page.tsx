@@ -21,9 +21,11 @@ export default function CustomerSettings() {
   const [newPassword, setNewPassword] = React.useState("")
   const [confirmPassword, setConfirmPassword] = React.useState("")
   const [showPassword, setShowPassword] = React.useState(false)
+  const [avatarUrl, setAvatarUrl] = React.useState("")
 
   const [isLoadingProfile, setIsLoadingProfile] = React.useState(true)
   const [isSavingProfile, setIsSavingProfile] = React.useState(false)
+  const [isUploadingAvatar, setIsUploadingAvatar] = React.useState(false)
   const [isChangingPassword, setIsChangingPassword] = React.useState(false)
   const [profileStatus, setProfileStatus] = React.useState<{ type: "success" | "error"; text: string } | null>(null)
   const [passwordStatus, setPasswordStatus] = React.useState<{ type: "success" | "error"; text: string } | null>(null)
@@ -37,10 +39,11 @@ export default function CustomerSettings() {
           setEmail(user.email || "")
           const { data: profile } = await supabase
             .from("users")
-            .select("name")
+            .select("name, avatar_url")
             .eq("id", user.id)
             .single()
           if (profile?.name) setName(profile.name)
+          if (profile?.avatar_url) setAvatarUrl(profile.avatar_url)
         }
       } catch {
         // silently fail
@@ -67,6 +70,9 @@ export default function CustomerSettings() {
 
       if (error) throw new Error(error.message)
       setProfileStatus({ type: "success", text: "Profile updated successfully!" })
+      
+      // Notify layout to refresh the profile info in the sidebar
+      window.dispatchEvent(new Event("profile-updated"))
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to update profile."
       setProfileStatus({ type: "error", text: msg })
@@ -144,12 +150,89 @@ export default function CustomerSettings() {
           <section className="bg-card border border-border rounded-3xl p-6 shadow-sm space-y-5" aria-labelledby="profile-settings-heading">
             <h2 id="profile-settings-heading" className="font-serif text-lg font-bold text-foreground flex items-center gap-2">
               <Settings className="w-5 h-5 text-primary" aria-hidden="true" />
-              Profile Information
+              My Profile
             </h2>
 
             <StatusBanner status={profileStatus} />
 
-            <form onSubmit={handleSaveProfile} className="space-y-4" noValidate>
+            <div className="flex flex-col sm:flex-row gap-6">
+              {/* Avatar Upload */}
+              <div className="flex flex-col items-center gap-3 shrink-0">
+                <div className="relative w-28 h-28 rounded-full overflow-hidden bg-muted border-4 border-background shadow-sm">
+                  {avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center font-serif text-3xl text-primary font-bold bg-primary/10">
+                      {name.charAt(0) || "U"}
+                    </div>
+                  )}
+                  <label className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={async (e) => {
+                        if (!e.target.files || e.target.files.length === 0) return
+                        const file = e.target.files[0]
+                        if (!file.type.startsWith("image/")) {
+                          setProfileStatus({ type: "error", text: "Please upload a valid image file." })
+                          return
+                        }
+                        setIsUploadingAvatar(true)
+                        setProfileStatus(null)
+                        try {
+                          const { data: { user } } = await supabase.auth.getUser()
+                          if (!user) throw new Error("Not authenticated")
+
+                          const fileExt = file.name.split(".").pop()
+                          const fileName = `avatar_${crypto.randomUUID()}.${fileExt}`
+                          const storagePath = `${user.id}/${fileName}`
+
+                          const { error: uploadError } = await supabase.storage
+                            .from("profile-images")
+                            .upload(storagePath, file, { upsert: true })
+
+                          if (uploadError) throw new Error(uploadError.message)
+
+                          const { data: publicUrlData } = supabase.storage
+                            .from("profile-images")
+                            .getPublicUrl(storagePath)
+
+                          const url = publicUrlData.publicUrl
+
+                          const { error: dbError } = await supabase
+                            .from("users")
+                            .update({ avatar_url: url })
+                            .eq("id", user.id)
+
+                          if (dbError) throw new Error(dbError.message)
+
+                          setAvatarUrl(url)
+                          setProfileStatus({ type: "success", text: "Profile photo updated." })
+                          
+                          // Notify layout to refresh the profile info in the sidebar
+                          window.dispatchEvent(new Event("profile-updated"))
+                        } catch (err: any) {
+                          setProfileStatus({ type: "error", text: err.message || "Avatar upload failed." })
+                        } finally {
+                          setIsUploadingAvatar(false)
+                          e.target.value = ""
+                        }
+                      }}
+                      className="hidden"
+                      disabled={isUploadingAvatar}
+                    />
+                    {isUploadingAvatar ? (
+                      <Loader2 className="w-6 h-6 text-white animate-spin" />
+                    ) : (
+                      <span className="text-xs font-bold text-white uppercase tracking-wider">Edit</span>
+                    )}
+                  </label>
+                </div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Profile Photo</p>
+              </div>
+
+              <form onSubmit={handleSaveProfile} className="flex-1 space-y-4" noValidate>
               <div>
                 <label htmlFor="settings-name" className="block text-xs font-semibold text-foreground mb-1.5">
                   Display Name
@@ -193,7 +276,8 @@ export default function CustomerSettings() {
                 ) : null}
                 Save Changes
               </Button>
-            </form>
+              </form>
+            </div>
           </section>
 
           {/* Password */}

@@ -20,12 +20,15 @@ import {
   Truck,
   PackageCheck,
   Info,
+  Camera,
+  ImageIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { StatusStepper } from "@/components/shared/StatusStepper"
 import { QuotationBreakdownCard } from "@/components/shared/QuotationBreakdownCard"
 import { ChatWindow } from "@/components/shared/ChatWindow"
+import { DemoCheckoutDialog } from "@/components/shared/DemoCheckoutDialog"
 
 export default function CustomerOrderDetails() {
   const { id } = useParams()
@@ -53,6 +56,42 @@ export default function CustomerOrderDetails() {
   const [reviewComment, setReviewComment] = React.useState("")
   const [isSubmittingReview, setIsSubmittingReview] = React.useState(false)
   const [reviewError, setReviewError] = React.useState<string | null>(null)
+
+  // Approval state
+  const [isApproving, setIsApproving] = React.useState(false)
+  const [approvalError, setApprovalError] = React.useState<string | null>(null)
+  const [isRejecting, setIsRejecting] = React.useState(false)
+  const [feedbackComment, setFeedbackComment] = React.useState("")
+  const [showFeedbackInput, setShowFeedbackInput] = React.useState(false)
+
+  // Payment Verification & Feedback Display
+  const [paymentVerified, setPaymentVerified] = React.useState(false)
+  const [feedbackCommentDisplay, setFeedbackCommentDisplay] = React.useState<string | null>(null)
+
+  // Progress photos uploaded by the tailor
+  interface ProgressPhoto { id: string; image_url: string; sort_order: number; created_at: string }
+  const [progressPhotos, setProgressPhotos] = React.useState<ProgressPhoto[]>([])
+
+  // Progress photo upload state
+  const [isUploadingPhoto, setIsUploadingPhoto] = React.useState(false)
+  const [uploadPhotoError, setUploadPhotoError] = React.useState<string | null>(null)
+  const [uploadPhotoSuccess, setUploadPhotoSuccess] = React.useState(false)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
+
+  // Demo Checkout state
+  const [isCheckoutOpen, setIsCheckoutOpen] = React.useState(false)
+  const [checkoutQuote, setCheckoutQuote] = React.useState<any>(null)
+
+  const loadProgressPhotos = React.useCallback(async (orderId: string) => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/progress-photos`)
+      if (!res.ok) return
+      const data = await res.json()
+      setProgressPhotos(data.photos ?? [])
+    } catch {
+      // Non-critical — silently ignore
+    }
+  }, [])
 
   const loadData = React.useCallback(async () => {
     setIsLoading(true)
@@ -85,23 +124,95 @@ export default function CustomerOrderDetails() {
       }
       setRequest(reqData)
 
-      // Fetch all quotations while request is in bidding or quoted stages
-      if (["pending_bids", "quoted"].includes(reqData.status)) {
+      // Check payment verification
+      if (!["draft", "pending_bids", "quoted", "quote_accepted", "assigned", "payment_pending"].includes(reqData.status)) {
+        const { data: payment } = await supabase
+          .from("payments")
+          .select("id")
+          .eq("order_id", id)
+          .eq("payment_status", "completed")
+          .maybeSingle()
+        setPaymentVerified(!!payment)
+      } else {
+        setPaymentVerified(false)
+      }
+
+      // Fetch feedback if changes requested
+      if (reqData.production_evidence_status === "changes_requested") {
+        const { data: feedback } = await supabase
+          .from("production_feedback")
+          .select("comment")
+          .eq("request_id", id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single()
+        if (feedback) setFeedbackCommentDisplay(feedback.comment)
+      }
+
+      // Load progress photos when order is in an active production state
+      const ACTIVE_FOR_PHOTOS = ["paid", "confirmed", "in_production", "cutting", "stitching", "quality_check", "ready", "shipped", "delivered", "completed", "reviewed", "assigned", "measurements_pending"]
+      if (ACTIVE_FOR_PHOTOS.includes(reqData.status)) {
+        loadProgressPhotos(reqData.id)
+      }
+
+      // Fetch all quotations while request is in bidding, assigned, or quoted stages
+      if (["pending_bids", "quoted", "assigned"].includes(reqData.status)) {
         const { data: quotesData, error: quotesError } = await supabase
           .from("quotations")
           .select(`
             *,
-            tailor:users!tailor_id (name),
-            profile:tailor_profiles!tailor_id (avg_rating, portfolio_images)
+            tailor:users!tailor_id (
+              name,
+              tailor_profiles (avg_rating, portfolio_images),
+              tailor_portfolio_items (public_url)
+            )
           `)
           .eq("request_id", id)
           .order("price", { ascending: true })
 
-        if (!quotesError && quotesData) {
-          setQuotations(quotesData)
+        if (quotesError) {
+          console.error("Quotes fetch error:", quotesError)
+        } else if (quotesData) {
+          // Filter out withdrawn quotes and keep only the latest active quote per tailor
+          const activeQuotes = quotesData.filter((q: any) => q.status === "pending" || q.status === "accepted")
+          
+          // Deduplicate: If there are historical duplicate pending quotes from the same tailor, only keep the newest
+          const tailorQuoteMap = new Map()
+          
+          // Assuming quotesData is already ordered by price asc, but we need to resolve duplicates by taking the latest.
+          // Instead, let's just group them and take the first one (since we might want the cheapest or newest).
+          // To be safe and show only 1 per tailor:
+          for (const q of activeQuotes) {
+            if (!tailorQuoteMap.has(q.tailor_id) || new Date(q.created_at) > new Date(tailorQuoteMap.get(q.tailor_id).created_at)) {
+              tailorQuoteMap.set(q.tailor_id, q)
+            }
+          }
+          
+          const uniqueQuotes = Array.from(tailorQuoteMap.values())
+          
+          const mappedQuotes = uniqueQuotes.map((q: any) => {
+            const profile = Array.isArray(q.tailor?.tailor_profiles) ? q.tailor.tailor_profiles[0] : q.tailor?.tailor_profiles
+            const pImages = [
+              ...(q.tailor?.tailor_portfolio_items || []).map((i: any) => i.public_url),
+              ...(profile?.portfolio_images || [])
+            ]
+            if (profile) {
+              profile.portfolio_images = pImages
+            }
+            return {
+              ...q,
+              profile
+            }
+          })
+          
+          // Re-sort by price ascending for display
+          mappedQuotes.sort((a, b) => a.price - b.price)
+          
+          setQuotations(mappedQuotes)
         }
       }
-    } catch {
+    } catch (err) {
+      console.error("Load data error:", err)
       setErrorMsg("An unexpected error occurred.")
     } finally {
       setIsLoading(false)
@@ -129,6 +240,8 @@ export default function CustomerOrderDetails() {
         () => {
           // Re-fetch full row so joins (tailor name, accepted_quotation) are fresh
           loadData()
+          // Also refresh progress photos in case the tailor just uploaded one
+          if (id) loadProgressPhotos(id as string)
         }
       )
       .subscribe()
@@ -137,29 +250,16 @@ export default function CustomerOrderDetails() {
     }
   }, [id, supabase, loadData])
 
-  // Accept a quote + mock-pay in one click
+  // Open the Demo Checkout Dialog
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleAcceptAndPay = async (quote: any) => {
-    setAcceptingId(quote.id)
-    setAcceptError(null)
-    try {
-      const res = await fetch(`/api/orders/${id}/mock-pay`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quoteId: quote.id }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setAcceptError(data.error ?? "Payment failed. Please try again.")
-        return
-      }
-      // Reload the page state so it reflects the new status
-      await loadData()
-    } catch {
-      setAcceptError("Network error. Please check your connection and try again.")
-    } finally {
-      setAcceptingId(null)
-    }
+  const handleOpenCheckout = (quote: any) => {
+    setCheckoutQuote(quote)
+    setIsCheckoutOpen(true)
+  }
+
+  const handleCheckoutSuccess = async () => {
+    // Reload the page state so it reflects the new paid status
+    await loadData()
   }
 
   // Confirm delivery (customer side)
@@ -210,12 +310,90 @@ export default function CustomerOrderDetails() {
     }
   }
 
+  const handleApproval = async (action: "approve" | "request_changes") => {
+    if (action === "approve") setIsApproving(true)
+    else setIsRejecting(true)
+    setApprovalError(null)
+
+    try {
+      const res = await fetch(`/api/orders/${request.id}/customer-approval`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, stage: request.status, comment: action === "request_changes" ? feedbackComment : undefined }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Failed to process approval")
+      
+      // Reload request
+      const { data: newReq } = await supabase.from("design_requests").select("*, tailor:users!tailor_id (name, email), accepted_quotation:quotations!accepted_quotation_id (price, estimated_days, note), review:reviews!order_id (rating, comment)").eq("id", request.id).single()
+      if (newReq) setRequest(newReq)
+      setShowFeedbackInput(false)
+      setFeedbackComment("")
+    } catch (err: any) {
+      setApprovalError(err.message)
+    } finally {
+      setIsApproving(false)
+      setIsRejecting(false)
+    }
+  }
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadPhotoError(null)
+    setUploadPhotoSuccess(false)
+
+    const validTypes = ["image/jpeg", "image/png", "image/webp"]
+    if (!validTypes.includes(file.type)) {
+      setUploadPhotoError("Please select a valid image (JPEG, PNG, or WEBP).")
+      e.target.value = ""
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadPhotoError("Image must be smaller than 5MB.")
+      e.target.value = ""
+      return
+    }
+
+    setIsUploadingPhoto(true)
+
+    try {
+      const reader = new FileReader()
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = (error) => reject(error)
+      })
+      reader.readAsDataURL(file)
+      const base64 = await base64Promise
+
+      const res = await fetch(`/api/orders/${id}/progress-photos`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: base64 }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Failed to upload photo.")
+      
+      setUploadPhotoSuccess(true)
+      if (id) await loadProgressPhotos(id as string)
+      setTimeout(() => setUploadPhotoSuccess(false), 3000)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Upload error"
+      setUploadPhotoError(msg)
+    } finally {
+      setIsUploadingPhoto(false)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    }
+  }
+
   const getStatusDisplay = (status: string) => {
     const map: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
       draft:                { label: "Draft",                         color: "text-muted-foreground", icon: <Clock className="w-4 h-4" /> },
       pending_bids:         { label: "Awaiting Quotes",               color: "text-amber-600",        icon: <Clock className="w-4 h-4" /> },
-      quoted:               { label: "Quote Received",                color: "text-amber-600",        icon: <Star className="w-4 h-4" /> },
-      quote_accepted:       { label: "Quote Accepted",                color: "text-primary",          icon: <CheckCircle className="w-4 h-4" /> },
+      quoted:               { label: "Price Received",                color: "text-amber-600",        icon: <Star className="w-4 h-4" /> },
+      quote_accepted:       { label: "Price Accepted",                color: "text-primary",          icon: <CheckCircle className="w-4 h-4" /> },
       payment_pending:      { label: "Payment Pending",               color: "text-amber-600",        icon: <CreditCard className="w-4 h-4" /> },
       assigned:             { label: "Tailor Assigned",               color: "text-primary",          icon: <User className="w-4 h-4" /> },
       paid:                 { label: "Paid — In Production",         color: "text-primary",          icon: <CreditCard className="w-4 h-4" /> },
@@ -297,7 +475,7 @@ export default function CustomerOrderDetails() {
       {/* Progress Stepper */}
       <div className="bg-card border border-border rounded-3xl p-6 shadow-sm">
         <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">Order Timeline</h3>
-        <StatusStepper status={request.status} />
+        <StatusStepper status={request.status} evidenceStatus={request.production_evidence_status} paymentVerified={paymentVerified} />
       </div>
 
       {/* Main Content */}
@@ -344,7 +522,7 @@ export default function CustomerOrderDetails() {
             {request.notes && (
               <div>
                 <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">Your Notes</p>
-                <p className="text-sm text-foreground/80">{request.notes}</p>
+                <p className="text-sm text-foreground/80 whitespace-pre-wrap">{request.notes}</p>
               </div>
             )}
           </div>
@@ -352,8 +530,8 @@ export default function CustomerOrderDetails() {
 
         {/* Right Col: Quotes or Active Order info */}
         <div className="lg:col-span-2 space-y-6">
-          {/* ── PENDING BIDS: show quotation comparison ── */}
-          {request.status === "pending_bids" && (
+          {/* ── PENDING BIDS / ASSIGNED: show quotation comparison ── */}
+          {["pending_bids", "assigned", "quoted"].includes(request.status) && (
             <>
               <h2 className="text-xl font-serif font-bold text-foreground mb-4">Tailor Quotes ({quotations.length})</h2>
 
@@ -408,17 +586,12 @@ export default function CustomerOrderDetails() {
                       {/* Action buttons */}
                       <div className="space-y-2 pt-2">
                         <div className="flex gap-3">
-                          {/* Accept & Pay (simulated) */}
+                          {/* Accept & Pay (Demo Checkout) */}
                           <Button
                             className="flex-1 bg-primary text-primary-foreground font-semibold rounded-xl"
-                            onClick={() => handleAcceptAndPay(quote)}
-                            disabled={acceptingId !== null}
+                            onClick={() => handleOpenCheckout(quote)}
                           >
-                            {acceptingId === quote.id ? (
-                              <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing…</>
-                            ) : (
-                              "Accept & Pay (Simulated)"
-                            )}
+                            Accept & Pay
                           </Button>
                           <Link href="/dashboard/messages" className="flex-1">
                             <Button variant="outline" className="w-full font-semibold rounded-xl gap-2" disabled={acceptingId !== null}>
@@ -439,74 +612,7 @@ export default function CustomerOrderDetails() {
             </>
           )}
 
-          {/* ── QUOTED: single quote received, awaiting customer decision ── */}
-          {request.status === "quoted" && (
-            <>
-              <h2 className="text-xl font-serif font-bold text-foreground mb-4">Quote Received</h2>
-              <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-sm text-amber-700 dark:text-amber-400 mb-4">
-                A tailor has submitted a quote for your request. Review the details below and accept to confirm.
-              </div>
 
-              {acceptError && (
-                <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-2xl mb-4">
-                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>{acceptError}</span>
-                </div>
-              )}
-
-              <div className="space-y-4">
-                {quotations.map(quote => (
-                  <div key={quote.id} className="bg-card border border-border rounded-3xl p-5 shadow-sm space-y-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                          {quote.tailor?.name?.charAt(0) || "T"}
-                        </div>
-                        <div>
-                          <p className="font-bold text-sm text-foreground">{quote.tailor?.name || "Verified Tailor"}</p>
-                          <div className="flex items-center gap-1 text-xs text-amber-500 font-medium">
-                            <Star className="w-3.5 h-3.5 fill-current" />
-                            {quote.profile?.avg_rating?.toFixed(1) || "5.0"} Rating
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-lg text-primary">{formatINR(quote.price)}</p>
-                        <p className="text-xs text-muted-foreground">{quote.estimated_days} days</p>
-                      </div>
-                    </div>
-
-                    <QuotationBreakdownCard quote={quote} />
-
-                    <div className="space-y-2 pt-2">
-                      <div className="flex gap-3">
-                        <Button
-                          className="flex-1 bg-primary text-primary-foreground font-semibold rounded-xl"
-                          onClick={() => handleAcceptAndPay(quote)}
-                          disabled={acceptingId !== null}
-                        >
-                          {acceptingId === quote.id ? (
-                            <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Processing…</>
-                          ) : (
-                            "Accept & Pay (Simulated)"
-                          )}
-                        </Button>
-                        <Link href="/dashboard/messages" className="flex-1">
-                          <Button variant="outline" className="w-full font-semibold rounded-xl gap-2" disabled={acceptingId !== null}>
-                            <MessageSquare className="w-4 h-4" /> Message
-                          </Button>
-                        </Link>
-                      </div>
-                      <p className="flex items-start gap-1.5 text-[11px] text-muted-foreground leading-relaxed">
-                        <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                        Simulated payment — Razorpay integration coming soon. No real charge will be made.
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
 
           {/* ── ACTIVE ORDER: show status & actions ── */}
           {isActiveOrder && (
@@ -566,7 +672,7 @@ export default function CustomerOrderDetails() {
                 {request.status === "in_production" && (
                   <div className="flex items-start gap-2 p-3 bg-amber-500/5 border border-amber-500/20 rounded-xl text-sm text-amber-700 dark:text-amber-400">
                     <Scissors className="w-4 h-4 shrink-0 mt-0.5" />
-                    <span>Your garment is being crafted. You&apos;ll be notified when it ships.</span>
+                    <span>Your clothing is being crafted. You&apos;ll be notified when it ships.</span>
                   </div>
                 )}
 
@@ -672,6 +778,136 @@ export default function CustomerOrderDetails() {
                 )}
               </div>
 
+              {/* Production Updates — tailor progress photos */}
+              <div className="bg-card border border-border rounded-3xl p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    <Camera className="w-4 h-4" /> Production Updates
+                  </h3>
+                  
+                  {currentUserId === request.tailor_id && (
+                    <div>
+                      <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        className="hidden" 
+                        accept="image/jpeg,image/png,image/webp" 
+                        onChange={handlePhotoUpload} 
+                      />
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploadingPhoto}
+                        className="gap-2 rounded-full"
+                      >
+                        {isUploadingPhoto ? (
+                          <><Loader2 className="w-4 h-4 animate-spin" /> Uploading...</>
+                        ) : (
+                          <><Camera className="w-4 h-4" /> Add Photo</>
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {uploadPhotoError && (
+                  <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-xl">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{uploadPhotoError}</span>
+                  </div>
+                )}
+                {uploadPhotoSuccess && (
+                  <div className="flex items-center gap-2 p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-sm rounded-xl">
+                    <CheckCircle className="w-4 h-4 shrink-0" />
+                    <span>Photo uploaded successfully!</span>
+                  </div>
+                )}
+
+                {progressPhotos.length > 0 ? (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                    {progressPhotos.map((photo) => (
+                      <a
+                        key={photo.id}
+                        href={photo.image_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="aspect-square rounded-2xl overflow-hidden border border-border block group relative"
+                        title={new Date(photo.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={photo.image_url}
+                          alt={`Production update ${photo.sort_order}`}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                          <Camera className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 rounded-2xl bg-muted/30 border border-border/50 border-dashed text-center space-y-2">
+                    <ImageIcon className="w-8 h-8 text-muted-foreground/40" />
+                    <p className="text-sm font-medium text-muted-foreground">No progress photos yet</p>
+                    <p className="text-xs text-muted-foreground/70 max-w-xs">
+                      Your tailor will post production updates here as your garment is crafted.
+                    </p>
+                  </div>
+                )}
+
+                {request.production_evidence_status === "waiting_for_customer_approval" && (
+                  <div className="mt-6 p-5 border border-primary/20 bg-primary/5 rounded-2xl space-y-4">
+                    <h4 className="font-bold text-foreground">Action Required: Approve Stage</h4>
+                    <p className="text-sm text-muted-foreground">Your tailor has uploaded new work photos. Please review the photos and approve to continue production.</p>
+                    {approvalError && <p className="text-sm text-destructive">{approvalError}</p>}
+                    
+                    {!showFeedbackInput ? (
+                      <div className="flex flex-wrap gap-3">
+                        <Button onClick={() => handleApproval("approve")} disabled={isApproving || isRejecting} className="bg-primary text-primary-foreground font-bold">
+                          {isApproving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />}
+                          Approve & Continue
+                        </Button>
+                        <Button onClick={() => setShowFeedbackInput(true)} variant="outline" disabled={isApproving || isRejecting}>
+                          Request Changes
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <textarea
+                          className="w-full min-h-[80px] p-3 text-sm rounded-xl border border-border bg-background"
+                          placeholder="Describe the changes you'd like..."
+                          value={feedbackComment}
+                          onChange={(e) => setFeedbackComment(e.target.value)}
+                        />
+                        <div className="flex gap-2">
+                          <Button onClick={() => handleApproval("request_changes")} disabled={isApproving || isRejecting || !feedbackComment.trim()} variant="destructive">
+                            {isRejecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null} Submit Feedback
+                          </Button>
+                          <Button onClick={() => setShowFeedbackInput(false)} variant="ghost" disabled={isApproving || isRejecting}>
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {request.production_evidence_status === "changes_requested" && feedbackCommentDisplay && (
+                  <div className="mt-6 p-5 border border-red-500/20 bg-red-500/5 rounded-2xl space-y-3">
+                    <h4 className="font-bold text-red-600 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" /> Changes Requested
+                    </h4>
+                    <p className="text-sm text-foreground">You requested the following changes:</p>
+                    <div className="p-3 bg-background border border-border rounded-xl text-sm italic text-muted-foreground">
+                      &ldquo;{feedbackCommentDisplay}&rdquo;
+                    </div>
+                    <p className="text-xs text-muted-foreground">The tailor has been notified and will upload new photos once the changes are made.</p>
+                  </div>
+                )}
+              </div>
+
               {/* Chat Panel */}
               {currentUserId && (
                 <div className="bg-card border border-border rounded-3xl p-6 mt-6">
@@ -687,6 +923,19 @@ export default function CustomerOrderDetails() {
           )}
         </div>
       </div>
+
+      <DemoCheckoutDialog
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        quote={checkoutQuote ? {
+          id: checkoutQuote.id,
+          price: checkoutQuote.price,
+          tailorName: checkoutQuote.tailor?.name || "Tailor"
+        } : null}
+        garmentName={request.ai_tags?.[0] || "Custom Design"}
+        orderId={request.id}
+        onSuccess={handleCheckoutSuccess}
+      />
     </div>
   )
 }

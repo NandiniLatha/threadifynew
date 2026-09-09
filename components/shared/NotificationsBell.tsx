@@ -28,7 +28,13 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`
 }
 
-export function NotificationsBell() {
+export function NotificationsBell({ 
+  align = "right",
+  side = "bottom"
+}: { 
+  align?: "left" | "right",
+  side?: "top" | "bottom"
+} = {}) {
   
   const [open, setOpen] = React.useState(false)
   const [notifications, setNotifications] = React.useState<Notification[]>([])
@@ -147,7 +153,7 @@ export function NotificationsBell() {
             role="dialog"
             aria-modal="true"
             aria-label="Notifications panel"
-            className="absolute right-0 top-full mt-2 w-80 bg-card border border-border rounded-2xl shadow-xl z-50 overflow-hidden"
+            className={`absolute ${align === "right" ? "right-0" : "left-0"} ${side === "bottom" ? "top-full mt-2" : "bottom-full mb-2"} w-80 bg-card border border-border rounded-2xl shadow-xl z-50 overflow-hidden`}
           >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">

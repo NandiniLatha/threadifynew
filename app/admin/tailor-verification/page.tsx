@@ -47,7 +47,8 @@ export default function TailorVerification() {
             verification_status,
             verification_docs_url,
             portfolio_images,
-            user:users!user_id ( name, email )
+            user:users!user_id ( name, email ),
+            tailor_portfolio_items (public_url)
           `)
           .eq("verification_status", "pending")
 
@@ -60,7 +61,7 @@ export default function TailorVerification() {
             bio:                   item.bio,
             verification_status:   item.verification_status,
             verification_docs_url: item.verification_docs_url,
-            portfolio_images:      item.portfolio_images ?? [],
+            portfolio_images:      [...(item.tailor_portfolio_items || []).map((i: any) => i.public_url), ...(item.portfolio_images ?? [])],
             userName:              item.user?.name  ?? "Tailor",
             userEmail:             item.user?.email ?? "—",
           }))
@@ -146,7 +147,7 @@ export default function TailorVerification() {
                 </div>
 
                 <div>
-                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Tailor Bio</h3>
+                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">About Me</h3>
                   <p className="text-xs text-foreground/80 leading-relaxed italic bg-muted/40 p-4 border border-border rounded-2xl">
                     &ldquo;{app.bio}&rdquo;
                   </p>

@@ -37,11 +37,50 @@ export async function POST(request: Request) {
       const requestId = notes.requestId
 
       if (requestId) {
-        // Update database: mark design request as Paid (db status 'assigned')
+        // We need to fetch the design request to get customer_id and tailor_id
+        const { data: request, error: reqErr } = await supabaseAdmin
+          .from("design_requests")
+          .select("customer_id, tailor_id, accepted_quotation_id")
+          .eq("id", requestId)
+          .single()
+
+        if (request && !reqErr) {
+          // Calculate amount from payload or quotation
+          const { data: quote } = await supabaseAdmin
+            .from("quotations")
+            .select("price")
+            .eq("id", request.accepted_quotation_id)
+            .single()
+
+          const amountPaid = quote ? Number(quote.price) : 0
+          const platformCommission = parseFloat((amountPaid * 0.10).toFixed(2))
+          const tailorPayout = amountPaid - platformCommission
+
+          const { error: paymentErr } = await supabaseAdmin
+            .from("payments")
+            .upsert({
+              order_id: requestId,
+              customer_id: request.customer_id,
+              tailor_id: request.tailor_id,
+              amount: amountPaid,
+              platform_fee: platformCommission,
+              tailor_payout: tailorPayout,
+              currency: "INR",
+              payment_status: "completed",
+              razorpay_order_id: orderEntity.id,
+            }, { onConflict: "order_id" })
+
+          if (paymentErr) {
+            console.error("Webhook payment insert error", paymentErr.message)
+          }
+        }
+
+        // Update database: mark design request as 'paid'
         const { error } = await supabaseAdmin
           .from("design_requests")
           .update({
-            status: "assigned", // UI representing 'Paid'
+            status: "paid",
+            production_evidence_status: "none"
           })
           .eq("id", requestId)
 

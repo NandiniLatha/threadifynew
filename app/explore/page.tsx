@@ -32,7 +32,8 @@ export default async function ExplorePage() {
         verification_status,
         created_at,
         portfolio_images,
-        user:users!user_id (name)
+        user:users!user_id (name),
+        tailor_portfolio_items (public_url)
       `)
       .eq("verification_status", "approved")
       .limit(50),
@@ -91,9 +92,15 @@ export default async function ExplorePage() {
       createdAt: t.created_at,
       // Use real portfolio images from DB when available, otherwise
       // derive category-appropriate fashion images from the library
-      images: (t.portfolio_images && t.portfolio_images.length > 0)
-        ? t.portfolio_images
-        : getFashionPortfolioImages(config.category, 5, Math.abs(t.user_id.charCodeAt(0) - 97))
+      images: (() => {
+        const pImages = [
+          ...(t.tailor_portfolio_items || []).map((i: any) => i.public_url),
+          ...(t.portfolio_images || [])
+        ];
+        return pImages.length > 0 
+          ? pImages 
+          : getFashionPortfolioImages(config.category, 5, Math.abs(t.user_id.charCodeAt(0) - 97))
+      })()
     }
   })
 

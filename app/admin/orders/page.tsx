@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 import { formatINR } from "@/lib/utils/currency"
 import {
@@ -106,9 +107,9 @@ export default function AdminOrders() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-serif text-3xl font-bold text-foreground">Global Orders Audit</h1>
+        <h1 className="font-serif text-3xl font-bold text-foreground">Platform Requests & Orders</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Monitor transaction statuses, pricing variables, assignments, and audit client requests.
+          Overview of all active design requests and their resulting orders across the marketplace.
         </p>
       </div>
 
@@ -177,16 +178,19 @@ export default function AdminOrders() {
               </thead>
               <tbody className="divide-y divide-border/60">
                 {filteredOrders.map((ord) => (
-                  <tr key={ord.id} className="hover:bg-muted/20 transition-colors">
-                    <td className="p-4 font-mono font-semibold text-foreground">{ord.id}</td>
-                    <td className="p-4">
+                  <tr key={ord.id} className="hover:bg-muted/20 transition-colors group relative cursor-pointer">
+                    <td className="p-4 font-mono font-semibold text-foreground">
+                      <Link href={`/admin/orders/${ord.id}`} className="absolute inset-0" aria-label={`View order ${ord.id}`} />
+                      {ord.id.split('-')[0]}...
+                    </td>
+                    <td className="p-4 relative pointer-events-none">
                       <div className="font-bold text-foreground">{ord.clientName}</div>
                       <div className="text-[10px] text-muted-foreground">{ord.clientEmail}</div>
                     </td>
-                    <td className="p-4 font-semibold text-foreground/80">{ord.tailorName}</td>
-                    <td className="p-4 font-bold text-foreground">{formatINR(ord.price)}</td>
-                    <td className="p-4 text-muted-foreground">{ord.createdDate}</td>
-                    <td className="p-4 text-right">
+                    <td className="p-4 font-semibold text-foreground/80 relative pointer-events-none">{ord.tailorName}</td>
+                    <td className="p-4 font-bold text-foreground relative pointer-events-none">{formatINR(ord.price)}</td>
+                    <td className="p-4 text-muted-foreground relative pointer-events-none">{ord.createdDate}</td>
+                    <td className="p-4 text-right relative pointer-events-none">
                       <span
                         className={`inline-flex items-center text-[10px] font-bold px-2.5 py-0.5 border rounded-full ${
                           ord.status === "Paid"

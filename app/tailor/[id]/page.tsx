@@ -60,12 +60,18 @@ export default function TailorProfilePage() {
           verification_status,
           avg_rating,
           portfolio_images,
-          user:users!user_id (name, id)
+          user:users!user_id (name, id),
+          tailor_portfolio_items (public_url)
         `)
         .eq('user_id', id)
         .single()
 
       if (profileData) {
+        // Merge legacy images with new normalized images
+        profileData.portfolio_images = [
+            ...(profileData.tailor_portfolio_items || []).map((i: any) => i.public_url),
+            ...(profileData.portfolio_images || [])
+        ]
         setTailor(profileData)
         setPlaceholderData(getTailorPlaceholder(id, (profileData.user as any)?.name))
         setConfig(getTailorConfig(id, (profileData.user as any)?.name))

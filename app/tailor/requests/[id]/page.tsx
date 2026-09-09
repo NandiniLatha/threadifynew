@@ -12,7 +12,9 @@ import {
   CheckCircle,
   IndianRupee,
   Clock,
-  FileText
+  FileText,
+  Tag,
+  Scissors
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -29,17 +31,11 @@ export default function TailorRequestDetails() {
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null)
 
   // Form states
-  const [price,             setPrice]             = React.useState("")
-  const [days,              setDays]              = React.useState("")
-  const [note,              setNote]              = React.useState("")
-  const [completionDate,    setCompletionDate]    = React.useState("")
-  const [baseGarment,       setBaseGarment]       = React.useState("")
-  const [fabricCost,        setFabricCost]        = React.useState("")
-  const [stitchingCost,     setStitchingCost]     = React.useState("")
-  const [customCharges,     setCustomCharges]     = React.useState("")
-  const [deliveryCharges,   setDeliveryCharges]   = React.useState("")
-  const [showBreakdown,     setShowBreakdown]     = React.useState(false)
-  const [isSubmitting,      setIsSubmitting]      = React.useState(false)
+  const [price, setPrice] = React.useState("")
+  const [days, setDays] = React.useState("")
+  const [note, setNote] = React.useState("")
+  const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [successMsg, setSuccessMsg] = React.useState<string | null>(null)
 
   React.useEffect(() => {
     async function loadData() {
@@ -51,15 +47,16 @@ export default function TailorRequestDetails() {
           return
         }
 
-        // Fetch request details — explicit columns only, not select(*)
         const { data: reqData, error: reqError } = await supabase
           .from("design_requests")
           .select(`
             id,
             status,
             budget_max,
+            budget_min,
             description,
             ai_tags,
+            notes,
             image_url,
             measurements,
             customer:users!customer_id ( name )
@@ -74,7 +71,7 @@ export default function TailorRequestDetails() {
         }
         setRequest(reqData)
 
-        // Check if tailor already placed a quote — explicit columns only
+        // Check if tailor already placed a quote
         const { data: quoteData, error: quoteError } = await supabase
           .from("quotations")
           .select("id, price, estimated_days, note, status")
@@ -99,55 +96,42 @@ export default function TailorRequestDetails() {
   const handleSubmitQuote = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Compute total from breakdown if entered
-    const breakdown = [
-      parseFloat(baseGarment)     || 0,
-      parseFloat(fabricCost)      || 0,
-      parseFloat(stitchingCost)   || 0,
-      parseFloat(customCharges)   || 0,
-      parseFloat(deliveryCharges) || 0,
-    ]
-    const breakdownTotal = breakdown.reduce((s, v) => s + v, 0)
-    const finalPrice = breakdownTotal > 0 ? breakdownTotal.toString() : price
-
-    if (!finalPrice || !days) {
+    if (!price || !days) {
       setErrorMsg("Please provide a price and estimated days.")
       return
     }
 
     setIsSubmitting(true)
     setErrorMsg(null)
+    setSuccessMsg(null)
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      const res = await fetch("/api/quotations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requestId: id,
+          price: price,
+          estimatedDays: days,
+          note: note,
+        }),
+      })
 
-      const { data, error } = await supabase
-        .from("quotations")
-        .insert({
-          request_id:             id,
-          tailor_id:              user.id,
-          price:                  parseFloat(finalPrice),
-          estimated_days:         parseInt(days, 10),
-          note:                   note || "",
-          status:                 "pending",
-          // Breakdown fields (new)
-          base_garment_price:     parseFloat(baseGarment)     || 0,
-          fabric_cost:            parseFloat(fabricCost)      || 0,
-          stitching_cost:         parseFloat(stitchingCost)   || 0,
-          customization_charges:  parseFloat(customCharges)   || 0,
-          delivery_charges:       parseFloat(deliveryCharges) || 0,
-          estimated_completion_date: completionDate || null,
+      const data = await res.json()
+      if (res.ok) {
+        setSuccessMsg("Price Quote successfully submitted!")
+        // Update local UI immediately
+        setMyQuote({
+          price: parseFloat(price),
+          estimated_days: parseInt(days, 10),
+          note: note,
+          status: "pending"
         })
-        .select()
-        .single()
-
-      if (error) throw error
-
-      setMyQuote(data)
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to submit quotation."
-      setErrorMsg(msg)
+      } else {
+        setErrorMsg(data.error || "Failed to submit quote.")
+      }
+    } catch {
+      setErrorMsg("Could not submit quotation. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
@@ -167,7 +151,7 @@ export default function TailorRequestDetails() {
         <Button variant="ghost" onClick={() => router.back()} className="gap-2">
           <ArrowLeft className="w-4 h-4" /> Back
         </Button>
-        <div className="p-6 bg-destructive/10 border border-destructive/20 text-destructive rounded-3xl flex flex-col items-center justify-center text-center space-y-4">
+        <div className="p-6 bg-destructive/10 border border-destructive/20 text-destructive rounded-[2rem] flex flex-col items-center justify-center text-center space-y-4 max-w-md mx-auto mt-20">
           <AlertCircle className="w-10 h-10" />
           <p className="font-semibold">{errorMsg || "Request not found"}</p>
         </div>
@@ -176,268 +160,236 @@ export default function TailorRequestDetails() {
   }
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
+    <div className="space-y-10 max-w-6xl mx-auto pb-20">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.push("/tailor/requests")} className="rounded-full">
-          <ArrowLeft className="w-5 h-5" />
+        <Button variant="outline" size="icon" onClick={() => router.push("/tailor/requests")} className="rounded-full shrink-0">
+          <ArrowLeft className="w-4 h-4" />
         </Button>
         <div>
-          <h1 className="font-serif text-2xl font-bold text-foreground">
-            {request.ai_tags[0] || "Custom Design Request"}
+          <h1 className="font-serif text-3xl font-bold text-foreground">
+            {request.ai_tags?.[0] || "Custom Design Request"}
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Requested by <span className="font-semibold">{request.customer?.name || "Customer"}</span>
+          <p className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
+            Requested by <span className="font-semibold text-foreground">{request.customer?.name || "Customer"}</span>
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Left Col: Request Details */}
-        <div className="space-y-6">
-          <div className="aspect-[4/5] rounded-3xl overflow-hidden border border-border bg-muted relative shadow-sm">
-            <Image width={400} height={400} 
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+        
+        {/* ── Left Column: Request Details (7 Cols) ── */}
+        <div className="lg:col-span-7 space-y-8">
+          {/* Inspiration Image */}
+          <div className="aspect-[4/5] sm:aspect-video lg:aspect-[4/5] xl:aspect-video rounded-[2rem] overflow-hidden border border-border bg-muted relative shadow-sm group">
+            <Image 
               src={request.image_url} 
               alt="Design inspiration" 
-              className="w-full h-full object-cover"
+              fill
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
+            <div className="absolute top-4 left-4">
+              <span className="bg-background/90 backdrop-blur-md text-foreground text-xs font-bold px-3 py-1.5 rounded-full border border-border flex items-center shadow-sm">
+                <Scissors className="w-3 h-3 mr-1.5" /> Client Inspiration
+              </span>
+            </div>
           </div>
           
-          <div className="bg-card border border-border rounded-3xl p-6 space-y-5 shadow-sm">
-            <h3 className="font-bold text-foreground flex items-center gap-2 border-b border-border pb-3">
-              <FileText className="w-4 h-4 text-primary" />
-              Requirements
+          {/* Detailed Breakdown */}
+          <div className="space-y-6">
+            <h3 className="font-serif text-2xl font-bold text-foreground border-b border-border pb-4">
+              Requirements & Details
             </h3>
             
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">Budget</p>
-                <p className="text-sm font-bold text-primary">{formatINR(request.budget_min)} – {formatINR(request.budget_max)}</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+              <div className="bg-muted/30 p-4 rounded-2xl border border-border/50">
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-1">Target Budget</p>
+                <p className="text-lg font-bold text-foreground">{formatINR(request.budget_min)} – {formatINR(request.budget_max)}</p>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">Client Deadline</p>
-                <p className="text-sm font-bold">{request.deadline}</p>
+              <div className="bg-muted/30 p-4 rounded-2xl border border-border/50">
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-1">Required Deadline</p>
+                <p className="text-lg font-bold text-foreground">{request.deadline}</p>
+              </div>
+              <div className="bg-muted/30 p-4 rounded-2xl border border-border/50 col-span-2 sm:col-span-1">
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-1">Status</p>
+                <p className="text-lg font-bold text-foreground capitalize">{request.status.replace("_", " ")}</p>
               </div>
             </div>
 
-            <div>
-              <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-2">Detected Elements</p>
-              <div className="flex flex-wrap gap-1.5">
-                {request.ai_tags.map((tag: string, i: number) => (
-                  <span key={i} className="text-xs font-medium px-2.5 py-1 bg-muted border border-border rounded-md text-foreground">
-                    {tag}
-                  </span>
-                ))}
+            {request.ai_tags && request.ai_tags.length > 0 && (
+              <div>
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-3">AI Detected Attributes</p>
+                <div className="flex flex-wrap gap-2">
+                  {request.ai_tags.map((tag: string, i: number) => (
+                    <span key={i} className="text-xs font-semibold px-3 py-1.5 bg-background border border-border rounded-lg text-foreground shadow-sm flex items-center">
+                      <Tag className="w-3 h-3 mr-1.5 text-muted-foreground" /> {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
             
             {request.notes && (
               <div className="pt-2">
-                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">Client Notes</p>
-                 <p className="text-sm text-foreground/90 bg-muted/50 p-4 rounded-xl leading-relaxed italic border border-border/50">&ldquo;{request.notes}&rdquo;</p>
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <FileText className="w-3.5 h-3.5" /> Client Notes
+                </p>
+                <div className="text-sm text-foreground/90 bg-primary/5 p-6 rounded-[2rem] leading-relaxed italic border border-primary/10 relative">
+                  <span className="text-4xl text-primary/20 absolute top-2 left-3 font-serif">"</span>
+                  <span className="relative z-10 block pt-1 px-2">&ldquo;{request.notes}&rdquo;</span>
+                </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Right Col: Quoting Form / Status */}
-        <div className="space-y-6">
-          {request.status !== "pending_bids" ? (
-            <div className="bg-card border border-border rounded-3xl p-8 text-center space-y-4 shadow-sm">
-              <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto" />
-              <h2 className="text-xl font-bold text-foreground">Bidding Closed</h2>
-              <p className="text-sm text-muted-foreground">
-                This request is no longer accepting quotes. It has either been assigned to a tailor or cancelled.
-              </p>
-            </div>
-          ) : myQuote ? (
-            <div className="bg-card border border-primary/30 rounded-3xl p-6 space-y-6 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 pointer-events-none" />
-              
-              <div className="flex items-center gap-3 pb-4 border-b border-border">
-                <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
-                  <CheckCircle className="w-5 h-5" />
+        {/* ── Right Column: Quoting Action (5 Cols) ── */}
+        <div className="lg:col-span-5">
+          <div className="sticky top-24">
+            {request.status !== "pending_bids" ? (
+              <div className="bg-card border border-border rounded-[2rem] p-10 text-center space-y-5 shadow-sm">
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto">
+                   <AlertCircle className="w-8 h-8 text-muted-foreground" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-foreground">Your Quote is Submitted</h2>
-                  <p className="text-xs text-muted-foreground">Waiting for the client to review.</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-background p-4 rounded-2xl border border-border">
-                  <p className="text-xs text-muted-foreground font-semibold mb-1">Quoted Price</p>
-                  <p className="text-lg font-bold text-primary">{formatINR(myQuote.price)}</p>
-                </div>
-                <div className="bg-background p-4 rounded-2xl border border-border">
-                  <p className="text-xs text-muted-foreground font-semibold mb-1">Timeline</p>
-                  <p className="text-lg font-bold text-foreground flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-muted-foreground" /> {myQuote.estimated_days} days
+                  <h2 className="text-xl font-bold text-foreground">Bidding Closed</h2>
+                  <p className="text-sm text-muted-foreground mt-2 max-w-[250px] mx-auto">
+                    This request is no longer accepting quotes. It has either been assigned to a tailor or cancelled.
                   </p>
                 </div>
               </div>
-
-              {myQuote.note && (
-                <div>
-                  <p className="text-xs font-semibold text-muted-foreground mb-2">Your Message</p>
-                   <p className="text-sm bg-muted p-4 rounded-xl text-foreground/80 border border-border/50">&ldquo;{myQuote.note}&rdquo;</p>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="bg-card border border-border rounded-3xl p-6 shadow-sm">
-              <h2 className="text-xl font-serif font-bold text-foreground mb-6">Submit Your Quote</h2>
-              
-              {errorMsg && (
-                <div className="p-3 mb-6 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-xl flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>{errorMsg}</span>
-                </div>
-              )}
-
-              <form onSubmit={handleSubmitQuote} className="space-y-5">
-                {/* ── Total price OR auto-computed from breakdown ── */}
-                <div>
-                  <label htmlFor="price" className="block text-sm font-bold text-foreground mb-1.5">
-                    Total Price Quote
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="price"
-                      type="number"
-                      min={0}
-                      value={price}
-                      onChange={(e) => setPrice(e.target.value)}
-                      placeholder={showBreakdown ? "Auto-calculated from breakdown" : "e.g. 15000"}
-                      className="w-full h-11 px-3 pl-10 border border-border rounded-xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                    />
-                    <IndianRupee className="w-4 h-4 absolute left-3.5 top-3.5 text-muted-foreground" />
+            ) : myQuote ? (
+              <div className="bg-card border border-primary/30 rounded-[2rem] p-8 shadow-sm relative overflow-hidden">
+                <div className="absolute -top-12 -right-12 w-40 h-40 bg-primary/5 rounded-full pointer-events-none" />
+                
+                <div className="flex flex-col items-center text-center pb-6 border-b border-border/50 mb-6">
+                  <div className="w-14 h-14 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-4">
+                    <CheckCircle className="w-7 h-7" />
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-1.5">
-                     Keep it within the client&apos;s budget of {formatINR(request.budget_min)} - {formatINR(request.budget_max)} to increase your chances.
-                  </p>
+                  <h2 className="text-2xl font-serif font-bold text-foreground">Quote Submitted</h2>
+                  <p className="text-sm text-muted-foreground mt-1">Waiting for the client to review your proposal.</p>
                 </div>
 
-                {/* ── Price Breakdown toggle ── */}
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => setShowBreakdown(!showBreakdown)}
-                    className="flex items-center gap-2 text-xs font-semibold text-primary hover:underline"
-                  >
-                    {showBreakdown ? "▲ Hide price breakdown" : "▼ Add itemized breakdown (recommended)"}
-                  </button>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between bg-muted/30 p-4 rounded-2xl border border-border/50">
+                    <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Offered Price</p>
+                    <p className="text-xl font-bold text-primary">{formatINR(myQuote.price)}</p>
+                  </div>
+                  <div className="flex items-center justify-between bg-muted/30 p-4 rounded-2xl border border-border/50">
+                    <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Timeline</p>
+                    <p className="text-lg font-bold text-foreground flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-muted-foreground" /> {myQuote.estimated_days} days
+                    </p>
+                  </div>
+                </div>
 
-                  {showBreakdown && (
-                    <div className="mt-4 space-y-3 p-4 bg-muted/50 rounded-2xl border border-border">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Breakdown (optional)</p>
-                      {[
-                        { label: "Base Garment",       val: baseGarment,     set: setBaseGarment,     placeholder: "e.g. 5000" },
-                        { label: "Fabric Cost",         val: fabricCost,      set: setFabricCost,      placeholder: "e.g. 3000" },
-                        { label: "Stitching",           val: stitchingCost,   set: setStitchingCost,   placeholder: "e.g. 2000" },
-                        { label: "Customization / Work", val: customCharges,  set: setCustomCharges,   placeholder: "e.g. 2500" },
-                        { label: "Delivery Charges",   val: deliveryCharges, set: setDeliveryCharges, placeholder: "e.g. 200"  },
-                      ].map((field) => (
-                        <div key={field.label} className="flex items-center gap-3">
-                          <label className="w-36 shrink-0 text-xs font-medium text-muted-foreground">{field.label}</label>
-                          <div className="relative flex-1">
-                            <span className="absolute left-3 top-2.5 text-xs text-muted-foreground">₹</span>
-                            <input
-                              type="number"
-                              min={0}
-                              value={field.val}
-                              onChange={(e) => {
-                                field.set(e.target.value)
-                                // Auto-update total
-                                const vals = [
-                                  field.label === "Base Garment"        ? e.target.value : baseGarment,
-                                  field.label === "Fabric Cost"         ? e.target.value : fabricCost,
-                                  field.label === "Stitching"           ? e.target.value : stitchingCost,
-                                  field.label === "Customization / Work"? e.target.value : customCharges,
-                                  field.label === "Delivery Charges"    ? e.target.value : deliveryCharges,
-                                ]
-                                const total = vals.reduce((s, v) => s + (parseFloat(v) || 0), 0)
-                                if (total > 0) setPrice(total.toString())
-                              }}
-                              placeholder={field.placeholder}
-                              className="w-full h-9 px-3 pl-7 border border-border rounded-xl bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-                            />
-                          </div>
-                        </div>
-                      ))}
+                {myQuote.note && (
+                  <div className="mt-6">
+                    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-2">Your Message</p>
+                     <p className="text-sm bg-muted/50 p-4 rounded-2xl text-foreground/80 border border-border/40 italic">&ldquo;{myQuote.note}&rdquo;</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="bg-card border border-border rounded-[2rem] p-8 shadow-sm">
+                <h2 className="text-2xl font-serif font-bold text-foreground mb-1">Submit Proposal</h2>
+                <p className="text-sm text-muted-foreground mb-8">Offer your pricing and timeline to win this client.</p>
+                
+                {errorMsg && (
+                  <div className="p-4 mb-6 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-2xl flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                    <span>{errorMsg}</span>
+                  </div>
+                )}
+
+                {successMsg && (
+                  <div className="p-4 mb-6 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-450 text-sm rounded-2xl flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 shrink-0" />
+                    <span>{successMsg}</span>
+                  </div>
+                )}
+
+                {!successMsg && (
+                  <form onSubmit={handleSubmitQuote} className="space-y-6">
+                    <div>
+                      <label htmlFor="price" className="block text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
+                        Total Price Quote
+                      </label>
+                      <div className="relative">
+                        <input
+                          id="price"
+                          type="number"
+                          min={0}
+                          required
+                          value={price}
+                          onChange={(e) => setPrice(e.target.value)}
+                          placeholder="e.g. 15000"
+                          className="w-full h-12 px-4 pl-11 border border-border rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                        />
+                        <IndianRupee className="w-4 h-4 absolute left-4 top-4 text-muted-foreground" />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-2 flex items-center gap-1.5">
+                         <AlertCircle className="w-3 h-3" />
+                         Tip: The client's budget is {formatINR(request.budget_min)} - {formatINR(request.budget_max)}.
+                      </p>
                     </div>
-                  )}
-                </div>
 
-                {/* ── Timeline ── */}
-                <div>
-                  <label htmlFor="days" className="block text-sm font-bold text-foreground mb-1.5">
-                    Estimated Time (Days)
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="days"
-                      type="number"
-                      required
-                      min={1}
-                      value={days}
-                      onChange={(e) => setDays(e.target.value)}
-                      placeholder="e.g. 14"
-                      className="w-full h-11 px-3 pl-10 border border-border rounded-xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                    />
-                    <Clock className="w-4 h-4 absolute left-3.5 top-3.5 text-muted-foreground" />
-                  </div>
-                </div>
+                    <div>
+                      <label htmlFor="days" className="block text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
+                        Estimated Delivery (Days)
+                      </label>
+                      <div className="relative">
+                        <input
+                          id="days"
+                          type="number"
+                          required
+                          min={1}
+                          value={days}
+                          onChange={(e) => setDays(e.target.value)}
+                          placeholder="e.g. 14"
+                          className="w-full h-12 px-4 pl-11 border border-border rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                        />
+                        <Clock className="w-4 h-4 absolute left-4 top-4 text-muted-foreground" />
+                      </div>
+                    </div>
 
-                {/* ── Completion date ── */}
-                <div>
-                  <label htmlFor="completion_date" className="block text-sm font-bold text-foreground mb-1.5">
-                    Estimated Completion Date <span className="text-muted-foreground font-normal text-xs">(optional)</span>
-                  </label>
-                  <input
-                    id="completion_date"
-                    type="date"
-                    value={completionDate}
-                    onChange={(e) => setCompletionDate(e.target.value)}
-                    className="w-full h-11 px-3 border border-border rounded-xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                </div>
+                    <div>
+                      <label htmlFor="note" className="block text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
+                        Message to Client <span className="text-muted-foreground font-normal lowercase tracking-normal">(optional)</span>
+                      </label>
+                      <textarea
+                        id="note"
+                        value={note}
+                        onChange={(e) => setNote(e.target.value)}
+                        placeholder="Why should the client choose you? Discuss your fabric choices, fitting process, or experience..."
+                        className="w-full h-32 p-4 border border-border rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none transition-shadow"
+                      />
+                    </div>
 
-                {/* ── Note ── */}
-                <div>
-                  <label htmlFor="note" className="block text-sm font-bold text-foreground mb-1.5">
-                    Message to Client <span className="text-muted-foreground font-normal text-xs">(optional)</span>
-                  </label>
-                  <textarea
-                    id="note"
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    placeholder="Tell the client about your fabric choices, fitting process, and why you're the right fit..."
-                    className="w-full h-28 p-3 border border-border rounded-xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
-                  />
-                </div>
-
-                <div className="pt-2">
-                  <Button 
-                    type="submit" 
-                    disabled={isSubmitting}
-                    className="w-full h-12 bg-primary text-primary-foreground font-bold rounded-xl text-base shadow-sm hover:opacity-90 transition-opacity"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Submitting...
-                      </>
-                    ) : (
-                      "Submit Price Quote"
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </div>
-          )}
+                    <div className="pt-4 border-t border-border/50">
+                      <Button 
+                        type="submit" 
+                        disabled={isSubmitting}
+                        className="w-full h-12 bg-primary text-primary-foreground font-bold rounded-2xl text-base shadow-sm hover:opacity-90 transition-opacity"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                            Submitting...
+                          </>
+                        ) : (
+                          "Send Proposal to Client"
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
   )
 }
+

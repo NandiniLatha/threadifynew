@@ -37,6 +37,22 @@ export async function POST(request: Request) {
       )
     }
 
+    // Prevent duplicate active quotes from the same tailor for this request
+    const { data: existingQuote } = await supabase
+      .from("quotations")
+      .select("id")
+      .eq("tailor_id", user.id)
+      .eq("request_id", requestId)
+      .in("status", ["pending", "accepted"])
+      .single()
+
+    if (existingQuote) {
+      return NextResponse.json(
+        { error: "You have already submitted a quotation for this request." },
+        { status: 400 }
+      )
+    }
+
     const { error } = await supabase.from("quotations").insert({
       request_id: requestId,
       tailor_id: user.id,
@@ -53,11 +69,19 @@ export async function POST(request: Request) {
     // Fire notification to the customer who owns this design request
     const { data: designRequest } = await supabase
       .from("design_requests")
-      .select("customer_id")
+      .select("customer_id, status")
       .eq("id", requestId)
       .single()
 
     if (designRequest?.customer_id) {
+      // If this is the first quote, update the request status to 'quoted'
+      if (designRequest.status === "pending_bids") {
+        await supabase
+          .from("design_requests")
+          .update({ status: "quoted" })
+          .eq("id", requestId)
+      }
+
       await createNotification(
         supabase,
         designRequest.customer_id,

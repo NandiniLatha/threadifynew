@@ -52,7 +52,7 @@ const JOURNEY_STEPS: JourneyStep[] = [
   },
   {
     number: "04",
-    title: "Get Your Quote",
+    title: "Get Your Price",
     description: "Receive a clear, transparent price quote.",
     image: "/images/journey/step_4_quote.webp",
     icon: IndianRupee,

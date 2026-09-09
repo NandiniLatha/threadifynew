@@ -22,7 +22,9 @@ import {
 } from "lucide-react"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
 import { NotificationsBell } from "@/components/shared/NotificationsBell"
+import { EditProfileModal } from "@/components/shared/EditProfileModal"
 import { Button } from "@/components/ui/button"
+import { motion, AnimatePresence } from "framer-motion"
 
 export default function CustomerLayout({
   children,
@@ -35,9 +37,34 @@ export default function CustomerLayout({
 
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
   const [userName, setUserName] = React.useState("Customer")
+  const [avatarUrl, setAvatarUrl] = React.useState<string | null>(null)
+  const [customerBio, setCustomerBio] = React.useState("")
+  const [lastChangedAt, setLastChangedAt] = React.useState<string | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false)
   const [userId, setUserId] = React.useState<string | null>(null)
   const [unreadCount, setUnreadCount] = React.useState(0)
   const [notifUnreadCount, setNotifUnreadCount] = React.useState(0)
+  const [wishlistCount, setWishlistCount] = React.useState(0)
+
+  const fetchNotifCount = React.useCallback(async () => {
+    try {
+      const res = await fetch("/api/notifications/unread-count")
+      if (res.ok) {
+        const data = await res.json()
+        setNotifUnreadCount(data.count ?? 0)
+      }
+    } catch { /* silently fail */ }
+  }, [])
+
+  const fetchWishlistCount = React.useCallback(async () => {
+    try {
+      const res = await fetch("/api/wishlist/count")
+      if (res.ok) {
+        const data = await res.json()
+        setWishlistCount(data.count ?? 0)
+      }
+    } catch { /* silently fail */ }
+  }, [])
 
   React.useEffect(() => {
     let active = true
@@ -47,41 +74,38 @@ export default function CustomerLayout({
         setUserId(user.id)
         const { data: profile } = await supabase
           .from("users")
-          .select("name")
+          .select("name, avatar_url, bio, display_name_changed_at")
           .eq("id", user.id)
           .single()
-        if (active && profile?.name) {
-          setUserName(profile.name)
+        if (active && profile) {
+          if (profile.name) setUserName(profile.name)
+          if (profile.avatar_url) setAvatarUrl(profile.avatar_url)
+          setCustomerBio(profile.bio || "")
+          setLastChangedAt(profile.display_name_changed_at || null)
         }
       }
     }
     fetchProfile()
 
-    // Fetch notification unread count via lightweight endpoint (count query only —
-    // no payload). Avoids duplicating the full fetch that NotificationsBell also makes.
-    async function fetchNotifCount() {
-      try {
-        const res = await fetch("/api/notifications/unread-count")
-        if (res.ok) {
-          const data = await res.json()
-          setNotifUnreadCount(data.count ?? 0)
-        }
-      } catch { /* silently fail */ }
-    }
     fetchNotifCount()
+    fetchWishlistCount()
+
+    window.addEventListener("profile-updated", fetchProfile)
 
     return () => {
       active = false
+      window.removeEventListener("profile-updated", fetchProfile)
     }
-  }, [supabase])
+  }, [supabase, fetchNotifCount, fetchWishlistCount])
 
   // Realtime subscription for unread messages badge (depends on userId)
   React.useEffect(() => {
     if (!userId) return
 
-    const uniqueChannelName = `global-customer-messages-${userId}-${Math.random().toString(36).substring(7)}`
-    const channel = supabase
-      .channel(uniqueChannelName)
+    // Realtime subscription for unread messages badge
+    const messageChannelName = `global-customer-messages-${userId}-${Math.random().toString(36).substring(7)}`
+    const messageChannel = supabase
+      .channel(messageChannelName)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages" },
@@ -97,10 +121,38 @@ export default function CustomerLayout({
       )
       .subscribe()
 
+    // Realtime subscription for notifications badge
+    const notifChannelName = `global-customer-notifs-${userId}-${Math.random().toString(36).substring(7)}`
+    const notifChannel = supabase
+      .channel(notifChannelName)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
+        () => {
+          fetchNotifCount() // Re-fetch count when any notification changes for this user
+        }
+      )
+      .subscribe()
+
+    // Realtime subscription for wishlist badge
+    const wishlistChannelName = `global-customer-wishlist-${userId}-${Math.random().toString(36).substring(7)}`
+    const wishlistChannel = supabase
+      .channel(wishlistChannelName)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "wishlist_items", filter: `customer_id=eq.${userId}` },
+        () => {
+          fetchWishlistCount() // Re-fetch count when wishlist changes
+        }
+      )
+      .subscribe()
+
     return () => {
-      supabase.removeChannel(channel)
+      supabase.removeChannel(messageChannel)
+      supabase.removeChannel(notifChannel)
+      supabase.removeChannel(wishlistChannel)
     }
-  }, [supabase, userId])
+  }, [supabase, userId, fetchNotifCount, fetchWishlistCount])
 
 
   const menuItems = [
@@ -153,43 +205,54 @@ export default function CustomerLayout({
       {/* Sidebar - Desktop */}
       <aside
         aria-label="Customer navigation"
-        className={`fixed inset-y-0 left-0 z-30 w-64 bg-card border-r border-border flex flex-col justify-between transform md:translate-x-0 transition-transform duration-300 md:static ${
+        className={`fixed inset-y-0 left-0 z-30 w-64 bg-background border-r border-border/40 flex flex-col justify-between transform md:translate-x-0 transition-transform duration-300 md:static ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex flex-col flex-1">
           {/* Sidebar Brand header */}
-          <div className="h-16 border-b border-border items-center px-6 hidden md:flex justify-between">
+          <div className="h-20 border-b border-border/40 items-center px-8 hidden md:flex justify-between">
             <Link href="/" className="flex items-center space-x-2">
-              <Image src="/brand/threadify-logo.svg" alt="Threadify" width={140} height={36} className="h-8 w-auto dark:invert" />
+              <Image src="/brand/threadify-logo.svg" alt="Threadify" width={140} height={36} className="h-7 w-auto dark:invert" />
             </Link>
-            <div className="flex items-center gap-2">
-              <NotificationsBell />
-              <ThemeToggle />
-            </div>
           </div>
 
-          {/* User info capsule */}
-          <div className="p-4 border-b border-border/60">
-            <div className="flex items-center space-x-3 p-2 bg-muted/40 rounded-2xl border border-border/50">
+          {/* User info capsule (Elevated Editorial) */}
+          <div className="p-8 pb-4">
+            <div className="flex items-center space-x-4 p-2 -ml-2 rounded-xl">
               <div
-                className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold"
+                className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-serif text-lg font-bold border border-primary/20 shadow-sm overflow-hidden shrink-0"
                 aria-hidden="true"
               >
-                {userName.charAt(0)}
+                {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  userName.charAt(0) || "C"
+                )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-foreground truncate">{userName}</p>
-                <p className="text-[10px] text-muted-foreground font-semibold flex items-center gap-0.5 mt-0.5">
-                  <Sparkles className="w-3 h-3 text-rust" aria-hidden="true" />
-                  <span>Customer Workspace</span>
+                <p className="text-sm font-bold text-foreground font-serif tracking-tight truncate">{userName}</p>
+                <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold flex items-center gap-1 mt-1">
+                  Customer
                 </p>
               </div>
             </div>
+            {customerBio && (
+              <p className="mt-4 text-xs text-muted-foreground line-clamp-3">
+                {customerBio}
+              </p>
+            )}
+            <button
+              onClick={() => setIsEditModalOpen(true)}
+              className="mt-4 w-full px-3 py-1.5 text-xs font-semibold bg-muted hover:bg-muted/80 text-foreground rounded-lg transition-colors border border-border"
+            >
+              Edit Profile
+            </button>
           </div>
 
           {/* Nav links */}
-          <nav className="flex-1 p-4 space-y-1 overflow-y-auto" aria-label="Dashboard navigation">
+          <nav className="flex-1 px-4 py-2 space-y-1.5 overflow-y-auto" aria-label="Dashboard navigation">
             {menuItems.map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
@@ -199,41 +262,69 @@ export default function CustomerLayout({
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
                   aria-current={isActive ? "page" : undefined}
-                  className={`flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                  className={`group relative flex items-center justify-between px-4 py-3 rounded-lg text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                     isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      ? "text-foreground font-bold"
+                      : "text-muted-foreground hover:text-foreground font-medium"
                   }`}
                 >
-                  <div className="flex items-center space-x-3">
-                    <Icon className="w-5 h-5 shrink-0" aria-hidden="true" />
-                    <span>{item.name}</span>
+                  {/* Active Indicator Line */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="active-sidebar-nav"
+                      className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                  )}
+                  {/* Subtle Background Hover/Active */}
+                  {isActive && (
+                    <div className="absolute inset-0 bg-muted/30 rounded-lg pointer-events-none" />
+                  )}
+                  <div className="absolute inset-0 bg-muted/0 hover:bg-muted/30 rounded-lg transition-colors pointer-events-none group-hover:bg-muted/30" />
+                  
+                  <div className="flex items-center space-x-3 relative z-10">
+                    <Icon className={`w-4 h-4 shrink-0 transition-colors ${isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`} aria-hidden="true" />
+                    <span className="tracking-wide">{item.name}</span>
                   </div>
-                  {item.name === "Messages" && unreadCount > 0 && (
-                    <span className="bg-destructive text-destructive-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
-                      {unreadCount}
-                    </span>
-                  )}
-                  {item.name === "Notifications" && notifUnreadCount > 0 && (
-                    <span className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
-                      {notifUnreadCount > 9 ? "9+" : notifUnreadCount}
-                    </span>
-                  )}
+                  
+                  <div className="flex items-center gap-2 relative z-10">
+                    {item.name === "Messages" && unreadCount > 0 && (
+                      <span className="bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        {unreadCount}
+                      </span>
+                    )}
+                    {item.name === "Notifications" && notifUnreadCount > 0 && (
+                      <span className="bg-foreground text-background text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                        {notifUnreadCount > 9 ? "9+" : notifUnreadCount}
+                      </span>
+                    )}
+                    {item.name === "Wishlist" && wishlistCount > 0 && (
+                      <span className="bg-muted text-foreground border border-border text-[10px] font-semibold px-2 py-0.5 rounded-full shadow-sm">
+                        {wishlistCount}
+                      </span>
+                    )}
+                  </div>
                 </Link>
               )
             })}
           </nav>
         </div>
 
-        {/* Sidebar Footer - Logout */}
-        <div className="p-4 border-t border-border">
+        {/* Sidebar Footer - Settings & Logout */}
+        <div className="p-4 border-t border-border/40 space-y-4">
+           <div className="flex items-center gap-2 px-4 justify-between">
+              <ThemeToggle />
+              <NotificationsBell align="left" side="top" />
+           </div>
           <Button
-            variant="outline"
+            variant="ghost"
             onClick={handleLogout}
-            className="w-full flex items-center justify-center space-x-2 border-border text-destructive hover:bg-destructive/10 hover:border-destructive/20 font-semibold h-11 rounded-2xl"
+            className="w-full flex items-center justify-start space-x-3 text-muted-foreground hover:text-foreground hover:bg-muted/50 font-medium h-10 rounded-lg"
           >
-            <LogOut className="w-5 h-5" aria-hidden="true" />
-            <span>Sign Out</span>
+            <LogOut className="w-4 h-4" aria-hidden="true" />
+            <span className="tracking-wide text-sm">Sign Out</span>
           </Button>
         </div>
       </aside>
@@ -248,6 +339,18 @@ export default function CustomerLayout({
           {children}
         </div>
       </main>
+
+      {userId && (
+        <EditProfileModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          initialName={userName}
+          initialBio={customerBio}
+          initialAvatar={avatarUrl || ""}
+          lastChangedAt={lastChangedAt}
+          userId={userId}
+        />
+      )}
     </div>
   )
 }

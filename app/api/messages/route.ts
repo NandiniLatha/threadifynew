@@ -63,6 +63,51 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    // Connected Notification System: Notify recipient if no unread notification exists
+    try {
+      const { data: requestData } = await supabase
+        .from("design_requests")
+        .select("customer_id, tailor_id")
+        .eq("id", orderId)
+        .single()
+        
+      if (requestData) {
+        const isCustomerSending = user.id === requestData.customer_id;
+        const recipientId = isCustomerSending ? requestData.tailor_id : requestData.customer_id;
+        
+        if (recipientId) {
+          const notificationLink = isCustomerSending 
+            ? `/tailor/orders` 
+            : `/dashboard/orders/${orderId}`;
+          
+          const { data: existingUnread } = await supabase
+            .from("notifications")
+            .select("id")
+            .eq("user_id", recipientId)
+            .eq("link", notificationLink)
+            .eq("read", false)
+            .limit(1)
+            
+          if (!existingUnread || existingUnread.length === 0) {
+            // Provide a generic but clear message
+            const senderRole = user.id === requestData.customer_id ? "customer" : "tailor"
+            const { error: notifErr } = await supabase.from("notifications").insert({
+              user_id: recipientId,
+              message: `New message received regarding your order`,
+              link: notificationLink,
+              read: false,
+            })
+            
+            if (notifErr) {
+              console.warn("[messages] notification insert failed:", notifErr.message)
+            }
+          }
+        }
+      }
+    } catch (notifErr) {
+      console.warn("[messages] error processing notification:", notifErr)
+    }
+
     return NextResponse.json({ success: true, data })
   } catch (err) {
     const message = err instanceof Error ? err.message : "An unexpected error occurred."

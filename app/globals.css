@@ -43,7 +43,7 @@
     --input: 24 12% 82%;
     --ring: var(--rust);
 
-    --radius: 0.75rem;
+    --radius: 0rem;
   }
 
   .dark {

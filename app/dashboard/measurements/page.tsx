@@ -369,7 +369,7 @@ export default function MeasurementsPage() {
 
           {/* Garment type selector */}
           <div>
-            <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Garment Type</p>
+            <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Clothing Type</p>
             <div className="flex flex-wrap gap-2">
               {(Object.keys(GARMENT_LABELS) as GarmentType[]).map((gt) => (
                 <button

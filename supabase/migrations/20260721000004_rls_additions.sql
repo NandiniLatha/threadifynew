@@ -29,11 +29,13 @@ $$;
 
 -- ── addresses ────────────────────────────────────────────────
 
+DROP POLICY IF EXISTS "addresses: owner full access" ON public.addresses;
 CREATE POLICY "addresses: owner full access"
   ON public.addresses FOR ALL
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "addresses: admin read" ON public.addresses;
 CREATE POLICY "addresses: admin read"
   ON public.addresses FOR SELECT
   USING (is_admin());
@@ -41,6 +43,7 @@ CREATE POLICY "addresses: admin read"
 -- ── design_request_images ─────────────────────────────────────
 
 -- Customer can read images for their own requests
+DROP POLICY IF EXISTS "dri: customer read own" ON public.design_request_images;
 CREATE POLICY "dri: customer read own"
   ON public.design_request_images FOR SELECT
   USING (
@@ -51,6 +54,7 @@ CREATE POLICY "dri: customer read own"
   );
 
 -- Tailors can read images for requests they have a quote on or are assigned to
+DROP POLICY IF EXISTS "dri: tailor read accessible requests" ON public.design_request_images;
 CREATE POLICY "dri: tailor read accessible requests"
   ON public.design_request_images FOR SELECT
   USING (
@@ -67,6 +71,7 @@ CREATE POLICY "dri: tailor read accessible requests"
   );
 
 -- Tailors can read images for pending_bids requests (to decide whether to bid)
+DROP POLICY IF EXISTS "dri: tailor read pending" ON public.design_request_images;
 CREATE POLICY "dri: tailor read pending"
   ON public.design_request_images FOR SELECT
   USING (
@@ -78,6 +83,7 @@ CREATE POLICY "dri: tailor read pending"
   );
 
 -- Customer (or tailor) can upload images for their request/associated request
+DROP POLICY IF EXISTS "dri: customer insert own" ON public.design_request_images;
 CREATE POLICY "dri: customer insert own"
   ON public.design_request_images FOR INSERT
   WITH CHECK (
@@ -89,6 +95,7 @@ CREATE POLICY "dri: customer insert own"
   );
 
 -- Customer can delete their own request images
+DROP POLICY IF EXISTS "dri: customer delete own" ON public.design_request_images;
 CREATE POLICY "dri: customer delete own"
   ON public.design_request_images FOR DELETE
   USING (
@@ -98,6 +105,7 @@ CREATE POLICY "dri: customer delete own"
     )
   );
 
+DROP POLICY IF EXISTS "dri: admin full access" ON public.design_request_images;
 CREATE POLICY "dri: admin full access"
   ON public.design_request_images FOR ALL
   USING (is_admin());
@@ -105,6 +113,7 @@ CREATE POLICY "dri: admin full access"
 -- ── order_status_history ─────────────────────────────────────
 -- Immutable audit log — no update/delete for non-admins
 
+DROP POLICY IF EXISTS "osh: customer read own order history" ON public.order_status_history;
 CREATE POLICY "osh: customer read own order history"
   ON public.order_status_history FOR SELECT
   USING (
@@ -114,6 +123,7 @@ CREATE POLICY "osh: customer read own order history"
     )
   );
 
+DROP POLICY IF EXISTS "osh: tailor read assigned order history" ON public.order_status_history;
 CREATE POLICY "osh: tailor read assigned order history"
   ON public.order_status_history FOR SELECT
   USING (
@@ -123,27 +133,32 @@ CREATE POLICY "osh: tailor read assigned order history"
     )
   );
 
+DROP POLICY IF EXISTS "osh: admin full access" ON public.order_status_history;
 CREATE POLICY "osh: admin full access"
   ON public.order_status_history FOR ALL
   USING (is_admin());
 
 -- ── measurements ─────────────────────────────────────────────
 
+DROP POLICY IF EXISTS "measurements: owner full access" ON public.measurements;
 CREATE POLICY "measurements: owner full access"
   ON public.measurements FOR ALL
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "measurements: admin read" ON public.measurements;
 CREATE POLICY "measurements: admin read"
   ON public.measurements FOR SELECT
   USING (is_admin());
 
 -- ── payments ─────────────────────────────────────────────────
 
+DROP POLICY IF EXISTS "payments: customer read own" ON public.payments;
 CREATE POLICY "payments: customer read own"
   ON public.payments FOR SELECT
   USING (auth.uid() = customer_id);
 
+DROP POLICY IF EXISTS "payments: tailor read own" ON public.payments;
 CREATE POLICY "payments: tailor read own"
   ON public.payments FOR SELECT
   USING (auth.uid() = tailor_id);
@@ -151,20 +166,24 @@ CREATE POLICY "payments: tailor read own"
 -- Only server-side (service role) or admin inserts payment records
 -- The anon key + RLS path: customer row insert is NOT allowed client-side;
 -- all payment inserts go through the server-side API route with service-role.
+DROP POLICY IF EXISTS "payments: admin full access" ON public.payments;
 CREATE POLICY "payments: admin full access"
   ON public.payments FOR ALL
   USING (is_admin());
 
 -- ── conversations ─────────────────────────────────────────────
 
+DROP POLICY IF EXISTS "conversations: customer read own" ON public.conversations;
 CREATE POLICY "conversations: customer read own"
   ON public.conversations FOR SELECT
   USING (auth.uid() = customer_id);
 
+DROP POLICY IF EXISTS "conversations: tailor read own" ON public.conversations;
 CREATE POLICY "conversations: tailor read own"
   ON public.conversations FOR SELECT
   USING (auth.uid() = tailor_id);
 
+DROP POLICY IF EXISTS "conversations: admin full access" ON public.conversations;
 CREATE POLICY "conversations: admin full access"
   ON public.conversations FOR ALL
   USING (is_admin());
@@ -175,6 +194,7 @@ CREATE POLICY "conversations: admin full access"
 -- ── activity_logs ─────────────────────────────────────────────
 -- Admin-only; no customer access
 
+DROP POLICY IF EXISTS "activity_logs: admin full access" ON public.activity_logs;
 CREATE POLICY "activity_logs: admin full access"
   ON public.activity_logs FOR ALL
   USING (is_admin());

@@ -59,7 +59,7 @@ export async function POST(
       return NextResponse.json({ error: "Only the request owner can confirm payment." }, { status: 403 })
     }
 
-    if (!["pending_bids", "assigned"].includes(designRequest.status)) {
+    if (!["pending_bids", "quoted", "assigned"].includes(designRequest.status)) {
       return NextResponse.json(
         { error: `Cannot pay for a request with status '${designRequest.status}'.` },
         { status: 409 }
@@ -82,7 +82,9 @@ export async function POST(
     const platformCommission = parseFloat((amountPaid * 0.10).toFixed(2))
 
     // --- SIMULATED PAYMENT ---
-    // razorpay_order_id and razorpay_payment_id intentionally left null.
+    // We generate a demo transaction ID since this is a portfolio project.
+    // razorpay_order_id is left null, but we'll use razorpay_payment_id for the demo ID.
+    const demoTransactionId = `THR-DEMO-${Date.now().toString().slice(-8)}${Math.floor(Math.random() * 1000)}`
     // When real Razorpay is wired, these get filled in by the webhook handler.
 
     // 1. Update design_requests: assign tailor, set payment fields, advance status
@@ -93,15 +95,37 @@ export async function POST(
         tailor_id: quote.tailor_id,
         amount_paid: amountPaid,
         platform_commission: platformCommission,
-        razorpay_order_id: null,   // filled in when real Razorpay is connected
-        razorpay_payment_id: null, // filled in when real Razorpay is connected
+        razorpay_order_id: null,
+        razorpay_payment_id: demoTransactionId,
         status: "paid",
+        production_evidence_status: "none",
       })
       .eq("id", requestId)
 
     if (updateErr) {
       console.error("[mock-pay] design_requests update failed:", updateErr.message)
       return NextResponse.json({ error: updateErr.message }, { status: 500 })
+    }
+
+    // 1b. Create a verified payment record to enforce genuine payment status
+    const tailorPayout = amountPaid - platformCommission
+    const { error: paymentErr } = await supabase
+      .from("payments")
+      .insert({
+        order_id: requestId,
+        customer_id: user.id,
+        tailor_id: quote.tailor_id,
+        amount: amountPaid,
+        platform_fee: platformCommission,
+        tailor_payout: tailorPayout,
+        currency: "INR",
+        payment_status: "completed",
+        razorpay_payment_id: demoTransactionId,
+      })
+
+    if (paymentErr) {
+      console.error("[mock-pay] payments insert failed:", paymentErr.message)
+      return NextResponse.json({ error: paymentErr.message }, { status: 500 })
     }
 
     // 2. Mark this quotation as accepted
@@ -118,7 +142,7 @@ export async function POST(
       "/tailor/orders"
     )
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, transactionId: demoTransactionId })
   } catch (err) {
     const msg = err instanceof Error ? err.message : "An unexpected error occurred."
     console.error("[mock-pay] unhandled error:", msg)
