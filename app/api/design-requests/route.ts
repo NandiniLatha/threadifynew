@@ -2,15 +2,16 @@ import { createClient } from "@/lib/supabase/server"
 import { v2 as cloudinary } from "cloudinary"
 import { NextResponse } from "next/server"
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "",
-  api_key: process.env.CLOUDINARY_API_KEY || "",
-  api_secret: process.env.CLOUDINARY_API_SECRET || "",
-})
-
 export async function POST(request: Request) {
   try {
+    // Configure Cloudinary dynamically inside the request handler
+    // This ensures process.env is evaluated at runtime in production, not build time
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "",
+      api_key: process.env.CLOUDINARY_API_KEY || "",
+      api_secret: process.env.CLOUDINARY_API_SECRET || "",
+    })
+
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -60,8 +61,15 @@ export async function POST(request: Request) {
           folder: "threadify_inspiration",
         })
         imageUrl = uploadRes.secure_url
-      } catch (err) {
-        console.error("Cloudinary upload error:", err)
+      } catch (err: any) {
+        console.error("Cloudinary upload error diagnostic:", {
+          message: err.message || err,
+          http_code: err.http_code,
+          name: err.name,
+          sourceType: typeof imageSource,
+          isBase64: typeof imageSource === "string" && imageSource.startsWith("data:image/"),
+          sourceLength: imageSource?.length
+        })
         return NextResponse.json(
           { error: "We couldn't store your inspiration image. Please try again." },
           { status: 500 }
