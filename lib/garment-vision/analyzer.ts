@@ -190,11 +190,13 @@ export async function analyzeInspirationImage(
   // 2. Extract Garment Attributes
   const derived = deriveGarmentAttributes(initialLabels, bestMatch);
 
-  const isVisionFailure = !g && (!initialLabels || initialLabels.length === 0);
+  const hasGraniteSignal = Boolean(
+    g && Object.values(g).some((v) => typeof v === "string" && v && v !== "Unknown")
+  );
+  const isVisionFailure = !hasGraniteSignal && (!initialLabels || initialLabels.length === 0);
 
   // Overlay Granite's actual AI vision detection when available and valid
-  const garmentType = isVisionFailure ? "Unknown" : ((g?.garmentType && g.garmentType !== "Unknown") ? g.garmentType : derived.garmentType);
-  const category = isVisionFailure ? "Unknown" : ((g?.category && g.category !== "Unknown") ? g.category : derived.category);
+  const garmentType = isVisionFailure ? "Unknown" : ((g?.garmentType && g.garmentType !== "Unknown") ? g.garmentType : derived.garmentType); const category = isVisionFailure ? "Unknown" : ((g?.category && g.category !== "Unknown") ? g.category : derived.category);
   const gender = isVisionFailure ? "Unknown" : ((g?.gender && g.gender !== "Unknown") ? g.gender : derived.gender);
   const colour = isVisionFailure ? "Unknown" : ((g?.colour && g.colour !== "Unknown") ? g.colour : derived.colour);
   const pattern = isVisionFailure ? "Unknown" : ((g?.pattern && g.pattern !== "Unknown") ? g.pattern : derived.pattern);
@@ -202,7 +204,11 @@ export async function analyzeInspirationImage(
   const neckline = isVisionFailure ? "Unknown" : ((g?.neckline && g.neckline !== "Unknown") ? g.neckline : derived.neckline);
   const style = isVisionFailure ? "Unknown" : ((g?.style && g.style !== "Unknown") ? g.style : derived.style);
   const complexity = isVisionFailure ? "Unknown" : ((g?.complexity && g.complexity !== "Unknown") ? g.complexity : derived.complexity);
-  const confidenceScore = isVisionFailure ? 0.0 : (g?.confidenceScore ? Math.min(1, Math.max(0, g.confidenceScore / 100)) : 0.85);
+  const confidenceScore = isVisionFailure
+    ? 0.0
+    : typeof g?.confidenceScore === "number"
+      ? Math.min(1, Math.max(0, g.confidenceScore / 100))
+      : 0.85;
 
   // 3. Fabric Recommendations
   const suggestedFabric = bestMatch?.fabricRecommendations || [

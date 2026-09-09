@@ -53,7 +53,7 @@ function getNotifIcon(message: string) {
     return (
       <div className="w-10 h-10 border border-border/40 rounded-full flex items-center justify-center shrink-0 bg-muted/20">
         <svg className="w-4 h-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path d="M1 3h15v13H1zm15 4h4l3 3v6h-7V7z" /><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+          <path d="M1 3h15v13H1zm15 4h4l3 3v6h-7V7z" /><circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" />
         </svg>
       </div>
     )
@@ -95,7 +95,7 @@ const itemVariants: Variants = {
 }
 
 export default function TailorNotificationsPage() {
-  
+
   const [notifications, setNotifications] = React.useState<Notification[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null)
@@ -108,6 +108,7 @@ export default function TailorNotificationsPage() {
       if (res.ok) {
         const data = await res.json()
         setNotifications(Array.isArray(data) ? data : [])
+        setErrorMsg(null)
       } else {
         setErrorMsg("Failed to load notifications.")
       }
@@ -131,7 +132,7 @@ export default function TailorNotificationsPage() {
     return () => {
       unsubscribe?.()
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchNotifications])
 
   const markRead = async (id: string) => {
@@ -167,8 +168,8 @@ export default function TailorNotificationsPage() {
     }
   }
 
-  const filteredNotifs = filter === "unread" 
-    ? notifications.filter(n => !n.read) 
+  const filteredNotifs = filter === "unread"
+    ? notifications.filter(n => !n.read)
     : notifications
 
   return (
@@ -202,17 +203,15 @@ export default function TailorNotificationsPage() {
       <div className="flex items-center space-x-2 border-b border-border/40 pb-4">
         <button
           onClick={() => setFilter("all")}
-          className={`text-sm font-semibold px-4 py-1.5 rounded-full transition-colors ${
-            filter === "all" ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted"
-          }`}
+          className={`text-sm font-semibold px-4 py-1.5 rounded-full transition-colors ${filter === "all" ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted"
+            }`}
         >
           All Activity
         </button>
         <button
           onClick={() => setFilter("unread")}
-          className={`text-sm font-semibold px-4 py-1.5 rounded-full transition-colors ${
-            filter === "unread" ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted"
-          }`}
+          className={`text-sm font-semibold px-4 py-1.5 rounded-full transition-colors ${filter === "unread" ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted"
+            }`}
         >
           Unread
           {notifications.filter(n => !n.read).length > 0 && (
@@ -266,11 +265,10 @@ export default function TailorNotificationsPage() {
                   animate="visible"
                   exit="exit"
                   layout
-                  className={`group relative flex items-start gap-4 p-4 sm:p-5 rounded-2xl border transition-all duration-300 ${
-                    n.read 
-                      ? "bg-card border-border/40" 
-                      : "bg-background border-primary/20 shadow-sm"
-                  }`}
+                  className={`group relative flex items-start gap-4 p-4 sm:p-5 rounded-2xl border transition-all duration-300 ${n.read
+                    ? "bg-card border-border/40"
+                    : "bg-background border-primary/20 shadow-sm"
+                    }`}
                 >
                   {/* Unread Indicator dot */}
                   {!n.read && (
@@ -304,9 +302,11 @@ export default function TailorNotificationsPage() {
                   {!n.read && (
                     <button
                       onClick={() => markRead(n.id)}
-                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-background/5 backdrop-blur-[1px] flex items-center justify-center rounded-2xl sm:hidden"
+                      className="absolute bottom-3 right-3 p-2 rounded-full hover:bg-muted text-primary sm:hidden"
                       aria-label="Mark as read"
-                    />
+                    >
+                      <CheckCheck className="w-4 h-4" />
+                    </button>
                   )}
                 </motion.div>
               ))}

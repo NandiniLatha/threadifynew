@@ -30,7 +30,7 @@ interface DesignRequest {
 
 export default function TailorRequests() {
   const supabase = createClient()
-  
+
   const [requests, setRequests] = React.useState<DesignRequest[]>([])
   const [quotedRequestIds, setQuotedRequestIds] = React.useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = React.useState(true)
@@ -71,7 +71,7 @@ export default function TailorRequests() {
       }
     }
     loadData()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const unquotedRequests = requests.filter(r => !quotedRequestIds.has(r.id))
@@ -115,7 +115,7 @@ export default function TailorRequests() {
         </div>
       ) : (
         <div className="space-y-12">
-          
+
           {/* New Opportunities */}
           {unquotedRequests.length > 0 && (
             <div className="space-y-6">
@@ -123,7 +123,7 @@ export default function TailorRequests() {
                 <span className="w-2 h-2 rounded-full bg-primary inline-block" />
                 New Opportunities
               </h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {unquotedRequests.map((req) => (
                   <RequestCard key={req.id} req={req} isQuoted={false} />
@@ -138,7 +138,7 @@ export default function TailorRequests() {
               <h2 className="text-lg font-serif font-bold text-muted-foreground border-b border-border pb-2">
                 Already Quoted by You
               </h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-80">
                 {alreadyQuotedRequests.map((req) => (
                   <RequestCard key={req.id} req={req} isQuoted={true} />
@@ -169,28 +169,27 @@ function RequestCard({ req, isQuoted }: { req: DesignRequest, isQuoted: boolean 
           />
           {/* Budget overlay */}
           <div className="absolute bottom-3 left-3 right-3 bg-background/80 backdrop-blur-md rounded-2xl p-3 border border-border/50">
-             <div className="flex justify-between items-center text-xs">
-                <div>
-                   <p className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px] mb-0.5">Budget</p>
-                   <p className="font-bold text-foreground">{formatINR(req.budget_min)} - {formatINR(req.budget_max)}</p>
-                </div>
-                <div className="text-right">
-                   <p className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px] mb-0.5">Deadline</p>
-                   <p className="font-bold text-foreground flex items-center justify-end gap-1">
-                     <Calendar className="w-3 h-3" /> {req.deadline}
-                   </p>
-                </div>
-             </div>
+            <div className="flex justify-between items-center text-xs">
+              <div>
+                <p className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px] mb-0.5">Budget</p>
+                <p className="font-bold text-foreground">{formatINR(req.budget_min)} - {formatINR(req.budget_max)}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-muted-foreground font-semibold uppercase tracking-wider text-[9px] mb-0.5">Deadline</p>
+                <p className="font-bold text-foreground flex items-center justify-end gap-1">
+                  <Calendar className="w-3 h-3" /> {req.deadline}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
         <div className="px-1">
           {/* AI Tags */}
           <div className="flex flex-wrap gap-1.5 mb-3">
-            {req.ai_tags.slice(0, 3).map((tag, i) => (
-              <span key={i} className="inline-flex items-center text-[10px] font-bold px-2 py-1 bg-muted text-foreground border border-border rounded-full">
-                {tag}
-              </span>
+            {(req.ai_tags ?? []).slice(0, 3).map((tag, i) => (<span key={i} className="inline-flex items-center text-[10px] font-bold px-2 py-1 bg-muted text-foreground border border-border rounded-full">
+              {tag}
+            </span>
             ))}
             {req.ai_tags.length > 3 && (
               <span className="inline-flex items-center text-[10px] font-bold px-2 py-1 bg-muted/50 text-muted-foreground rounded-full">

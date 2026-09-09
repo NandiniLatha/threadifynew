@@ -20,26 +20,24 @@ import { createNotification } from "@/app/api/notifications/helpers"
  */
 
 const ALLOWED_TRANSITIONS: Record<string, string> = {
-  paid:          "cutting",
-  cutting:       "stitching",
-  stitching:     "quality_check",
+  paid: "cutting",
+  cutting: "stitching",
+  stitching: "quality_check",
   quality_check: "ready",
-  ready:         "shipped",
-  shipped:       "delivered",
-  delivered:     "completed",
-  
+  ready: "shipped",
+  delivered: "completed",
   // Legacy support
-  confirmed:     "cutting",
+  confirmed: "cutting",
   measurements_pending: "cutting",
   in_production: "shipped",
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  cutting:       "✂️ Cutting has started on your garment.",
-  stitching:     "🧵 Your garment is now being stitched.",
+  cutting: "✂️ Cutting has started on your garment.",
+  stitching: "🧵 Your garment is now being stitched.",
   quality_check: "🔍 Your garment is undergoing quality check.",
-  ready:         "✅ Your garment is ready! It will be shipped shortly.",
-  shipped:       "📦 Your garment has been shipped — get ready to confirm delivery!",
+  ready: "✅ Your garment is ready! It will be shipped shortly.",
+  shipped: "📦 Your garment has been shipped — get ready to confirm delivery!",
 }
 
 export async function POST(
@@ -85,7 +83,7 @@ export async function POST(
     }
 
     const currentStatus = designRequest.status
-    const nextStatus    = ALLOWED_TRANSITIONS[currentStatus]
+    const nextStatus = ALLOWED_TRANSITIONS[currentStatus]
 
     if (!nextStatus) {
       return NextResponse.json(

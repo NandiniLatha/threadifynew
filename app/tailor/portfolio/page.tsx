@@ -24,12 +24,12 @@ interface PortfolioItem {
 
 export default function TailorPortfolio() {
   const supabase = createClient()
-  
+
   const [items, setItems] = React.useState<PortfolioItem[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [isUploading, setIsUploading] = React.useState(false)
   const [deletingId, setDeletingId] = React.useState<string | null>(null)
-  
+
   // Edit State
   const [editingItem, setEditingItem] = React.useState<PortfolioItem | null>(null)
   const [editCaption, setEditCaption] = React.useState("")
@@ -49,8 +49,10 @@ export default function TailorPortfolio() {
           .order("display_order", { ascending: true })
           .order("created_at", { ascending: false })
 
-        if (!error && data) {
-          setItems(data)
+        if (error) {
+          setStatusMsg({ type: "error", text: "Failed to load portfolio." })
+        } else {
+          setItems(data ?? [])
         }
       }
     } catch {
@@ -204,11 +206,10 @@ export default function TailorPortfolio() {
             className="absolute inset-0 w-0 h-0 opacity-0"
             disabled={isUploading}
           />
-          <span className={`inline-flex cursor-pointer items-center justify-center gap-2 px-5 py-2.5 rounded-full font-semibold text-sm transition-all ${
-            isUploading 
-              ? "bg-muted text-muted-foreground cursor-not-allowed" 
+          <span className={`inline-flex cursor-pointer items-center justify-center gap-2 px-5 py-2.5 rounded-full font-semibold text-sm transition-all ${isUploading
+              ? "bg-muted text-muted-foreground cursor-not-allowed"
               : "bg-foreground text-background hover:bg-foreground/90 shadow-md"
-          }`}>
+            }`}>
             {isUploading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -226,11 +227,10 @@ export default function TailorPortfolio() {
 
       {statusMsg && (
         <div
-          className={`p-4 rounded-2xl border text-sm flex items-start gap-3 ${
-            statusMsg.type === "success"
+          className={`p-4 rounded-2xl border text-sm flex items-start gap-3 ${statusMsg.type === "success"
               ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-450"
               : "bg-destructive/10 border-destructive/20 text-destructive"
-          }`}
+            }`}
         >
           <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
           <span>{statusMsg.text}</span>
@@ -255,13 +255,13 @@ export default function TailorPortfolio() {
             <div key={item.id} className="group relative bg-card border border-border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col">
               <div className="relative aspect-[3/4] bg-muted w-full overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img 
-                  src={item.public_url} 
-                  alt={item.caption || "Portfolio item"} 
+                <img
+                  src={item.public_url}
+                  alt={item.caption || "Portfolio item"}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   loading="lazy"
                 />
-                
+
                 {/* Quick Actions overlay */}
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
                   <button
@@ -288,7 +288,7 @@ export default function TailorPortfolio() {
                   </button>
                 </div>
               </div>
-              
+
               <div className="p-4 flex-grow flex items-center bg-card">
                 {item.caption ? (
                   <p className="text-sm font-medium text-foreground line-clamp-2">{item.caption}</p>
@@ -311,7 +311,7 @@ export default function TailorPortfolio() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <div className="flex gap-4">
                 <div className="w-20 h-24 shrink-0 rounded-lg overflow-hidden bg-muted border border-border">
@@ -337,8 +337,8 @@ export default function TailorPortfolio() {
               <Button variant="outline" className="rounded-full" onClick={() => setEditingItem(null)}>
                 Cancel
               </Button>
-              <Button 
-                onClick={handleSaveEdit} 
+              <Button
+                onClick={handleSaveEdit}
                 disabled={isSavingEdit}
                 className="rounded-full bg-foreground text-background hover:bg-foreground/90 px-6"
               >
