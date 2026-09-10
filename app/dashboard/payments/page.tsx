@@ -22,7 +22,7 @@ interface PaymentRecord {
 }
 
 const STATUS_STYLE: Record<string, string> = {
-  paid:         "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20",
+  paid:         "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
   released:     "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20",
   in_escrow:    "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
   assigned:     "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
@@ -31,7 +31,8 @@ const STATUS_STYLE: Record<string, string> = {
 }
 
 function StatusIcon({ status }: { status: string }) {
-  if (status === "paid" || status === "released") return <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+  if (status === "released") return <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+  if (status === "paid") return <CheckCircle className="w-4 h-4 text-purple-500" aria-hidden="true" />
   if (status === "in_escrow" || status === "assigned") return <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
   return <CreditCard className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
 }
@@ -55,7 +56,7 @@ export default function CustomerPayments() {
           .from("design_requests")
           .select("id, ai_tags, status, created_at")
           .eq("customer_id", user.id)
-          .in("status", ["assigned", "in_production", "shipped", "delivered", "reviewed"])
+          .in("status", ["paid", "assigned", "in_production", "shipped", "delivered", "reviewed"])
 
         if (error) {
           setErrorMsg("Could not load your payment history. Please try again later.")
@@ -73,19 +74,20 @@ export default function CustomerPayments() {
           const mapped: PaymentRecord[] = requests.map((req) => {
             const quote = quotes?.find((q) => q.request_id === req.id)
             const isReleased = ["delivered", "reviewed"].includes(req.status)
+            const isPaid = req.status === "paid"
             return {
               id: req.id,
               garmentName: req.ai_tags?.[0] || "Custom Clothing",
               tailorName: "Studio Tailor",
               amount: quote ? Number(quote.price) * 100 : 0,
-              status: isReleased ? "released" : "in_escrow",
+              status: isReleased ? "released" : (isPaid ? "paid" : "in_escrow"),
               date: req.created_at.split("T")[0],
             }
           })
 
           setPayments(mapped)
           setTotalSpent(mapped.filter(p => p.status === "released").reduce((s, p) => s + p.amount, 0))
-          setTotalEscrow(mapped.filter(p => p.status === "in_escrow").reduce((s, p) => s + p.amount, 0))
+          setTotalEscrow(mapped.filter(p => p.status === "in_escrow" || p.status === "paid").reduce((s, p) => s + p.amount, 0))
         }
       } catch {
         setErrorMsg("Failed to load payment history.")
@@ -173,7 +175,7 @@ export default function CustomerPayments() {
                   <td className="px-5 py-4 font-bold text-foreground text-xs">{formatINR(pay.amount / 100)}</td>
                   <td className="px-5 py-4">
                     <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border capitalize ${STATUS_STYLE[pay.status] || STATUS_STYLE.pending}`}>
-                      {pay.status === "in_escrow" ? "In Secure Payment" : pay.status === "released" ? "Released" : pay.status}
+                      {pay.status === "in_escrow" ? "In Secure Payment" : pay.status === "released" ? "Released" : pay.status === "paid" ? "Payment Completed" : pay.status}
                     </span>
                   </td>
                 </tr>
