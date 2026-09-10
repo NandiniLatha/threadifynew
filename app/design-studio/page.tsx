@@ -125,6 +125,102 @@ function DesignStudio() {
     fit: "",
   })
 
+  const [dynamicOptions, setDynamicOptions] = React.useState<Record<OptionCategory, string[]>>({
+    fabric: [],
+    color: [],
+    pattern: [],
+    style: [],
+    sleeve: [],
+    collar: [],
+    size: [],
+    fit: [],
+  })
+
+  const handleAddCustomOption = (category: OptionCategory) => {
+    const val = customValues[category]?.trim()
+    if (!val) return
+
+    setDynamicOptions((prev) => {
+      const existing = prev[category]
+      if (existing.includes(val)) return prev
+      return { ...prev, [category]: [...existing, val] }
+    })
+    
+    setSelectedOptions((prev) => ({ ...prev, [category]: val }))
+    setCustomValues((prev) => ({ ...prev, [category]: "" }))
+  }
+
+  const renderCategory = (category: OptionCategory) => {
+    const configGroup = options[category]
+    const isCustomSelected = selectedOptions[category] === configGroup.customLabel
+    const allChips = [...configGroup.items, ...dynamicOptions[category], configGroup.customLabel]
+
+    return (
+      <div key={category} className="space-y-3">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          {configGroup.title}
+        </h3>
+        <div className="flex flex-wrap gap-2">
+          {allChips.map((opt) => {
+            const isSelected = selectedOptions[category] === opt
+            return (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => handleSelectOption(category, opt)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border ${
+                  isSelected
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-background border-border text-foreground hover:border-primary/50"
+                }`}
+              >
+                {opt}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Inline custom value text input */}
+        <AnimatePresence>
+          {isCustomSelected && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden pt-2"
+            >
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  maxLength={100}
+                  value={customValues[category]}
+                  onChange={(e) => handleCustomInputChange(category, e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault()
+                      handleAddCustomOption(category)
+                    }
+                  }}
+                  placeholder={configGroup.placeholder}
+                  className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                />
+                <Button 
+                  type="button" 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => handleAddCustomOption(category)}
+                  className="h-9 px-4 shrink-0"
+                >
+                  Add
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    )
+  }
+
   // Helper to resolve the final value (custom or predefined)
   const getResolvedValue = (category: OptionCategory): string => {
     const sel = selectedOptions[category]
@@ -797,72 +893,23 @@ function DesignStudio() {
                 )}
               </div>
             )}
+          </div>
+        </div>
 
-            {/* 3. Customize Design */}
-            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-6">
-              <h2 className="text-base font-bold text-foreground flex items-center gap-2">
-                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold">
-                  {process.env.NEXT_PUBLIC_RAG_ENABLED === "true" && ragState.status !== "idle" ? "4" : "3"}
-                </span>
-                <span>Customize Design</span>
-              </h2>
+        <div className="space-y-8 mt-8">
+          {/* 3. Customize Design */}
+          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-6">
+            <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-xs font-bold">
+                {process.env.NEXT_PUBLIC_RAG_ENABLED === "true" && ragState.status !== "idle" ? "4" : "3"}
+              </span>
+              <span>Customize Design</span>
+            </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {(Object.keys(options) as OptionCategory[]).map((category) => {
-                  const configGroup = options[category]
-                  const isCustomSelected = selectedOptions[category] === configGroup.customLabel
-                  const allChips = [...configGroup.items, configGroup.customLabel]
-
-                  return (
-                    <div key={category} className="space-y-3">
-                      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        {configGroup.title}
-                      </h3>
-                      <div className="flex flex-wrap gap-2">
-                        {allChips.map((opt) => {
-                          const isSelected = selectedOptions[category] === opt
-                          return (
-                            <button
-                              key={opt}
-                              type="button"
-                              onClick={() => handleSelectOption(category, opt)}
-                              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border ${
-                                isSelected
-                                  ? "bg-primary text-primary-foreground border-primary"
-                                  : "bg-background border-border text-foreground hover:border-primary/50"
-                              }`}
-                            >
-                              {opt}
-                            </button>
-                          )
-                        })}
-                      </div>
-
-                      {/* Inline custom value text input */}
-                      <AnimatePresence>
-                        {isCustomSelected && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="overflow-hidden pt-2"
-                          >
-                            <input
-                              type="text"
-                              maxLength={100}
-                              value={customValues[category]}
-                              onChange={(e) => handleCustomInputChange(category, e.target.value)}
-                              placeholder={configGroup.placeholder}
-                              className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                            />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  )
-                })}
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
+              {(["fabric", "color", "pattern", "sleeve", "style", "collar", "size", "fit"] as OptionCategory[]).map(renderCategory)}
             </div>
+          </div>
 
             {/* 4. Production Details & Submission Form */}
             <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4">
@@ -979,7 +1026,6 @@ function DesignStudio() {
               </div>
             </div>
           </div>
-        </div>
       </main>
     </div>
   )
