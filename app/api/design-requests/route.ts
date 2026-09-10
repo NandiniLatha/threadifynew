@@ -47,15 +47,15 @@ export async function POST(request: Request) {
     }
 
     // Determine the stored image URL:
-    // - If imageSource is already an http(s) URL, use it directly (no Cloudinary needed)
+    // - If imageSource is already an http(s) URL or a relative path, use it directly (no Cloudinary needed)
     // - If it's a base64 data URI, upload to Cloudinary (or fall back to placeholder)
-    const isExternalUrl = imageSource.startsWith("http")
+    const isDirectUrl = imageSource.startsWith("http") || imageSource.startsWith("/")
 
-    let imageUrl = isExternalUrl
+    let imageUrl = isDirectUrl
       ? imageSource
       : "/images/features/feature_1_ai_scan.webp"
 
-    if (!isExternalUrl && process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
+    if (!isDirectUrl && process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
       try {
         const uploadRes = await cloudinary.uploader.upload(imageSource, {
           folder: "threadify_inspiration",

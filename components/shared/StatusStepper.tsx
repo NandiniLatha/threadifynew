@@ -52,8 +52,7 @@ const STEPS: { key: string; label: string; short: string }[] = [
   { key: "completed",      label: "Completed",           short: "Done"       },
 ]
 
-/** Maps any status to a canonical step index (0-based in STEPS array) */
-function getStepIndex(status: OrderStatus, paymentVerified: boolean = true): number {
+function getStepIndex(status: OrderStatus): number {
   switch (status) {
     case "draft":
       return -1
@@ -67,23 +66,23 @@ function getStepIndex(status: OrderStatus, paymentVerified: boolean = true): num
     case "paid":
     case "confirmed":
     case "measurements_pending":
-      return paymentVerified ? 3 : 2
+      return 3
     case "cutting":
-      return paymentVerified ? 4 : 2
+      return 4
     case "stitching":
-      return paymentVerified ? 5 : 2
+      return 5
     case "quality_check":
-      return paymentVerified ? 6 : 2
+      return 6
     case "ready":
     case "in_production":
-      return paymentVerified ? 7 : 2
+      return 7
     case "shipped":
-      return paymentVerified ? 8 : 2
+      return 8
     case "delivered":
-      return paymentVerified ? 9 : 2
+      return 9
     case "completed":
     case "reviewed":
-      return paymentVerified ? 10 : 2
+      return 10
     default:
       return 0
   }
@@ -102,7 +101,7 @@ function HorizontalStepper({
   paymentVerified?: boolean
   className?: string 
 }) {
-  const currentIdx = getStepIndex(status, paymentVerified)
+  const currentIdx = getStepIndex(status)
 
   return (
     <div className={`w-full overflow-x-auto pb-4 ${className}`}>
@@ -172,7 +171,7 @@ function VerticalTimeline({
   paymentVerified?: boolean
   className?: string
 }) {
-  const currentIdx = getStepIndex(status, paymentVerified)
+  const currentIdx = getStepIndex(status)
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString("en-IN", {
@@ -287,9 +286,21 @@ export function StatusStepper({
     )
   }
 
-  if (vertical) {
-    return <VerticalTimeline status={status} history={history} evidenceStatus={evidenceStatus} paymentVerified={paymentVerified} className={className} />
-  }
+  const showPaymentWarning = status === "completed" && paymentVerified === false
 
-  return <HorizontalStepper status={status} evidenceStatus={evidenceStatus} paymentVerified={paymentVerified} className={className} />
+  return (
+    <div className="space-y-4">
+      {vertical ? (
+        <VerticalTimeline status={status} history={history} evidenceStatus={evidenceStatus} paymentVerified={paymentVerified} className={className} />
+      ) : (
+        <HorizontalStepper status={status} evidenceStatus={evidenceStatus} paymentVerified={paymentVerified} className={className} />
+      )}
+      
+      {showPaymentWarning && (
+        <div className="text-xs text-amber-600 bg-amber-500/10 border border-amber-500/20 px-3 py-2 rounded-xl flex items-center justify-center mt-2 max-w-sm mx-auto">
+          Payment record is missing for this order.
+        </div>
+      )}
+    </div>
+  )
 }
