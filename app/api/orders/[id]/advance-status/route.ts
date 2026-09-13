@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import { createNotification } from "@/app/api/notifications/helpers"
 
@@ -129,8 +130,9 @@ export async function POST(
       }
     }
 
-    // Update status
-    const { error: updateErr } = await supabase
+    // Update status securely bypassing RLS
+    const supabaseAdmin = createAdminClient()
+    const { error: updateErr } = await supabaseAdmin
       .from("design_requests")
       .update({ status: nextStatus })
       .eq("id", requestId)

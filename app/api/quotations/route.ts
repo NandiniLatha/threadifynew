@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { createNotification } from "@/app/api/notifications/helpers"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 export async function POST(request: Request) {
   try {
@@ -37,6 +38,25 @@ export async function POST(request: Request) {
       )
     }
 
+    // Fetch design request to verify existence and bidding eligibility
+    const { data: designRequest } = await supabase
+      .from("design_requests")
+      .select("customer_id, status, tailor_id")
+      .eq("id", requestId)
+      .single()
+
+    if (!designRequest) {
+      return NextResponse.json({ error: "Design request not found." }, { status: 404 })
+    }
+
+    // A tailor can only bid if it's open for bids, or if it was assigned directly to them
+    if (designRequest.status !== "pending_bids" && designRequest.tailor_id !== user.id) {
+      return NextResponse.json(
+        { error: "This request is not open for bidding or assigned to another tailor." },
+        { status: 403 }
+      )
+    }
+
     // Prevent duplicate active quotes from the same tailor for this request
     const { data: existingQuote } = await supabase
       .from("quotations")
@@ -66,17 +86,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Fire notification to the customer who owns this design request
-    const { data: designRequest } = await supabase
-      .from("design_requests")
-      .select("customer_id, status")
-      .eq("id", requestId)
-      .single()
-
     if (designRequest?.customer_id) {
       // If this is the first quote, update the request status to 'quoted'
       if (designRequest.status === "pending_bids") {
-        await supabase
+        const supabaseAdmin = createAdminClient()
+        await supabaseAdmin
           .from("design_requests")
           .update({ status: "quoted" })
           .eq("id", requestId)

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import { createNotification } from "@/app/api/notifications/helpers"
 
@@ -72,7 +73,8 @@ export async function POST(
     }
 
     if (action === "approve") {
-      const { error: updateErr } = await supabase
+      const supabaseAdmin = createAdminClient()
+      const { error: updateErr } = await supabaseAdmin
         .from("design_requests")
         .update({ production_evidence_status: "none" })
         .eq("id", orderId)
@@ -105,7 +107,8 @@ export async function POST(
       if (feedbackErr) throw new Error(feedbackErr.message)
 
       // Update evidence status
-      const { error: updateErr } = await supabase
+      const supabaseAdmin = createAdminClient()
+      const { error: updateErr } = await supabaseAdmin
         .from("design_requests")
         .update({ production_evidence_status: "changes_requested" })
         .eq("id", orderId)

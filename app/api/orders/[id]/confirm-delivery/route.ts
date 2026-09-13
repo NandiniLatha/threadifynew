@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { createNotification } from "@/app/api/notifications/helpers"
 
+import { createAdminClient } from "@/lib/supabase/admin"
+
 /**
  * POST /api/orders/[id]/confirm-delivery
  *
@@ -55,8 +57,10 @@ export async function POST(
       )
     }
 
+    const supabaseAdmin = createAdminClient()
+
     // Update status to delivered + record confirmation timestamp
-    const { error: updateErr } = await supabase
+    const { error: updateErr } = await supabaseAdmin
       .from("design_requests")
       .update({
         status: "delivered",

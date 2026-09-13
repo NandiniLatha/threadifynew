@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { createNotification } from "@/app/api/notifications/helpers"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 export async function POST(request: Request) {
   try {
@@ -31,6 +32,25 @@ export async function POST(request: Request) {
       )
     }
 
+    // Verify order exists and belongs to the customer
+    const { data: reqData } = await supabase
+      .from("design_requests")
+      .select("customer_id, tailor_id, status")
+      .eq("id", orderId)
+      .single()
+
+    if (!reqData) {
+      return NextResponse.json({ error: "Order not found." }, { status: 404 })
+    }
+
+    if (reqData.customer_id !== user.id) {
+      return NextResponse.json({ error: "You can only review your own orders." }, { status: 403 })
+    }
+
+    if (reqData.status !== "delivered") {
+      return NextResponse.json({ error: "You can only review delivered orders." }, { status: 409 })
+    }
+
     // Insert review row
     const { error: reviewErr } = await supabase.from("reviews").insert({
       order_id: orderId,
@@ -42,18 +62,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: reviewErr.message }, { status: 500 })
     }
 
-    // Update the design request status to 'reviewed'
-    await supabase
+    // Update the design request status to 'reviewed' using Service Role
+    const supabaseAdmin = createAdminClient()
+    await supabaseAdmin
       .from("design_requests")
       .update({ status: "reviewed" })
       .eq("id", orderId)
-
-    // Query tailor assigned to this design request to send notification
-    const { data: reqData } = await supabase
-      .from("design_requests")
-      .select("tailor_id")
-      .eq("id", orderId)
-      .single()
 
     if (reqData?.tailor_id) {
       // Notify the tailor about the new review

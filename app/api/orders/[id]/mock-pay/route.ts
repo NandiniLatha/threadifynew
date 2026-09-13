@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { createNotification } from "@/app/api/notifications/helpers"
 
+import { createAdminClient } from "@/lib/supabase/admin"
+
 /**
  * POST /api/orders/[id]/mock-pay
  *
@@ -87,8 +89,11 @@ export async function POST(
     const demoTransactionId = `THR-DEMO-${Date.now().toString().slice(-8)}${Math.floor(Math.random() * 1000)}`
     // When real Razorpay is wired, these get filled in by the webhook handler.
 
+    // Use Service Role for state mutations to bypass RLS restrictions
+    const supabaseAdmin = createAdminClient()
+
     // 1. Update design_requests: assign tailor, set payment fields, advance status
-    const { error: updateErr } = await supabase
+    const { error: updateErr } = await supabaseAdmin
       .from("design_requests")
       .update({
         accepted_quotation_id: quoteId,

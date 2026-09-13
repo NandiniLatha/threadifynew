@@ -8,6 +8,8 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET || "",
 })
 
+import { createAdminClient } from "@/lib/supabase/admin"
+
 /**
  * GET /api/orders/[id]/progress-photos
  *
@@ -184,8 +186,10 @@ export async function POST(
     }
 
     if (productionStage) {
+      const supabaseAdmin = createAdminClient()
+      
       // Advance evidence status to waiting_for_customer_approval
-      const { error: updateErr } = await supabase
+      const { error: updateErr } = await supabaseAdmin
         .from("design_requests")
         .update({ production_evidence_status: "waiting_for_customer_approval" })
         .eq("id", orderId)
