@@ -82,6 +82,12 @@ export default function CustomerOrderDetails() {
   const [isCheckoutOpen, setIsCheckoutOpen] = React.useState(false)
   const [checkoutQuote, setCheckoutQuote] = React.useState<any>(null)
 
+  // Cancellation state
+  const [isCancelling, setIsCancelling] = React.useState(false)
+  const [cancelError, setCancelError] = React.useState<string | null>(null)
+  const [cancelSuccess, setCancelSuccess] = React.useState(false)
+  const [isCancelConfirmOpen, setIsCancelConfirmOpen] = React.useState(false)
+
   const loadProgressPhotos = React.useCallback(async (orderId: string) => {
     try {
       const res = await fetch(`/api/orders/${orderId}/progress-photos`)
@@ -260,6 +266,29 @@ export default function CustomerOrderDetails() {
   const handleCheckoutSuccess = async () => {
     // Reload the page state so it reflects the new paid status
     await loadData()
+  }
+
+  const handleCancelOrder = async () => {
+    if (!id) return
+    setIsCancelling(true)
+    setCancelError(null)
+    setCancelSuccess(false)
+    try {
+      const res = await fetch(`/api/orders/${id}/cancel`, {
+        method: "POST"
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || "We couldn't cancel this order. Please try again.")
+      }
+      setCancelSuccess(true)
+      setIsCancelConfirmOpen(false)
+      loadData()
+    } catch (err: any) {
+      setCancelError(err.message || "We couldn't cancel this order. Please try again.")
+    } finally {
+      setIsCancelling(false)
+    }
   }
 
   // Confirm delivery (customer side)
@@ -523,6 +552,56 @@ export default function CustomerOrderDetails() {
               <div>
                 <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">Your Notes</p>
                 <p className="text-sm text-foreground/80 whitespace-pre-wrap">{request.notes}</p>
+              </div>
+            )}
+
+            {["pending_bids", "assigned"].includes(request.status) && (
+              <div className="pt-4 border-t border-border mt-4">
+                {cancelError && (
+                  <div className="p-3 mb-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-xl flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{cancelError}</span>
+                  </div>
+                )}
+                {cancelSuccess && (
+                  <div className="p-3 mb-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm rounded-xl flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 shrink-0" />
+                    <span>Order cancelled successfully.</span>
+                  </div>
+                )}
+                
+                {isCancelConfirmOpen ? (
+                  <div className="bg-destructive/5 border border-destructive/20 p-4 rounded-2xl space-y-3">
+                    <p className="text-sm font-medium text-destructive">Are you sure you want to cancel this order?</p>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="destructive" 
+                        className="flex-1 rounded-xl"
+                        onClick={handleCancelOrder}
+                        disabled={isCancelling}
+                      >
+                        {isCancelling ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                        Cancel Order
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="flex-1 rounded-xl"
+                        onClick={() => setIsCancelConfirmOpen(false)}
+                        disabled={isCancelling}
+                      >
+                        Keep Order
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20 rounded-xl"
+                    onClick={() => setIsCancelConfirmOpen(true)}
+                  >
+                    Cancel Order
+                  </Button>
+                )}
               </div>
             )}
           </div>
