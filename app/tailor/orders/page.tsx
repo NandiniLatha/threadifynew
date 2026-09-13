@@ -10,6 +10,7 @@ import {
   ArrowRight,
   Loader2,
   CheckCircle,
+  Clock,
   Truck,
   CreditCard,
   Scissors,
@@ -27,13 +28,14 @@ import { StatusStepper, OrderStatus } from "@/components/shared/StatusStepper"
 
 // DB status values → display labels
 const STATUS_LABEL: Record<string, string> = {
-  paid:                 "Payment Verified",
+  assigned:             "Assigned (Unpaid)",
+  paid:                 "Payment Done",
   confirmed:            "Confirmed",
   measurements_pending: "Measurements Pending",
   cutting:              "Cutting",
   stitching:            "Stitching",
   quality_check:        "Quality Check",
-  ready:                "Ready to Ship",
+  ready:                "Ready",
   in_production:        "In Production",
   shipped:              "Shipped",
   delivered:            "Delivered",
@@ -42,6 +44,7 @@ const STATUS_LABEL: Record<string, string> = {
 }
 
 const STATUS_COLOR: Record<string, string> = {
+  assigned:             "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
   paid:                 "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
   confirmed:            "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
   measurements_pending: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
@@ -58,6 +61,7 @@ const STATUS_COLOR: Record<string, string> = {
 
 function StatusIcon({ status }: { status: string }) {
   switch (status) {
+    case "assigned":             return <Clock className="w-3.5 h-3.5" />
     case "paid":
     case "confirmed":
     case "measurements_pending": return <CreditCard className="w-3.5 h-3.5" />
@@ -99,7 +103,7 @@ interface TailorOrder {
 }
 
 const ACTIVE_ORDER_STATUSES = [
-  "paid", "confirmed", "measurements_pending", 
+  "assigned", "paid", "confirmed", "measurements_pending", 
   "cutting", "stitching", "quality_check", "ready", "in_production", 
   "shipped", "delivered", "completed", "reviewed"
 ]
@@ -301,7 +305,7 @@ export default function TailorOrders() {
   }
 
   // Group orders for the left pane
-  const pendingActionOrders = orders.filter(o => ["paid", "confirmed", "measurements_pending"].includes(o.status))
+  const pendingActionOrders = orders.filter(o => ["assigned", "paid", "confirmed", "measurements_pending"].includes(o.status))
   const inProductionOrders = orders.filter(o => ["cutting", "stitching", "quality_check", "ready", "in_production"].includes(o.status))
   const shippedDeliveredOrders = orders.filter(o => ["shipped", "delivered", "completed", "reviewed"].includes(o.status))
 

@@ -39,14 +39,15 @@ interface StatusStepperProps {
 }
 
 const STEPS: { key: string; label: string; short: string }[] = [
-  { key: "pending_bids",   label: "Requested",          short: "Requested"  },
-  { key: "quoted",         label: "Price Received",      short: "Quoted"     },
+  { key: "pending_bids",   label: "Requested",           short: "Requested"  },
+  { key: "quoted",         label: "Price Sent",          short: "Price Sent" },
   { key: "quote_accepted", label: "Price Accepted",      short: "Accepted"   },
-  { key: "paid",           label: "Payment Confirmed",   short: "Paid"       },
+  { key: "assigned",       label: "Tailor Assigned",     short: "Assigned"   },
+  { key: "paid",           label: "Payment Done",        short: "Paid"       },
   { key: "cutting",        label: "Cutting",             short: "Cutting"    },
   { key: "stitching",      label: "Stitching",           short: "Stitching"  },
   { key: "quality_check",  label: "Quality Check",       short: "QC"         },
-  { key: "ready",          label: "Ready to Ship",       short: "Ready"      },
+  { key: "ready",          label: "Ready",               short: "Ready"      },
   { key: "shipped",        label: "Shipped",             short: "Shipped"    },
   { key: "delivered",      label: "Delivered",           short: "Delivered"  },
   { key: "completed",      label: "Completed",           short: "Done"       },
@@ -61,28 +62,30 @@ function getStepIndex(status: OrderStatus): number {
     case "quoted":
       return 1
     case "quote_accepted":
-    case "payment_pending":
       return 2
+    case "assigned":
+      return 3
     case "paid":
     case "confirmed":
+    case "payment_pending":
     case "measurements_pending":
-      return 3
-    case "cutting":
       return 4
-    case "stitching":
+    case "cutting":
       return 5
-    case "quality_check":
-      return 6
-    case "ready":
+    case "stitching":
     case "in_production":
+      return 6
+    case "quality_check":
       return 7
-    case "shipped":
+    case "ready":
       return 8
-    case "delivered":
+    case "shipped":
       return 9
+    case "delivered":
+      return 10
     case "completed":
     case "reviewed":
-      return 10
+      return 11
     default:
       return 0
   }
