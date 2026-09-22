@@ -8,6 +8,7 @@
 import { createClient } from '@/lib/supabase/client'
 import { ok, err, mapSupabaseError, mapUnknownError, type ServiceResult } from './errors'
 import type { UserRow } from '@/types/database'
+import { validatePassword, PASSWORD_REQUIREMENTS_MESSAGE } from '@/lib/utils/password'
 
 // Supabase browser client for client-side Auth operations
 const supabase = createClient()
@@ -58,6 +59,14 @@ export async function login(params: LoginParams): Promise<ServiceResult<{ user_i
  */
 export async function register(params: RegisterParams): Promise<ServiceResult<{ user_id: string; message: string }>> {
   try {
+    const passwordValidation = validatePassword(params.password)
+    if (!passwordValidation.isValid) {
+      return err({
+        code: 'VALIDATION',
+        message: passwordValidation.errorMessage || PASSWORD_REQUIREMENTS_MESSAGE,
+      })
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email: params.email,
       password: params.password,
@@ -142,6 +151,14 @@ export async function forgotPassword(email: string): Promise<ServiceResult<void>
  */
 export async function resetPassword(newPassword: string): Promise<ServiceResult<void>> {
   try {
+    const passwordValidation = validatePassword(newPassword)
+    if (!passwordValidation.isValid) {
+      return err({
+        code: 'VALIDATION',
+        message: passwordValidation.errorMessage || PASSWORD_REQUIREMENTS_MESSAGE,
+      })
+    }
+
     const { error } = await supabase.auth.updateUser({
       password: newPassword
     })

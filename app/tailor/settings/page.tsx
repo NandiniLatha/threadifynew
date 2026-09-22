@@ -18,6 +18,8 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Toast } from "@/components/ui/toast"
+import { validatePassword } from "@/lib/utils/password"
+import { PasswordRequirements } from "@/components/auth/PasswordRequirements"
 
 export default function TailorSettings() {
   const supabase = createClient()
@@ -26,11 +28,15 @@ export default function TailorSettings() {
   const [isLoading, setIsLoading] = React.useState(true)
   const [isSavingProfile, setIsSavingProfile] = React.useState(false)
   const [isUploadingAvatar, setIsUploadingAvatar] = React.useState(false)
-  const [statusMsg, setStatusMsg] = React.useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [avatarStatus, setAvatarStatus] = React.useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [profileStatus, setProfileStatus] = React.useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [payoutStatus, setPayoutStatus] = React.useState<{ type: "success" | "error"; text: string } | null>(null)
   
   // Password Form state
   const [newPassword, setNewPassword] = React.useState("")
   const [confirmPassword, setConfirmPassword] = React.useState("")
+  const [newPasswordError, setNewPasswordError] = React.useState<string | null>(null)
+  const [confirmPasswordError, setConfirmPasswordError] = React.useState<string | null>(null)
   const [showPassword, setShowPassword] = React.useState(false)
   const [isChangingPassword, setIsChangingPassword] = React.useState(false)
   const [passwordStatus, setPasswordStatus] = React.useState<{ type: "success" | "error"; text: string } | null>(null)
@@ -54,57 +60,55 @@ export default function TailorSettings() {
   const [ifsc, setIfsc] = React.useState("")
   const [showToast, setShowToast] = React.useState(false)
 
-  const loadData = React.useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        setEmail(user.email || "")
-        
-        // Load Profile
-        const { data: profile } = await supabase
-          .from("tailor_profiles")
-          .select("*")
-          .eq("user_id", user.id)
-          .single()
+  React.useEffect(() => {
+    async function loadData() {
+      setIsLoading(true)
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          setEmail(user.email || "")
+          
+          // Fetch existing tailor profile
+          const { data: profile } = await supabase
+            .from("tailor_profiles")
+            .select("*")
+            .eq("user_id", user.id)
+            .single()
 
-        if (profile) {
-          setBoutiqueName(profile.boutique_name || "")
-          setBio(profile.bio || profile.about || "")
-          setMobile(profile.mobile || "")
-          setGender(profile.gender || "prefer_not_to_say")
-          setProfilePhotoUrl(profile.profile_photo_url || "")
-          if (profile.razorpay_account_id) {
-            setRazorpayAccountId(profile.razorpay_account_id)
+          if (profile) {
+            setBoutiqueName(profile.boutique_name || "")
+            setBio(profile.bio || "")
+            setMobile(profile.mobile || "")
+            setGender(profile.gender || "prefer_not_to_say")
+            setProfilePhotoUrl(profile.profile_photo_url || "")
+            setRazorpayAccountId(profile.razorpay_account_id || null)
+          }
+
+          // Fetch experience
+          const { data: exp } = await supabase
+            .from("tailor_experience")
+            .select("*")
+            .eq("tailor_id", user.id)
+            .single()
+
+          if (exp) {
+            setTotalYears(exp.total_years || 0)
           }
         }
-
-        // Load Experience
-        const { data: experience } = await supabase
-          .from("tailor_experience")
-          .select("total_years")
-          .eq("tailor_id", user.id)
-          .maybeSingle()
-        
-        if (experience) {
-          setTotalYears(experience.total_years || 0)
-        }
+      } catch {
+        // silently ignore error on initial load
+      } finally {
+        setIsLoading(false)
       }
-    } catch {
-      console.error("Failed to query settings profile.")
-    } finally {
-      setIsLoading(false)
     }
-  }, [supabase])
-
-  React.useEffect(() => {
     loadData()
-  }, [loadData])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSavingProfile(true)
-    setStatusMsg(null)
+    setProfileStatus(null)
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -131,10 +135,10 @@ export default function TailorSettings() {
 
       if (expError) throw new Error(expError.message)
 
-      setStatusMsg({ type: "success", text: "Profile and Professional Information updated successfully." })
+      setProfileStatus({ type: "success", text: "Profile and Professional Information updated successfully." })
       window.dispatchEvent(new Event("tailor-profile-updated"))
     } catch (err: any) {
-      setStatusMsg({ type: "error", text: err.message || "Failed to update profile." })
+      setProfileStatus({ type: "error", text: err.message || "Failed to update profile." })
     } finally {
       setIsSavingProfile(false)
     }
@@ -145,12 +149,12 @@ export default function TailorSettings() {
     const file = e.target.files[0]
     
     if (!file.type.startsWith("image/")) {
-      setStatusMsg({ type: "error", text: "Please upload a valid image file." })
+      setAvatarStatus({ type: "error", text: "Please upload a valid image file." })
       return
     }
     
     setIsUploadingAvatar(true)
-    setStatusMsg(null)
+    setAvatarStatus(null)
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -181,10 +185,10 @@ export default function TailorSettings() {
       if (dbError) throw new Error(dbError.message)
 
       setProfilePhotoUrl(url)
-      setStatusMsg({ type: "success", text: "Profile photo updated." })
+      setAvatarStatus({ type: "success", text: "Profile photo updated." })
       window.dispatchEvent(new Event("tailor-profile-updated"))
     } catch (err: any) {
-      setStatusMsg({ type: "error", text: err.message || "Avatar upload failed." })
+      setAvatarStatus({ type: "error", text: err.message || "Avatar upload failed." })
     } finally {
       setIsUploadingAvatar(false)
       e.target.value = ""
@@ -193,10 +197,10 @@ export default function TailorSettings() {
 
   const handleOnboard = async (e: React.FormEvent) => {
     e.preventDefault()
-    setStatusMsg(null)
+    setPayoutStatus(null)
 
     if (!businessName || !accountNumber || !ifsc) {
-      setStatusMsg({ type: "error", text: "Please enter all payout account parameters." })
+      setPayoutStatus({ type: "error", text: "Please enter all payout account parameters." })
       return
     }
 
@@ -217,12 +221,12 @@ export default function TailorSettings() {
       const data = await res.json()
       if (res.ok) {
         setRazorpayAccountId(data.accountId)
-        setStatusMsg({ type: "success", text: "Razorpay linked account created successfully!" })
+        setPayoutStatus({ type: "success", text: "Razorpay linked account created successfully!" })
       } else {
-        setStatusMsg({ type: "error", text: data.error || "Onboarding failed." })
+        setPayoutStatus({ type: "error", text: data.error || "Onboarding failed." })
       }
     } catch {
-      setStatusMsg({ type: "error", text: "Failed to connect to the onboarding service." })
+      setPayoutStatus({ type: "error", text: "Failed to connect to the onboarding service." })
     } finally {
       setIsConnecting(false)
     }
@@ -231,13 +235,22 @@ export default function TailorSettings() {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setPasswordStatus(null)
+    setNewPasswordError(null)
+    setConfirmPasswordError(null)
 
-    if (newPassword !== confirmPassword) {
-      setPasswordStatus({ type: "error", text: "Passwords do not match." })
+    const passwordValidation = validatePassword(newPassword)
+    if (!passwordValidation.isValid) {
+      setNewPasswordError(passwordValidation.errorMessage)
       return
     }
-    if (newPassword.length < 6) {
-      setPasswordStatus({ type: "error", text: "Password must be at least 6 characters." })
+
+    if (!confirmPassword) {
+      setConfirmPasswordError("Please confirm your new password.")
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      setConfirmPasswordError("Passwords do not match.")
       return
     }
 
@@ -272,22 +285,7 @@ export default function TailorSettings() {
         </p>
       </div>
 
-      {statusMsg && (
-        <div
-          className={`p-4 rounded-2xl border text-sm flex items-start gap-3 ${
-            statusMsg.type === "success"
-              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-450"
-              : "bg-destructive/10 border-destructive/20 text-destructive"
-          }`}
-        >
-          {statusMsg.type === "success" ? (
-            <CheckCircle className="w-5 h-5 shrink-0 mt-0.5" />
-          ) : (
-            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-          )}
-          <span>{statusMsg.text}</span>
-        </div>
-      )}
+
 
       {/* Profile & Professional Section */}
       <section className="bg-card border border-border rounded-3xl p-6 sm:p-8 shadow-sm space-y-8">
@@ -325,6 +323,22 @@ export default function TailorSettings() {
               </label>
             </div>
             <p className="text-xs text-muted-foreground">Click photo to update</p>
+            {avatarStatus && (
+              <div
+                className={`p-3 rounded-xl border text-xs flex items-start gap-2 max-w-[200px] text-center ${
+                  avatarStatus.type === "success"
+                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-450"
+                    : "bg-destructive/10 border-destructive/20 text-destructive"
+                }`}
+              >
+                {avatarStatus.type === "success" ? (
+                  <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                )}
+                <span>{avatarStatus.text}</span>
+              </div>
+            )}
           </div>
 
           {/* Edit Form */}
@@ -408,6 +422,23 @@ export default function TailorSettings() {
               </div>
             </div>
 
+            {profileStatus && (
+              <div
+                className={`p-3 rounded-xl border text-xs flex items-start gap-2 ${
+                  profileStatus.type === "success"
+                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-450"
+                    : "bg-destructive/10 border-destructive/20 text-destructive"
+                }`}
+              >
+                {profileStatus.type === "success" ? (
+                  <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                )}
+                <span>{profileStatus.text}</span>
+              </div>
+            )}
+
             <div className="pt-4 flex justify-end">
               <Button
                 type="submit"
@@ -428,6 +459,23 @@ export default function TailorSettings() {
           <Shield className="w-6 h-6 shrink-0" />
           <h2 className="text-xl font-serif font-bold text-foreground">Account & Payouts</h2>
         </div>
+
+        {payoutStatus && (
+          <div
+            className={`p-3 rounded-xl border text-xs flex items-start gap-2 ${
+              payoutStatus.type === "success"
+                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-450"
+                : "bg-destructive/10 border-destructive/20 text-destructive"
+            }`}
+          >
+            {payoutStatus.type === "success" ? (
+              <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            ) : (
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            )}
+            <span>{payoutStatus.text}</span>
+          </div>
+        )}
 
         {razorpayAccountId ? (
           <div className="space-y-4">
@@ -561,9 +609,16 @@ export default function TailorSettings() {
                 type={showPassword ? "text" : "password"}
                 required
                 value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="At least 6 characters"
-                className="w-full h-10 px-3 pr-10 border border-border rounded-xl bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                onChange={(e) => {
+                  setNewPassword(e.target.value)
+                  if (newPasswordError) setNewPasswordError(null)
+                }}
+                placeholder="Create a strong password"
+                className={`w-full h-10 px-3 pr-10 border rounded-xl bg-background text-sm focus:outline-none focus:ring-1 ${
+                  newPasswordError
+                    ? "border-destructive focus:ring-destructive focus:border-destructive"
+                    : "border-border focus:ring-primary focus:border-primary"
+                }`}
               />
               <button
                 type="button"
@@ -574,6 +629,11 @@ export default function TailorSettings() {
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+            <PasswordRequirements
+              password={newPassword}
+              fieldError={newPasswordError}
+              showValidationRules={true}
+            />
           </div>
 
           <div>
@@ -584,10 +644,23 @@ export default function TailorSettings() {
               type={showPassword ? "text" : "password"}
               required
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value)
+                if (confirmPasswordError) setConfirmPasswordError(null)
+              }}
               placeholder="Re-enter new password"
-              className="w-full h-10 px-3 border border-border rounded-xl bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+              className={`w-full h-10 px-3 border rounded-xl bg-background text-sm focus:outline-none focus:ring-1 ${
+                confirmPasswordError
+                  ? "border-destructive focus:ring-destructive focus:border-destructive"
+                  : "border-border focus:ring-primary focus:border-primary"
+              }`}
             />
+            {confirmPasswordError && (
+              <div className="mt-1.5 p-2.5 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-start gap-2">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                <span>{confirmPasswordError}</span>
+              </div>
+            )}
           </div>
 
           <div className="pt-4 flex justify-end">

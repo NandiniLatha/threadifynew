@@ -6,6 +6,7 @@ import {
   FolderKanban,
   Loader2,
   AlertCircle,
+  CheckCircle,
   Plus,
   Trash2,
   Image as ImageIcon,
@@ -227,12 +228,17 @@ export default function TailorPortfolio() {
 
       {statusMsg && (
         <div
-          className={`p-4 rounded-2xl border text-sm flex items-start gap-3 ${statusMsg.type === "success"
+          className={`p-3.5 rounded-2xl border text-sm flex items-start gap-2.5 ${
+            statusMsg.type === "success"
               ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-450"
               : "bg-destructive/10 border-destructive/20 text-destructive"
-            }`}
+          }`}
         >
-          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+          {statusMsg.type === "success" ? (
+            <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
+          ) : (
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+          )}
           <span>{statusMsg.text}</span>
         </div>
       )}

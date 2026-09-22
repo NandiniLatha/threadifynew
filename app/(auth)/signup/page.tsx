@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/client"
 import { motion } from "framer-motion"
 import { AlertCircle, Lock, Mail, Loader2, User, Phone, Scissors, UserCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { validatePassword } from "@/lib/utils/password"
+import { PasswordRequirements } from "@/components/auth/PasswordRequirements"
 
 export default function SignupPage() {
   const router = useRouter()
@@ -18,21 +20,29 @@ export default function SignupPage() {
   const [role, setRole] = React.useState<"customer" | "tailor">("customer")
   const [isLoading, setIsLoading] = React.useState(false)
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null)
+  const [passwordError, setPasswordError] = React.useState<string | null>(null)
   const [successMsg, setSuccessMsg] = React.useState<string | null>(null)
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrorMsg(null)
+    setPasswordError(null)
     setSuccessMsg(null)
 
     const normalizedEmail = email.trim().toLowerCase()
-    if (!normalizedEmail || !password || !name) {
-      setErrorMsg("Please fill in your name, email, and password.")
+    if (!name.trim()) {
+      setErrorMsg("Please enter your full name.")
       return
     }
 
-    if (password.length < 6) {
-      setErrorMsg("Please choose a password with at least 6 characters.")
+    if (!normalizedEmail) {
+      setErrorMsg("Please enter your email address.")
+      return
+    }
+
+    const passwordValidation = validatePassword(password)
+    if (!passwordValidation.isValid) {
+      setPasswordError(passwordValidation.errorMessage)
       return
     }
 
@@ -278,12 +288,24 @@ export default function SignupPage() {
                   autoComplete="new-password"
                   required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 pl-10 border border-border rounded-xl bg-background text-foreground shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
-                  placeholder="Min. 6 characters"
+                  onChange={(e) => {
+                    setPassword(e.target.value)
+                    if (passwordError) setPasswordError(null)
+                  }}
+                  className={`appearance-none block w-full px-3 py-2 pl-10 border rounded-xl bg-background text-foreground shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-1 text-sm ${
+                    passwordError
+                      ? "border-destructive focus:ring-destructive focus:border-destructive"
+                      : "border-border focus:ring-primary focus:border-primary"
+                  }`}
+                  placeholder="Create a strong password"
                 />
                 <Lock className="w-4 h-4 absolute left-3.5 top-3 text-muted-foreground" />
               </div>
+              <PasswordRequirements
+                password={password}
+                fieldError={passwordError}
+                showValidationRules={true}
+              />
             </div>
 
             <div>

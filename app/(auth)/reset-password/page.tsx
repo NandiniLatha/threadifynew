@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/client"
 import { motion } from "framer-motion"
 import { AlertCircle, Lock, Loader2, CheckCircle2, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { validatePassword } from "@/lib/utils/password"
+import { PasswordRequirements } from "@/components/auth/PasswordRequirements"
 
 function ResetPasswordForm() {
   const router = useRouter()
@@ -13,6 +15,8 @@ function ResetPasswordForm() {
 
   const [password, setPassword] = React.useState("")
   const [confirmPassword, setConfirmPassword] = React.useState("")
+  const [passwordError, setPasswordError] = React.useState<string | null>(null)
+  const [confirmPasswordError, setConfirmPasswordError] = React.useState<string | null>(null)
   const [isLoading, setIsLoading] = React.useState(false)
   const [isVerifying, setIsVerifying] = React.useState(true)
   const [hasRecoverySession, setHasRecoverySession] = React.useState(false)
@@ -52,19 +56,22 @@ function ResetPasswordForm() {
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrorMsg(null)
+    setPasswordError(null)
+    setConfirmPasswordError(null)
 
-    if (!password || !confirmPassword) {
-      setErrorMsg("Please enter and confirm your new password.")
+    const passwordValidation = validatePassword(password)
+    if (!passwordValidation.isValid) {
+      setPasswordError(passwordValidation.errorMessage)
       return
     }
 
-    if (password.length < 6) {
-      setErrorMsg("Password must be at least 6 characters long.")
+    if (!confirmPassword) {
+      setConfirmPasswordError("Please confirm your new password.")
       return
     }
 
     if (password !== confirmPassword) {
-      setErrorMsg("Passwords do not match. Please re-enter.")
+      setConfirmPasswordError("Passwords do not match. Please re-enter.")
       return
     }
 
@@ -187,12 +194,24 @@ function ResetPasswordForm() {
                     autoComplete="new-password"
                     required
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="appearance-none block w-full px-3 py-2 pl-10 border border-border rounded-xl bg-background text-foreground shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
-                    placeholder="Min. 6 characters"
+                    onChange={(e) => {
+                      setPassword(e.target.value)
+                      if (passwordError) setPasswordError(null)
+                    }}
+                    className={`appearance-none block w-full px-3 py-2 pl-10 border rounded-xl bg-background text-foreground shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-1 text-sm ${
+                      passwordError
+                        ? "border-destructive focus:ring-destructive focus:border-destructive"
+                        : "border-border focus:ring-primary focus:border-primary"
+                    }`}
+                    placeholder="Create a strong password"
                   />
                   <Lock className="w-4 h-4 absolute left-3.5 top-3 text-muted-foreground" />
                 </div>
+                <PasswordRequirements
+                  password={password}
+                  fieldError={passwordError}
+                  showValidationRules={true}
+                />
               </div>
 
               <div>
@@ -207,12 +226,25 @@ function ResetPasswordForm() {
                     autoComplete="new-password"
                     required
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="appearance-none block w-full px-3 py-2 pl-10 border border-border rounded-xl bg-background text-foreground shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value)
+                      if (confirmPasswordError) setConfirmPasswordError(null)
+                    }}
+                    className={`appearance-none block w-full px-3 py-2 pl-10 border rounded-xl bg-background text-foreground shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-1 text-sm ${
+                      confirmPasswordError
+                        ? "border-destructive focus:ring-destructive focus:border-destructive"
+                        : "border-border focus:ring-primary focus:border-primary"
+                    }`}
                     placeholder="Re-enter password"
                   />
                   <Lock className="w-4 h-4 absolute left-3.5 top-3 text-muted-foreground" />
                 </div>
+                {confirmPasswordError && (
+                  <div className="mt-1.5 p-2.5 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-start gap-2">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                    <span>{confirmPasswordError}</span>
+                  </div>
+                )}
               </div>
 
               <div>

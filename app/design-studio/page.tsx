@@ -242,7 +242,11 @@ function DesignStudio() {
   }
 
   const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [statusMsg, setStatusMsg] = React.useState<{ type: "success" | "error" | "info"; text: string } | null>(null)
+  const [imageError, setImageError] = React.useState<string | null>(null)
+  const [budgetMinError, setBudgetMinError] = React.useState<string | null>(null)
+  const [budgetMaxError, setBudgetMaxError] = React.useState<string | null>(null)
+  const [deadlineError, setDeadlineError] = React.useState<string | null>(null)
+  const [actionStatusMsg, setActionStatusMsg] = React.useState<{ type: "success" | "error" | "info"; text: string } | null>(null)
 
   // Preferred tailor commissioning
   const [preferredTailorId, setPreferredTailorId] = React.useState<string | null>(null)
@@ -352,7 +356,7 @@ function DesignStudio() {
       if (file.type.startsWith("image/")) {
         processFile(file)
       } else {
-        setStatusMsg({ type: "error", text: "Please upload a valid image file (JPEG, PNG, WebP)." })
+        setImageError("Please upload a valid image file (JPEG, PNG, WebP).")
       }
     }
   }
@@ -365,7 +369,8 @@ function DesignStudio() {
 
   const processFile = (file: File) => {
     // Clear all previous AI state and inspiration metadata completely
-    setStatusMsg(null)
+    setImageError(null)
+    setActionStatusMsg(null)
     setInspirationItem(null)
     setTags([])
     resetClassifier()
@@ -381,7 +386,7 @@ function DesignStudio() {
         if (visionResult.detectionStatus === "UNCLEAR_IMAGE" || visionResult.detectionStatus === "NO_GARMENT") {
           setTags([])
           if (visionResult.userMessage) {
-            setStatusMsg({ type: "info", text: visionResult.userMessage })
+            setActionStatusMsg({ type: "info", text: visionResult.userMessage })
           }
         } else if (visionResult.labels && visionResult.labels.length > 0) {
           setTags(visionResult.labels)
@@ -403,7 +408,8 @@ function DesignStudio() {
     e.preventDefault()
     if (!urlInput.trim()) return
 
-    setStatusMsg(null)
+    setImageError(null)
+    setActionStatusMsg(null)
     setInspirationItem(null)
     setImagePreview("/images/features/feature_1_ai_scan.webp")
     setTags(["Custom Clothing", "Streetwear", "Bespoke Request"])
@@ -426,20 +432,41 @@ function DesignStudio() {
 
   // Submit and Draft handlers
   const handleSubmitRequest = async (isDraft: boolean) => {
+    setImageError(null)
+    setBudgetMinError(null)
+    setBudgetMaxError(null)
+    setDeadlineError(null)
+    setActionStatusMsg(null)
+
     if (!imagePreview) {
-      setStatusMsg({ type: "error", text: "Please upload or provide an inspiration image first." })
+      setImageError("Please upload or provide an inspiration image first.")
       return
     }
 
     if (!isDraft) {
-      if (!budgetMin || !budgetMax || !deadline) {
-        setStatusMsg({ type: "error", text: "Please specify both your budget range and target delivery date." })
+      let hasFieldErrors = false
+      if (!budgetMin.trim()) {
+        setBudgetMinError("Please enter a minimum budget.")
+        hasFieldErrors = true
+      }
+      if (!budgetMax.trim()) {
+        setBudgetMaxError("Please enter a maximum budget.")
+        hasFieldErrors = true
+      } else if (budgetMin.trim() && Number(budgetMin) > Number(budgetMax)) {
+        setBudgetMaxError("Maximum budget cannot be less than minimum budget.")
+        hasFieldErrors = true
+      }
+      if (!deadline.trim()) {
+        setDeadlineError("Please select a target delivery date.")
+        hasFieldErrors = true
+      }
+      if (hasFieldErrors) {
         return
       }
     }
 
     setIsSubmitting(true)
-    setStatusMsg(null)
+    setActionStatusMsg(null)
 
     if (isSubmitting) return
 
@@ -475,7 +502,7 @@ function DesignStudio() {
 
       const data = await res.json()
       if (res.ok) {
-        setStatusMsg({
+        setActionStatusMsg({
           type: "success",
           text: isDraft
             ? "Draft successfully saved to your wishlist!"
@@ -493,10 +520,10 @@ function DesignStudio() {
           setNotes("")
         }
       } else {
-        setStatusMsg({ type: "error", text: data.error || "Submission failed. Please check details and try again." })
+        setActionStatusMsg({ type: "error", text: data.error || "Submission failed. Please check details and try again." })
       }
     } catch {
-      setStatusMsg({ type: "error", text: "An unexpected error occurred during submission. Please try again." })
+      setActionStatusMsg({ type: "error", text: "An unexpected error occurred during submission. Please try again." })
     } finally {
       setIsSubmitting(false)
     }
@@ -592,26 +619,6 @@ function DesignStudio() {
           </div>
         )}
 
-        {/* Status Messages */}
-        {statusMsg && (
-          <div
-            className={`mb-6 p-4 rounded-xl border text-sm flex items-start gap-3 ${
-              statusMsg.type === "success"
-                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-300"
-                : statusMsg.type === "info"
-                ? "bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-300"
-                : "bg-destructive/10 border-destructive/20 text-destructive"
-            }`}
-          >
-            {statusMsg.type === "success" ? (
-              <CheckCircle className="w-5 h-5 shrink-0 mt-0.5" />
-            ) : (
-              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-            )}
-            <span className="leading-relaxed font-medium">{statusMsg.text}</span>
-          </div>
-        )}
-
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Column: Media Uploader & Detected Attributes */}
           <div className="lg:col-span-6 space-y-6">
@@ -631,8 +638,8 @@ function DesignStudio() {
                       setInspirationItem(null)
                       setTags([])
                       resetClassifier()
-                      resetRag()
-                      setStatusMsg(null)
+                      setImageError(null)
+                      setActionStatusMsg(null)
                     }}
                     className="text-xs font-semibold text-muted-foreground hover:text-destructive transition-colors"
                   >
@@ -717,7 +724,10 @@ function DesignStudio() {
                         id="url"
                         type="url"
                         value={urlInput}
-                        onChange={(e) => setUrlInput(e.target.value)}
+                        onChange={(e) => {
+                          setUrlInput(e.target.value)
+                          if (imageError) setImageError(null)
+                        }}
                         placeholder="Paste Pinterest, Instagram or image link..."
                         className="w-full h-9 px-3 pl-8 border border-border rounded-lg bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                       />
@@ -729,6 +739,17 @@ function DesignStudio() {
                   </div>
                 </form>
               </div>
+
+              {/* Inspiration Image Error placed directly below the photo section */}
+              {imageError && (
+                <div
+                  role="alert"
+                  className="mt-3 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-start gap-2.5 animate-in fade-in"
+                >
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span className="font-medium leading-relaxed">{imageError}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -921,7 +942,7 @@ function DesignStudio() {
               </h2>
 
               {/* Budget Range */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="budgetMin" className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
                     Min Budget (₹)
@@ -931,12 +952,25 @@ function DesignStudio() {
                       id="budgetMin"
                       type="number"
                       value={budgetMin}
-                      onChange={(e) => setBudgetMin(e.target.value)}
+                      onChange={(e) => {
+                        setBudgetMin(e.target.value)
+                        if (budgetMinError) setBudgetMinError(null)
+                      }}
                       placeholder="e.g. 1500"
-                      className="w-full h-10 px-3 pl-7 border border-border rounded-lg bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                      className={`w-full h-10 px-3 pl-7 border rounded-lg bg-background text-xs focus:outline-none focus:ring-1 ${
+                        budgetMinError
+                          ? "border-destructive focus:ring-destructive focus:border-destructive"
+                          : "border-border focus:ring-primary focus:border-primary"
+                      }`}
                     />
                     <span className="absolute left-2.5 top-3 text-xs text-muted-foreground">₹</span>
                   </div>
+                  {budgetMinError && (
+                    <div className="mt-1.5 p-2 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-start gap-1.5 animate-in fade-in">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                      <span>{budgetMinError}</span>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label htmlFor="budgetMax" className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
@@ -947,12 +981,25 @@ function DesignStudio() {
                       id="budgetMax"
                       type="number"
                       value={budgetMax}
-                      onChange={(e) => setBudgetMax(e.target.value)}
+                      onChange={(e) => {
+                        setBudgetMax(e.target.value)
+                        if (budgetMaxError) setBudgetMaxError(null)
+                      }}
                       placeholder="e.g. 4500"
-                      className="w-full h-10 px-3 pl-7 border border-border rounded-lg bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                      className={`w-full h-10 px-3 pl-7 border rounded-lg bg-background text-xs focus:outline-none focus:ring-1 ${
+                        budgetMaxError
+                          ? "border-destructive focus:ring-destructive focus:border-destructive"
+                          : "border-border focus:ring-primary focus:border-primary"
+                      }`}
                     />
                     <span className="absolute left-2.5 top-3 text-xs text-muted-foreground">₹</span>
                   </div>
+                  {budgetMaxError && (
+                    <div className="mt-1.5 p-2 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-start gap-1.5 animate-in fade-in">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                      <span>{budgetMaxError}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -966,11 +1013,24 @@ function DesignStudio() {
                     id="deadline"
                     type="date"
                     value={deadline}
-                    onChange={(e) => setDeadline(e.target.value)}
-                    className="w-full h-10 px-3 pl-9 border border-border rounded-lg bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                    onChange={(e) => {
+                      setDeadline(e.target.value)
+                      if (deadlineError) setDeadlineError(null)
+                    }}
+                    className={`w-full h-10 px-3 pl-9 border rounded-lg bg-background text-xs focus:outline-none focus:ring-1 ${
+                      deadlineError
+                        ? "border-destructive focus:ring-destructive focus:border-destructive"
+                        : "border-border focus:ring-primary focus:border-primary"
+                    }`}
                   />
                   <Calendar className="w-3.5 h-3.5 absolute left-3 top-3.5 text-muted-foreground" />
                 </div>
+                {deadlineError && (
+                  <div className="mt-1.5 p-2 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-start gap-1.5 animate-in fade-in">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                    <span>{deadlineError}</span>
+                  </div>
+                )}
               </div>
 
               {/* Custom Notes */}
@@ -1024,6 +1084,27 @@ function DesignStudio() {
                   )}
                 </Button>
               </div>
+
+              {/* Submission / Action Feedback placed directly below Action Buttons */}
+              {actionStatusMsg && (
+                <div
+                  role="alert"
+                  className={`mt-3 p-3.5 rounded-xl border text-xs sm:text-sm flex items-start gap-2.5 animate-in fade-in ${
+                    actionStatusMsg.type === "success"
+                      ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-300"
+                      : actionStatusMsg.type === "info"
+                      ? "bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-300"
+                      : "bg-destructive/10 border-destructive/20 text-destructive"
+                  }`}
+                >
+                  {actionStatusMsg.type === "success" ? (
+                    <CheckCircle className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  )}
+                  <span className="leading-relaxed font-medium">{actionStatusMsg.text}</span>
+                </div>
+              )}
             </div>
           </div>
       </main>

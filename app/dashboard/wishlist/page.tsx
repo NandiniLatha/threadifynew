@@ -39,7 +39,10 @@ export default function CustomerWishlist() {
   const [inspirations, setInspirations] = React.useState<WishlistItem[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null)
-  const [isDeleting, setIsDeleting] = React.useState<string | null>(null)
+  const [successMsg, setSuccessMsg] = React.useState<string | null>(null)
+  const [itemToDelete, setItemToDelete] = React.useState<WishlistItem | null>(null)
+  const [isDeleting, setIsDeleting] = React.useState(false)
+  const [deleteErrorMsg, setDeleteErrorMsg] = React.useState<string | null>(null)
 
   const loadWishlist = React.useCallback(async () => {
     setIsLoading(true)
@@ -72,24 +75,28 @@ export default function CustomerWishlist() {
     loadWishlist()
   }, [loadWishlist])
 
-  const handleDeleteDraft = async (id: string) => {
-    setIsDeleting(id)
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return
+    setIsDeleting(true)
+    setDeleteErrorMsg(null)
     try {
       const { error } = await supabase
         .from("wishlist_items")
         .delete()
-        .eq("id", id)
+        .eq("id", itemToDelete.id)
       
       if (!error) {
-        setWishlist((prev) => prev.filter((item) => item.id !== id))
-        setInspirations((prev) => prev.filter((item) => item.id !== id))
+        setWishlist((prev) => prev.filter((item) => item.id !== itemToDelete.id))
+        setInspirations((prev) => prev.filter((item) => item.id !== itemToDelete.id))
+        setSuccessMsg("Saved design removed successfully.")
+        setItemToDelete(null)
       } else {
-        setErrorMsg("Failed to delete item.")
+        setDeleteErrorMsg(error.message || "Failed to delete saved design.")
       }
     } catch {
-      setErrorMsg("Failed to delete item.")
+      setDeleteErrorMsg("Failed to delete saved design. Please try again.")
     } finally {
-      setIsDeleting(null)
+      setIsDeleting(false)
     }
   }
 
@@ -109,6 +116,19 @@ export default function CustomerWishlist() {
           Your personal atelier of custom clothing ideas. Resume your design drafts when you are ready to bring them to life.
         </p>
       </div>
+
+      {successMsg && (
+        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-between gap-4 rounded-xl animate-in fade-in">
+          <span className="text-sm font-medium">{successMsg}</span>
+          <button 
+            type="button" 
+            onClick={() => setSuccessMsg(null)}
+            className="text-xs uppercase font-bold tracking-wider hover:opacity-75"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
@@ -233,7 +253,7 @@ export default function CustomerWishlist() {
                              })
                              setInspirations(prev => prev.filter(i => i.id !== item.id))
                           }}
-                          disabled={isDeleting === item.id}
+                          disabled={isDeleting}
                           className="absolute top-4 right-4 p-2.5 bg-background/95 backdrop-blur-sm text-foreground rounded-full opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 shadow-lg disabled:opacity-50"
                           aria-label="Remove saved inspiration"
                         >
@@ -295,16 +315,15 @@ export default function CustomerWishlist() {
                       
                       <button
                         type="button"
-                        onClick={() => handleDeleteDraft(item.id)}
-                        disabled={isDeleting === item.id}
+                        onClick={() => {
+                          setDeleteErrorMsg(null)
+                          setItemToDelete(item)
+                        }}
+                        disabled={isDeleting}
                         className="absolute top-4 right-4 p-2.5 bg-background/95 backdrop-blur-sm text-foreground rounded-full opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 shadow-lg disabled:opacity-50"
                         aria-label="Remove saved design"
                       >
-                        {isDeleting === item.id ? (
-                          <div className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
-                        ) : (
-                          <Trash2 className="w-4 h-4" />
-                        )}
+                        <Trash2 className="w-4 h-4" />
                       </button>
                       
                       <div className="absolute bottom-6 left-0 right-0 flex justify-center translate-y-8 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 delay-100">
@@ -359,6 +378,61 @@ export default function CustomerWishlist() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {itemToDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-dialog-title"
+        >
+          <div className="bg-card border border-border rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-destructive/10 text-destructive rounded-xl shrink-0">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div className="space-y-1 flex-1">
+                <h2 id="delete-dialog-title" className="text-lg font-bold text-foreground">
+                  Remove Saved Design?
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Are you sure you want to delete this saved draft? This action cannot be undone.
+                </p>
+              </div>
+            </div>
+
+            {deleteErrorMsg && (
+              <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-xl flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{deleteErrorMsg}</span>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setItemToDelete(null)
+                  setDeleteErrorMsg(null)
+                }}
+                disabled={isDeleting}
+                className="rounded-xl border-border"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="rounded-xl font-semibold bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              >
+                {isDeleting ? "Removing..." : "Yes, Remove Draft"}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>

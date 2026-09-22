@@ -122,8 +122,11 @@ export default function MeasurementsPage() {
   const [isDefault,     setIsDefault]     = React.useState(false)
   const [formData,      setFormData]      = React.useState<Record<string, string>>({})
   const [isSaving,      setIsSaving]      = React.useState(false)
-  const [isDeleting,    setIsDeleting]    = React.useState<string | null>(null)
+  const [isDeleting,    setIsDeleting]    = React.useState(false)
+  const [measurementToDelete, setMeasurementToDelete] = React.useState<Measurement | null>(null)
+  const [deleteError,   setDeleteError]   = React.useState<string | null>(null)
   const [saveSuccess,   setSaveSuccess]   = React.useState(false)
+  const [successMsg,    setSuccessMsg]    = React.useState<string | null>(null)
 
   async function loadMeasurements() {
     setIsLoading(true)
@@ -217,10 +220,12 @@ export default function MeasurementsPage() {
     }
   }
 
-  async function handleSave() {
+    async function handleSave() {
     if (!formLabel.trim()) return
     setIsSaving(true)
     setSaveSuccess(false)
+    setError(null)
+    setSuccessMsg(null)
     try {
       const fields  = GARMENT_FIELDS[garmentType]
       const payload = buildPayload(
@@ -246,6 +251,7 @@ export default function MeasurementsPage() {
       if (!res.ok) throw new Error(data.error)
 
       setSaveSuccess(true)
+      setSuccessMsg(editingId ? "Measurement profile updated successfully." : "Measurement profile created successfully.")
       await loadMeasurements()
       setTimeout(() => setShowForm(false), 700)
     } catch (e) {
@@ -255,23 +261,27 @@ export default function MeasurementsPage() {
     }
   }
 
-  async function handleDelete(id: string) {
-    setIsDeleting(id)
+  async function handleConfirmDelete() {
+    if (!measurementToDelete) return
+    setIsDeleting(true)
+    setDeleteError(null)
     try {
       const res = await fetch("/api/measurements", {
         method:  "DELETE",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ id }),
+        body:    JSON.stringify({ id: measurementToDelete.id }),
       })
       if (!res.ok) {
         const d = await res.json()
         throw new Error(d.error)
       }
+      setSuccessMsg("Measurement profile deleted successfully.")
+      setMeasurementToDelete(null)
       await loadMeasurements()
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to delete.")
+      setDeleteError(e instanceof Error ? e.message : "Failed to delete measurement profile.")
     } finally {
-      setIsDeleting(null)
+      setIsDeleting(false)
     }
   }
 
@@ -297,6 +307,20 @@ export default function MeasurementsPage() {
           </Button>
         )}
       </div>
+
+      {/* Success banner */}
+      {successMsg && (
+        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-between gap-4 rounded-2xl animate-in fade-in">
+          <span className="text-sm font-medium">{successMsg}</span>
+          <button 
+            type="button" 
+            onClick={() => setSuccessMsg(null)}
+            className="text-xs uppercase font-bold tracking-wider hover:opacity-75"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Error */}
       {error && (
@@ -585,16 +609,15 @@ export default function MeasurementsPage() {
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
                     <button
-                      onClick={() => handleDelete(m.id)}
-                      disabled={isDeleting === m.id}
+                      onClick={() => {
+                        setDeleteError(null)
+                        setMeasurementToDelete(m)
+                      }}
+                      disabled={isDeleting}
                       className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                       title="Delete"
                     >
-                      {isDeleting === m.id ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-3.5 h-3.5" />
-                      )}
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
@@ -615,6 +638,61 @@ export default function MeasurementsPage() {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {measurementToDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-measurement-title"
+        >
+          <div className="bg-card border border-border rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-destructive/10 text-destructive rounded-xl shrink-0">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div className="space-y-1 flex-1">
+                <h2 id="delete-measurement-title" className="text-lg font-bold text-foreground">
+                  Delete Measurement Profile?
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Are you sure you want to delete <span className="font-semibold text-foreground">&quot;{measurementToDelete.label}&quot;</span>? This action cannot be undone.
+                </p>
+              </div>
+            </div>
+
+            {deleteError && (
+              <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-xl flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{deleteError}</span>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setMeasurementToDelete(null)
+                  setDeleteError(null)
+                }}
+                disabled={isDeleting}
+                className="rounded-xl border-border"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="rounded-xl font-semibold bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              >
+                {isDeleting ? "Deleting..." : "Yes, Delete Profile"}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -14,18 +14,21 @@ function LoginForm() {
 
   const [email, setEmail] = React.useState("")
   const [password, setPassword] = React.useState("")
+  const [emailError, setEmailError] = React.useState<string | null>(null)
+  const [passwordError, setPasswordError] = React.useState<string | null>(null)
   const [isLoading, setIsLoading] = React.useState(false)
 
-  // Show URL error param (e.g. from OAuth callback failure) as initial error
+  // Show URL error param (e.g. from OAuth callback failure)
   const urlError = searchParams.get("error")
   const [errorMsg, setErrorMsg] = React.useState<string | null>(
     urlError === "auth-failed"
       ? "Authentication failed. Please try signing in again."
-      : urlError === "oauth-denied"
-      ? "Google sign-in was cancelled."
       : urlError
       ? decodeURIComponent(urlError)
       : null
+  )
+  const [googleError, setGoogleError] = React.useState<string | null>(
+    urlError === "oauth-denied" ? "Google sign-in was cancelled." : null
   )
 
   const [isForgotMode, setIsForgotMode] = React.useState(false)
@@ -37,11 +40,12 @@ function LoginForm() {
     if (isForgotLoading) return
 
     setErrorMsg(null)
+    setEmailError(null)
     setForgotSuccessMsg(null)
 
     const normalizedEmail = email.trim().toLowerCase()
     if (!normalizedEmail) {
-      setErrorMsg("Please enter your email address to reset your password.")
+      setEmailError("Please enter your email address to reset your password.")
       return
     }
 
@@ -69,11 +73,21 @@ function LoginForm() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrorMsg(null)
+    setGoogleError(null)
+    setEmailError(null)
+    setPasswordError(null)
 
-    if (!email || !password) {
-      setErrorMsg("Please enter both your email address and password.")
-      return
+    let hasFieldErrors = false
+    if (!email.trim()) {
+      setEmailError("Please enter your email address.")
+      hasFieldErrors = true
     }
+    if (!password) {
+      setPasswordError("Please enter your password.")
+      hasFieldErrors = true
+    }
+
+    if (hasFieldErrors) return
 
     setIsLoading(true)
 
@@ -139,6 +153,7 @@ function LoginForm() {
 
   const handleGoogleLogin = async () => {
     setErrorMsg(null)
+    setGoogleError(null)
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -147,10 +162,10 @@ function LoginForm() {
         },
       })
       if (error) {
-        setErrorMsg("Could not connect with Google. Please try again or use your email.")
+        setGoogleError("Could not connect with Google. Please try again or use your email.")
       }
     } catch {
-      setErrorMsg("Something went wrong initializing Google sign-in.")
+      setGoogleError("Something went wrong initializing Google sign-in.")
     }
   }
 
@@ -199,19 +214,6 @@ function LoginForm() {
         >
           {isForgotMode ? (
             <form className="space-y-6" onSubmit={handleForgotPassword}>
-              {errorMsg && (
-                <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-                  <span>{errorMsg}</span>
-                </div>
-              )}
-
-              {forgotSuccessMsg && (
-                <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm flex items-start gap-3">
-                  <span>{forgotSuccessMsg}</span>
-                </div>
-              )}
-
               <div>
                 <label htmlFor="email" className="block text-sm font-semibold text-foreground">
                   Email address
@@ -224,12 +226,31 @@ function LoginForm() {
                     autoComplete="email"
                     required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="appearance-none block w-full px-3 py-2 pl-10 border border-border rounded-xl bg-background text-foreground shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      if (emailError) setEmailError(null)
+                      if (errorMsg) setErrorMsg(null)
+                    }}
+                    className={`appearance-none block w-full px-3 py-2 pl-10 border rounded-xl bg-background text-foreground shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-1 text-sm ${
+                      emailError || errorMsg
+                        ? "border-destructive focus:ring-destructive focus:border-destructive"
+                        : "border-border focus:ring-primary focus:border-primary"
+                    }`}
                     placeholder="name@example.com"
                   />
                   <Mail className="w-4 h-4 absolute left-3.5 top-3 text-muted-foreground" />
                 </div>
+                {(emailError || errorMsg) && (
+                  <div className="mt-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs sm:text-sm flex items-start gap-2.5 animate-in fade-in">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span className="font-medium leading-relaxed">{emailError || errorMsg}</span>
+                  </div>
+                )}
+                {forgotSuccessMsg && (
+                  <div className="mt-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs sm:text-sm flex items-start gap-2.5 animate-in fade-in">
+                    <span className="font-medium leading-relaxed">{forgotSuccessMsg}</span>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -251,13 +272,6 @@ function LoginForm() {
             </form>
           ) : (
             <form className="space-y-6" onSubmit={handleLogin}>
-              {errorMsg && (
-                <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-                  <span>{errorMsg}</span>
-                </div>
-              )}
-
               <div>
                 <label htmlFor="email" className="block text-sm font-semibold text-foreground">
                   Email address
@@ -270,12 +284,26 @@ function LoginForm() {
                     autoComplete="email"
                     required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="appearance-none block w-full px-3 py-2 pl-10 border border-border rounded-xl bg-background text-foreground shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      if (emailError) setEmailError(null)
+                      if (errorMsg) setErrorMsg(null)
+                    }}
+                    className={`appearance-none block w-full px-3 py-2 pl-10 border rounded-xl bg-background text-foreground shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-1 text-sm ${
+                      emailError
+                        ? "border-destructive focus:ring-destructive focus:border-destructive"
+                        : "border-border focus:ring-primary focus:border-primary"
+                    }`}
                     placeholder="name@example.com"
                   />
                   <Mail className="w-4 h-4 absolute left-3.5 top-3 text-muted-foreground" />
                 </div>
+                {emailError && (
+                  <div className="mt-1.5 p-2.5 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-start gap-1.5 animate-in fade-in">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                    <span className="font-medium leading-tight">{emailError}</span>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -290,12 +318,31 @@ function LoginForm() {
                     autoComplete="current-password"
                     required
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="appearance-none block w-full px-3 py-2 pl-10 border border-border rounded-xl bg-background text-foreground shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
+                    onChange={(e) => {
+                      setPassword(e.target.value)
+                      if (passwordError) setPasswordError(null)
+                      if (errorMsg) setErrorMsg(null)
+                    }}
+                    className={`appearance-none block w-full px-3 py-2 pl-10 border rounded-xl bg-background text-foreground shadow-sm placeholder-muted-foreground focus:outline-none focus:ring-1 text-sm ${
+                      passwordError || errorMsg
+                        ? "border-destructive focus:ring-destructive focus:border-destructive"
+                        : "border-border focus:ring-primary focus:border-primary"
+                    }`}
                     placeholder="••••••••"
                   />
                   <Lock className="w-4 h-4 absolute left-3.5 top-3 text-muted-foreground" />
                 </div>
+
+                {/* Password validation / Authentication error placed directly below password field */}
+                {(passwordError || errorMsg) && (
+                  <div
+                    role="alert"
+                    className="mt-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs sm:text-sm flex items-start gap-2.5 animate-in fade-in"
+                  >
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span className="font-medium leading-relaxed">{passwordError || errorMsg}</span>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-end">
@@ -354,6 +401,15 @@ function LoginForm() {
                 </svg>
                 Continue with Google
               </Button>
+              {googleError && (
+                <div
+                  role="alert"
+                  className="mt-3 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs sm:text-sm flex items-start gap-2.5 animate-in fade-in"
+                >
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span className="font-medium leading-relaxed">{googleError}</span>
+                </div>
+              )}
             </div>
           </div>
         </motion.div>

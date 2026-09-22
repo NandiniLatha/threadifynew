@@ -12,6 +12,8 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { validatePassword } from "@/lib/utils/password"
+import { PasswordRequirements } from "@/components/auth/PasswordRequirements"
 
 export default function CustomerSettings() {
   const supabase = createClient()
@@ -20,6 +22,8 @@ export default function CustomerSettings() {
   const [email, setEmail] = React.useState("")
   const [newPassword, setNewPassword] = React.useState("")
   const [confirmPassword, setConfirmPassword] = React.useState("")
+  const [newPasswordError, setNewPasswordError] = React.useState<string | null>(null)
+  const [confirmPasswordError, setConfirmPasswordError] = React.useState<string | null>(null)
   const [showPassword, setShowPassword] = React.useState(false)
   const [avatarUrl, setAvatarUrl] = React.useState("")
 
@@ -27,6 +31,7 @@ export default function CustomerSettings() {
   const [isSavingProfile, setIsSavingProfile] = React.useState(false)
   const [isUploadingAvatar, setIsUploadingAvatar] = React.useState(false)
   const [isChangingPassword, setIsChangingPassword] = React.useState(false)
+  const [avatarStatus, setAvatarStatus] = React.useState<{ type: "success" | "error"; text: string } | null>(null)
   const [profileStatus, setProfileStatus] = React.useState<{ type: "success" | "error"; text: string } | null>(null)
   const [passwordStatus, setPasswordStatus] = React.useState<{ type: "success" | "error"; text: string } | null>(null)
 
@@ -87,13 +92,22 @@ export default function CustomerSettings() {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setPasswordStatus(null)
+    setNewPasswordError(null)
+    setConfirmPasswordError(null)
 
-    if (newPassword !== confirmPassword) {
-      setPasswordStatus({ type: "error", text: "Passwords do not match." })
+    const passwordValidation = validatePassword(newPassword)
+    if (!passwordValidation.isValid) {
+      setNewPasswordError(passwordValidation.errorMessage)
       return
     }
-    if (newPassword.length < 8) {
-      setPasswordStatus({ type: "error", text: "Password must be at least 8 characters." })
+
+    if (!confirmPassword) {
+      setConfirmPasswordError("Please confirm your new password.")
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      setConfirmPasswordError("Passwords do not match.")
       return
     }
 
@@ -117,7 +131,7 @@ export default function CustomerSettings() {
     return (
       <div
         role="alert"
-        className={`p-3 rounded-2xl border text-sm flex items-start gap-2.5 ${
+        className={`p-3 rounded-2xl border text-xs sm:text-sm flex items-start gap-2.5 animate-in fade-in ${
           status.type === "success"
             ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400"
             : "bg-destructive/10 border-destructive/20 text-destructive"
@@ -156,8 +170,6 @@ export default function CustomerSettings() {
               My Profile
             </h2>
 
-            <StatusBanner status={profileStatus} />
-
             <div className="flex flex-col sm:flex-row gap-6">
               {/* Avatar Upload */}
               <div className="flex flex-col items-center gap-3 shrink-0">
@@ -178,11 +190,11 @@ export default function CustomerSettings() {
                         if (!e.target.files || e.target.files.length === 0) return
                         const file = e.target.files[0]
                         if (!file.type.startsWith("image/")) {
-                          setProfileStatus({ type: "error", text: "Please upload a valid image file." })
+                          setAvatarStatus({ type: "error", text: "Please upload a valid image file." })
                           return
                         }
                         setIsUploadingAvatar(true)
-                        setProfileStatus(null)
+                        setAvatarStatus(null)
                         try {
                           const { data: { user } } = await supabase.auth.getUser()
                           if (!user) throw new Error("Not authenticated")
@@ -211,12 +223,12 @@ export default function CustomerSettings() {
                           if (dbError) throw new Error(dbError.message)
 
                           setAvatarUrl(url)
-                          setProfileStatus({ type: "success", text: "Profile photo updated." })
+                          setAvatarStatus({ type: "success", text: "Profile photo updated." })
                           
                           // Notify layout to refresh the profile info in the sidebar
                           window.dispatchEvent(new Event("profile-updated"))
                         } catch (err: any) {
-                          setProfileStatus({ type: "error", text: err.message || "Avatar upload failed." })
+                          setAvatarStatus({ type: "error", text: err.message || "Avatar upload failed." })
                         } finally {
                           setIsUploadingAvatar(false)
                           e.target.value = ""
@@ -233,6 +245,11 @@ export default function CustomerSettings() {
                   </label>
                 </div>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Profile Photo</p>
+                {avatarStatus && (
+                  <div className="w-full text-center">
+                    <StatusBanner status={avatarStatus} />
+                  </div>
+                )}
               </div>
 
               <form onSubmit={handleSaveProfile} className="flex-1 space-y-4" noValidate>
@@ -245,7 +262,10 @@ export default function CustomerSettings() {
                   type="text"
                   required
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => {
+                    setName(e.target.value)
+                    if (profileStatus) setProfileStatus(null)
+                  }}
                   placeholder="Your full name"
                   className="w-full h-10 px-3 border border-border rounded-xl bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                 />
@@ -279,6 +299,10 @@ export default function CustomerSettings() {
                 ) : null}
                 Save Changes
               </Button>
+
+              {profileStatus && (
+                <StatusBanner status={profileStatus} />
+              )}
               </form>
             </div>
           </section>
@@ -289,8 +313,6 @@ export default function CustomerSettings() {
               <Settings className="w-5 h-5 text-primary" aria-hidden="true" />
               Change Password
             </h2>
-
-            <StatusBanner status={passwordStatus} />
 
             <form onSubmit={handleChangePassword} className="space-y-4" noValidate>
               <div>
@@ -303,21 +325,31 @@ export default function CustomerSettings() {
                     type={showPassword ? "text" : "password"}
                     required
                     value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="At least 8 characters"
-                    className="w-full h-10 px-3 pr-10 border border-border rounded-xl bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                    aria-describedby="password-length-hint"
+                    onChange={(e) => {
+                      setNewPassword(e.target.value)
+                      if (newPasswordError) setNewPasswordError(null)
+                      if (passwordStatus) setPasswordStatus(null)
+                    }}
+                    placeholder="Min. 6 chars, 1 uppercase, 1 symbol"
+                    className={`w-full h-10 px-3 pr-10 border rounded-xl bg-background text-sm focus:outline-none focus:ring-1 ${
+                      newPasswordError
+                        ? "border-destructive focus:ring-destructive focus:border-destructive"
+                        : "border-border focus:ring-primary focus:border-primary"
+                    }`}
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword((s) => !s)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                <p id="password-length-hint" className="text-[10px] text-muted-foreground mt-1">Minimum 8 characters required.</p>
+                <PasswordRequirements
+                  password={newPassword}
+                  fieldError={newPasswordError}
+                />
               </div>
 
               <div>
@@ -329,10 +361,24 @@ export default function CustomerSettings() {
                   type={showPassword ? "text" : "password"}
                   required
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Repeat your new password"
-                  className="w-full h-10 px-3 border border-border rounded-xl bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value)
+                    if (confirmPasswordError) setConfirmPasswordError(null)
+                    if (passwordStatus) setPasswordStatus(null)
+                  }}
+                  placeholder="Re-enter your new password"
+                  className={`w-full h-10 px-3 border rounded-xl bg-background text-sm focus:outline-none focus:ring-1 ${
+                    confirmPasswordError
+                      ? "border-destructive focus:ring-destructive focus:border-destructive"
+                      : "border-border focus:ring-primary focus:border-primary"
+                  }`}
                 />
+                {confirmPasswordError && (
+                  <div className="mt-1.5 p-2 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-start gap-1.5 animate-in fade-in">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                    <span>{confirmPasswordError}</span>
+                  </div>
+                )}
               </div>
 
               <Button
@@ -345,6 +391,10 @@ export default function CustomerSettings() {
                 ) : null}
                 Update Password
               </Button>
+
+              {passwordStatus && (
+                <StatusBanner status={passwordStatus} />
+              )}
             </form>
           </section>
         </div>

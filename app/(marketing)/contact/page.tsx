@@ -21,13 +21,36 @@ export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [statusMsg, setStatusMsg] = React.useState<{ type: "success" | "error"; text: string } | null>(null)
 
+  const [errors, setErrors] = React.useState<{ [key: string]: string | null }>({})
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+    const { name, value } = e.target
+    setForm((prev) => ({ ...prev, [name]: value }))
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: null }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setStatusMsg(null)
+
+    const newErrors: { [key: string]: string } = {}
+    if (!form.name.trim()) newErrors.name = "Please enter your full name."
+    if (!form.email.trim()) {
+      newErrors.email = "Please enter your email address."
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      newErrors.email = "Please enter a valid email address."
+    }
+    if (!form.subject) newErrors.subject = "Please select a topic."
+    if (!form.message.trim()) newErrors.message = "Please enter your message."
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      return
+    }
+
+    setErrors({})
     setIsSubmitting(true)
     try {
       const res = await fetch("/api/contact", {
@@ -37,7 +60,7 @@ export default function ContactPage() {
       })
       const data = await res.json()
       if (res.ok) {
-        setStatusMsg({ type: "success", text: data.message })
+        setStatusMsg({ type: "success", text: data.message || "Message sent successfully! We will get back to you shortly." })
         setForm({ name: "", email: "", subject: "", message: "" })
       } else {
         setStatusMsg({ type: "error", text: data.error || "Something went wrong. Please try again." })
@@ -161,24 +184,6 @@ export default function ContactPage() {
             <div className="bg-card border border-border rounded-3xl p-8 shadow-sm">
               <h2 className="font-serif text-xl font-bold text-foreground mb-6">Send a Message</h2>
 
-              {statusMsg && (
-                <div
-                  role="alert"
-                  className={`mb-6 p-4 rounded-2xl border text-sm flex items-start gap-3 ${
-                    statusMsg.type === "success"
-                      ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400"
-                      : "bg-destructive/10 border-destructive/20 text-destructive"
-                  }`}
-                >
-                  {statusMsg.type === "success" ? (
-                    <CheckCircle className="w-5 h-5 shrink-0 mt-0.5" aria-hidden="true" />
-                  ) : (
-                    <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" aria-hidden="true" />
-                  )}
-                  <span>{statusMsg.text}</span>
-                </div>
-              )}
-
               <form onSubmit={handleSubmit} className="space-y-5" noValidate>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
@@ -193,8 +198,18 @@ export default function ContactPage() {
                       value={form.name}
                       onChange={handleChange}
                       placeholder="Your name"
-                      className="w-full h-10 px-3 border border-border rounded-xl bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                      className={`w-full h-10 px-3 border rounded-xl bg-background text-sm focus:outline-none focus:ring-1 ${
+                        errors.name
+                          ? "border-destructive focus:ring-destructive focus:border-destructive"
+                          : "border-border focus:ring-primary focus:border-primary"
+                      }`}
                     />
+                    {errors.name && (
+                      <div className="mt-1.5 p-2 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-center gap-1.5">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errors.name}</span>
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label htmlFor="contact-email" className="block text-xs font-semibold text-foreground mb-1.5">
@@ -208,8 +223,18 @@ export default function ContactPage() {
                       value={form.email}
                       onChange={handleChange}
                       placeholder="your@email.com"
-                      className="w-full h-10 px-3 border border-border rounded-xl bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                      className={`w-full h-10 px-3 border rounded-xl bg-background text-sm focus:outline-none focus:ring-1 ${
+                        errors.email
+                          ? "border-destructive focus:ring-destructive focus:border-destructive"
+                          : "border-border focus:ring-primary focus:border-primary"
+                      }`}
                     />
+                    {errors.email && (
+                      <div className="mt-1.5 p-2 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-center gap-1.5">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errors.email}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -223,7 +248,11 @@ export default function ContactPage() {
                     required
                     value={form.subject}
                     onChange={handleChange}
-                    className="w-full h-10 px-3 border border-border rounded-xl bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                    className={`w-full h-10 px-3 border rounded-xl bg-background text-sm focus:outline-none focus:ring-1 ${
+                      errors.subject
+                        ? "border-destructive focus:ring-destructive focus:border-destructive"
+                        : "border-border focus:ring-primary focus:border-primary"
+                    }`}
                   >
                     <option value="">Select a topic</option>
                     <option value="Order & Delivery">Order &amp; Delivery</option>
@@ -232,6 +261,12 @@ export default function ContactPage() {
                     <option value="Technical Support">Technical Support</option>
                     <option value="General Inquiry">General Inquiry</option>
                   </select>
+                  {errors.subject && (
+                    <div className="mt-1.5 p-2 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{errors.subject}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -246,8 +281,18 @@ export default function ContactPage() {
                     onChange={handleChange}
                     placeholder="Tell us how we can help you..."
                     rows={5}
-                    className="w-full p-3 border border-border rounded-xl bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary resize-none"
+                    className={`w-full p-3 border rounded-xl bg-background text-sm focus:outline-none focus:ring-1 ${
+                      errors.message
+                        ? "border-destructive focus:ring-destructive focus:border-destructive"
+                        : "border-border focus:ring-primary focus:border-primary"
+                    }`}
                   />
+                  {errors.message && (
+                    <div className="mt-1.5 p-2 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{errors.message}</span>
+                    </div>
+                  )}
                 </div>
 
                 <Button
@@ -262,6 +307,24 @@ export default function ContactPage() {
                   )}
                   {isSubmitting ? "Sending..." : "Send Message"}
                 </Button>
+
+                {statusMsg && (
+                  <div
+                    role="alert"
+                    className={`p-4 rounded-2xl border text-sm flex items-start gap-3 ${
+                      statusMsg.type === "success"
+                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400"
+                        : "bg-destructive/10 border-destructive/20 text-destructive"
+                    }`}
+                  >
+                    {statusMsg.type === "success" ? (
+                      <CheckCircle className="w-5 h-5 shrink-0 mt-0.5" aria-hidden="true" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" aria-hidden="true" />
+                    )}
+                    <span>{statusMsg.text}</span>
+                  </div>
+                )}
               </form>
             </div>
           </motion.section>

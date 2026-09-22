@@ -47,10 +47,8 @@ export default function TailorRequestDetails() {
   const [isLoading, setIsLoading] = React.useState(true)
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null)
 
-  // Form states
-  const [price, setPrice] = React.useState("")
-  const [days, setDays] = React.useState("")
-  const [note, setNote] = React.useState("")
+  const [priceError, setPriceError] = React.useState<string | null>(null)
+  const [daysError, setDaysError] = React.useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [successMsg, setSuccessMsg] = React.useState<string | null>(null)
 
@@ -108,17 +106,32 @@ export default function TailorRequestDetails() {
     if (id) loadData()
   }, [id, router, supabase])
 
+  const [price, setPrice] = React.useState("")
+  const [days, setDays] = React.useState("")
+  const [note, setNote] = React.useState("")
+
+
   const handleSubmitQuote = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (!price || !days) {
-      setErrorMsg("Please provide a price and estimated days.")
-      return
-    }
-
-    setIsSubmitting(true)
+    setPriceError(null)
+    setDaysError(null)
     setErrorMsg(null)
     setSuccessMsg(null)
+
+    let hasErrors = false
+    if (!price || Number(price) <= 0) {
+      setPriceError("Please enter a valid price quote.")
+      hasErrors = true
+    }
+
+    if (!days || Number(days) < 1) {
+      setDaysError("Please enter the estimated number of days.")
+      hasErrors = true
+    }
+
+    if (hasErrors) return
+
+    setIsSubmitting(true)
 
     try {
       const res = await fetch("/api/quotations", {
@@ -350,96 +363,123 @@ export default function TailorRequestDetails() {
               <div className="bg-card border border-border rounded-[2rem] p-8 shadow-sm">
                 <h2 className="text-2xl font-serif font-bold text-foreground mb-1">Submit Proposal</h2>
                 <p className="text-sm text-muted-foreground mb-8">Offer your pricing and timeline to win this client.</p>
-                
-                {errorMsg && (
-                  <div className="p-4 mb-6 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-2xl flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-                    <span>{errorMsg}</span>
-                  </div>
-                )}
 
-                {successMsg && (
-                  <div className="p-4 mb-6 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-450 text-sm rounded-2xl flex items-center gap-3">
-                    <CheckCircle className="w-5 h-5 shrink-0" />
-                    <span>{successMsg}</span>
-                  </div>
-                )}
-
-                {!successMsg && (
-                  <form onSubmit={handleSubmitQuote} className="space-y-6">
-                    <div>
-                      <label htmlFor="price" className="block text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
-                        Total Price Quote
-                      </label>
-                      <div className="relative">
-                        <input
-                          id="price"
-                          type="number"
-                          min={0}
-                          required
-                          value={price}
-                          onChange={(e) => setPrice(e.target.value)}
-                          placeholder="e.g. 15000"
-                          className="w-full h-12 px-4 pl-11 border border-border rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
-                        />
-                        <IndianRupee className="w-4 h-4 absolute left-4 top-4 text-muted-foreground" />
-                      </div>
-                      <p className="text-[10px] text-muted-foreground mt-2 flex items-center gap-1.5">
-                         <AlertCircle className="w-3 h-3" />
-                         Tip: The client's budget is {formatINR(request.budget_min)} - {formatINR(request.budget_max)}.
-                      </p>
-                    </div>
-
-                    <div>
-                      <label htmlFor="days" className="block text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
-                        Estimated Delivery (Days)
-                      </label>
-                      <div className="relative">
-                        <input
-                          id="days"
-                          type="number"
-                          required
-                          min={1}
-                          value={days}
-                          onChange={(e) => setDays(e.target.value)}
-                          placeholder="e.g. 14"
-                          className="w-full h-12 px-4 pl-11 border border-border rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
-                        />
-                        <Clock className="w-4 h-4 absolute left-4 top-4 text-muted-foreground" />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label htmlFor="note" className="block text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
-                        Message to Client <span className="text-muted-foreground font-normal lowercase tracking-normal">(optional)</span>
-                      </label>
-                      <textarea
-                        id="note"
-                        value={note}
-                        onChange={(e) => setNote(e.target.value)}
-                        placeholder="Why should the client choose you? Discuss your fabric choices, fitting process, or experience..."
-                        className="w-full h-32 p-4 border border-border rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none transition-shadow"
+                <form onSubmit={handleSubmitQuote} className="space-y-6">
+                  <div>
+                    <label htmlFor="price" className="block text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
+                      Total Price Quote
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="price"
+                        type="number"
+                        min={0}
+                        required
+                        value={price}
+                        onChange={(e) => {
+                          setPrice(e.target.value)
+                          if (priceError) setPriceError(null)
+                          if (errorMsg) setErrorMsg(null)
+                        }}
+                        placeholder="e.g. 15000"
+                        className={`w-full h-12 px-4 pl-11 border rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-shadow ${
+                          priceError
+                            ? "border-destructive focus:ring-destructive"
+                            : "border-border focus:ring-primary"
+                        }`}
                       />
+                      <IndianRupee className="w-4 h-4 absolute left-4 top-4 text-muted-foreground" />
                     </div>
+                    {priceError && (
+                      <div className="mt-1.5 p-2 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-start gap-1.5 animate-in fade-in">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                        <span>{priceError}</span>
+                      </div>
+                    )}
+                    <p className="text-[10px] text-muted-foreground mt-2 flex items-center gap-1.5">
+                       <AlertCircle className="w-3 h-3" />
+                       Tip: The client&apos;s budget is {formatINR(request.budget_min)} - {formatINR(request.budget_max)}.
+                    </p>
+                  </div>
 
-                    <div className="pt-4 border-t border-border/50">
-                      <Button 
-                        type="submit" 
-                        disabled={isSubmitting}
-                        className="w-full h-12 bg-primary text-primary-foreground font-bold rounded-2xl text-base shadow-sm hover:opacity-90 transition-opacity"
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                            Submitting...
-                          </>
-                        ) : (
-                          "Send Proposal to Client"
-                        )}
-                      </Button>
+                  <div>
+                    <label htmlFor="days" className="block text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
+                      Estimated Delivery (Days)
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="days"
+                        type="number"
+                        required
+                        min={1}
+                        value={days}
+                        onChange={(e) => {
+                          setDays(e.target.value)
+                          if (daysError) setDaysError(null)
+                          if (errorMsg) setErrorMsg(null)
+                        }}
+                        placeholder="e.g. 14"
+                        className={`w-full h-12 px-4 pl-11 border rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-shadow ${
+                          daysError
+                            ? "border-destructive focus:ring-destructive"
+                            : "border-border focus:ring-primary"
+                        }`}
+                      />
+                      <Clock className="w-4 h-4 absolute left-4 top-4 text-muted-foreground" />
                     </div>
-                  </form>
-                )}
+                    {daysError && (
+                      <div className="mt-1.5 p-2 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-start gap-1.5 animate-in fade-in">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                        <span>{daysError}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="note" className="block text-xs font-semibold text-foreground uppercase tracking-wider mb-2">
+                      Message to Client <span className="text-muted-foreground font-normal lowercase tracking-normal">(optional)</span>
+                    </label>
+                    <textarea
+                      id="note"
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      placeholder="Why should the client choose you? Discuss your fabric choices, fitting process, or experience..."
+                      className="w-full h-32 p-4 border border-border rounded-2xl bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none transition-shadow"
+                    />
+                  </div>
+
+                  <div className="pt-4 border-t border-border/50">
+                    <Button 
+                      type="submit" 
+                      disabled={isSubmitting}
+                      className="w-full h-12 bg-primary text-primary-foreground font-bold rounded-2xl text-base shadow-sm hover:opacity-90 transition-opacity"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        "Send Proposal to Client"
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Submission status feedback placed directly below the button */}
+                  {errorMsg && (
+                    <div className="p-3.5 bg-destructive/10 border border-destructive/20 text-destructive text-xs sm:text-sm rounded-xl flex items-start gap-2.5 animate-in fade-in">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <span className="font-medium">{errorMsg}</span>
+                    </div>
+                  )}
+
+                  {successMsg && (
+                    <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-450 text-xs sm:text-sm rounded-xl flex items-center gap-2.5 animate-in fade-in">
+                      <CheckCircle className="w-4 h-4 shrink-0" />
+                      <span className="font-medium">{successMsg}</span>
+                    </div>
+                  )}
+                </form>
               </div>
             )}
           </div>

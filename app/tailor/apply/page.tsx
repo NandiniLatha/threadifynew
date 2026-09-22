@@ -26,6 +26,8 @@ export default function TailorApply() {
   const [docName, setDocName] = React.useState("")
   
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [bioError, setBioError] = React.useState<string | null>(null)
+  const [docError, setDocError] = React.useState<string | null>(null)
   const [statusMsg, setStatusMsg] = React.useState<{ type: "success" | "error"; text: string } | null>(null)
   const [onboardingSuccess, setOnboardingSuccess] = React.useState(false)
 
@@ -48,6 +50,7 @@ export default function TailorApply() {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
       setDocName(file.name)
+      if (docError) setDocError(null)
       const reader = new FileReader()
       reader.onloadend = () => {
         setDocBase64(reader.result as string)
@@ -59,17 +62,22 @@ export default function TailorApply() {
   // Onboard Submission
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault()
+    setBioError(null)
+    setDocError(null)
     setStatusMsg(null)
 
+    let hasErrors = false
     if (!bio.trim()) {
-      setStatusMsg({ type: "error", text: "Please share a brief professional biography first." })
-      return
+      setBioError("Please share a brief professional biography first.")
+      hasErrors = true
     }
 
     if (!docBase64) {
-      setStatusMsg({ type: "error", text: "Please upload a verification document to prove your identity/credentials." })
-      return
+      setDocError("Please upload a verification document to prove your identity/credentials.")
+      hasErrors = true
     }
+
+    if (hasErrors) return
 
     setIsSubmitting(true)
 
@@ -165,19 +173,6 @@ export default function TailorApply() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-card border border-border shadow-md rounded-3xl py-8 px-6 sm:px-10 space-y-6"
         >
-          {statusMsg && (
-            <div
-              className={`p-4 rounded-2xl border text-sm flex items-start gap-3 ${
-                statusMsg.type === "success"
-                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-450"
-                  : "bg-destructive/10 border-destructive/20 text-destructive"
-              }`}
-            >
-              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-              <span>{statusMsg.text}</span>
-            </div>
-          )}
-
           <form onSubmit={handleApply} className="space-y-6">
             {/* Bio */}
             <div>
@@ -191,17 +186,31 @@ export default function TailorApply() {
                 id="bio"
                 required
                 value={bio}
-                onChange={(e) => setBio(e.target.value)}
+                onChange={(e) => {
+                  setBio(e.target.value)
+                  if (bioError) setBioError(null)
+                  if (statusMsg) setStatusMsg(null)
+                }}
                 placeholder="I have over 10 years of experience in bespoke suiting and bridal wear..."
                 rows={4}
-                className="w-full p-3 border border-border rounded-2xl bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary resize-none"
+                className={`w-full p-3 border rounded-2xl bg-background text-sm focus:outline-none focus:ring-1 resize-none ${
+                  bioError
+                    ? "border-destructive focus:ring-destructive focus:border-destructive"
+                    : "border-border focus:ring-primary focus:border-primary"
+                }`}
               />
+              {bioError && (
+                <div className="mt-1.5 p-2.5 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-start gap-1.5 animate-in fade-in">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                  <span>{bioError}</span>
+                </div>
+              )}
             </div>
 
             {/* Previous Work Grid Upload */}
             <div>
               <label className="block text-sm font-semibold text-foreground mb-1">
-                Previous Work Work (Optional)
+                Previous Work (Optional)
               </label>
               <p className="text-xs text-muted-foreground mb-3">
                 Upload photos of outfits you have tailored or sketched.
@@ -238,7 +247,9 @@ export default function TailorApply() {
               <p className="text-xs text-muted-foreground mb-3">
                 Upload a certificate, license, ID, or business registration to help verify your identity.
               </p>
-              <div className="border border-border rounded-2xl p-4 bg-background">
+              <div className={`border rounded-2xl p-4 bg-background ${
+                docError ? "border-destructive" : "border-border"
+              }`}>
                 {docName ? (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2 text-sm text-foreground font-semibold">
@@ -264,6 +275,12 @@ export default function TailorApply() {
                   </label>
                 )}
               </div>
+              {docError && (
+                <div className="mt-1.5 p-2.5 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-start gap-1.5 animate-in fade-in">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                  <span>{docError}</span>
+                </div>
+              )}
             </div>
 
             {/* Actions */}
@@ -286,6 +303,21 @@ export default function TailorApply() {
                 )}
               </Button>
             </div>
+
+            {/* Application status feedback placed directly below action buttons */}
+            {statusMsg && (
+              <div
+                role="alert"
+                className={`mt-3 p-3.5 rounded-xl border text-xs sm:text-sm flex items-start gap-2.5 animate-in fade-in ${
+                  statusMsg.type === "success"
+                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-450"
+                    : "bg-destructive/10 border-destructive/20 text-destructive"
+                }`}
+              >
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span className="font-medium">{statusMsg.text}</span>
+              </div>
+            )}
           </form>
         </motion.div>
       </div>
