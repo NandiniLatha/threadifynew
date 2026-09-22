@@ -42,6 +42,10 @@ CREATE POLICY "measurements: assigned tailor read active orders"
       SELECT 1 FROM public.design_requests dr
       WHERE dr.customer_id = public.measurements.user_id
         AND dr.tailor_id = auth.uid()
-        AND dr.status IN ('assigned', 'in_production', 'delivered')
+        AND dr.status IN (
+          'assigned', 'paid', 'confirmed', 'measurements_pending',
+          'cutting', 'stitching', 'quality_check', 'ready',
+          'in_production', 'shipped', 'delivered', 'completed', 'reviewed'
+        )
     )
   );

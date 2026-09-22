@@ -202,9 +202,9 @@ export function CinematicHero() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto mb-12">
-              <MagneticButton href="/dashboard" variant="primary" className="w-full sm:w-auto">
+              <MagneticButton href="/signup" variant="primary" className="w-full sm:w-auto">
                 <Sparkles className="w-4 h-4 mr-1 text-primary-foreground/90" aria-hidden="true" />
-                <span>Start Designing</span>
+                <span>Get Started</span>
                 <ArrowRight className="w-4 h-4 ml-1" aria-hidden="true" />
               </MagneticButton>
 

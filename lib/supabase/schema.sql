@@ -94,6 +94,13 @@ create policy "Allow customers to create design requests" on public.design_reque
 create policy "Allow customers to update their own design requests" on public.design_requests
   for update using (auth.uid() = customer_id);
 
+create policy "Allow customers to delete own cancellable design requests" on public.design_requests
+  for delete using (
+    auth.uid() = customer_id
+    and status in ('draft', 'pending_bids', 'quoted', 'cancelled')
+  );
+
+
 -- Policies for wishlist_items
 create policy "Allow users to manage their own wishlist items" on public.wishlist_items
   for all using (auth.uid() = customer_id);

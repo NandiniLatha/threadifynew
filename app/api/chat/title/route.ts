@@ -21,7 +21,10 @@ export async function POST(req: Request) {
 
     // Only call OpenAI if key is configured
     if (process.env.OPENAI_API_KEY && !process.env.OPENAI_API_KEY.startsWith("sk-your")) {
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+      const openai = new OpenAI({ 
+        apiKey: process.env.OPENAI_API_KEY,
+        timeout: 5000
+      })
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         max_tokens: 12,

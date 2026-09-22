@@ -87,7 +87,7 @@ export async function POST(
           supabase,
           orderRow.tailor_id,
           `✅ The customer has approved the ${stage} evidence! You can now proceed.`,
-          "/tailor/orders"
+          `/tailor/orders?id=${orderId}`
         )
       }
 
@@ -121,7 +121,7 @@ export async function POST(
           supabase,
           orderRow.tailor_id,
           `⚠️ The customer has requested changes for the ${stage} phase. Please review their feedback.`,
-          "/tailor/orders"
+          `/tailor/orders?id=${orderId}`
         )
       }
 

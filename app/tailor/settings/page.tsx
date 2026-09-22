@@ -12,6 +12,9 @@ import {
   Briefcase,
   Camera,
   Shield,
+  Lock,
+  Eye,
+  EyeOff,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Toast } from "@/components/ui/toast"
@@ -25,6 +28,13 @@ export default function TailorSettings() {
   const [isUploadingAvatar, setIsUploadingAvatar] = React.useState(false)
   const [statusMsg, setStatusMsg] = React.useState<{ type: "success" | "error"; text: string } | null>(null)
   
+  // Password Form state
+  const [newPassword, setNewPassword] = React.useState("")
+  const [confirmPassword, setConfirmPassword] = React.useState("")
+  const [showPassword, setShowPassword] = React.useState(false)
+  const [isChangingPassword, setIsChangingPassword] = React.useState(false)
+  const [passwordStatus, setPasswordStatus] = React.useState<{ type: "success" | "error"; text: string } | null>(null)
+
   // Profile Form state
   const [boutiqueName, setBoutiqueName] = React.useState("")
   const [bio, setBio] = React.useState("")
@@ -215,6 +225,33 @@ export default function TailorSettings() {
       setStatusMsg({ type: "error", text: "Failed to connect to the onboarding service." })
     } finally {
       setIsConnecting(false)
+    }
+  }
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setPasswordStatus(null)
+
+    if (newPassword !== confirmPassword) {
+      setPasswordStatus({ type: "error", text: "Passwords do not match." })
+      return
+    }
+    if (newPassword.length < 6) {
+      setPasswordStatus({ type: "error", text: "Password must be at least 6 characters." })
+      return
+    }
+
+    setIsChangingPassword(true)
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword })
+      if (error) throw new Error(error.message)
+      setPasswordStatus({ type: "success", text: "Password updated successfully!" })
+      setNewPassword("")
+      setConfirmPassword("")
+    } catch (err: any) {
+      setPasswordStatus({ type: "error", text: err.message || "Failed to update password." })
+    } finally {
+      setIsChangingPassword(false)
     }
   }
 
@@ -488,6 +525,82 @@ export default function TailorSettings() {
             </form>
           </div>
         )}
+      </section>
+
+      {/* Security & Password Section */}
+      <section className="bg-card border border-border rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+        <div className="flex items-center space-x-3 text-primary border-b border-border pb-4">
+          <Lock className="w-6 h-6 shrink-0" />
+          <h2 className="text-xl font-serif font-bold text-foreground">Security & Password</h2>
+        </div>
+
+        {passwordStatus && (
+          <div
+            className={`p-4 rounded-2xl border text-sm flex items-start gap-3 ${
+              passwordStatus.type === "success"
+                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-450"
+                : "bg-destructive/10 border-destructive/20 text-destructive"
+            }`}
+          >
+            {passwordStatus.type === "success" ? (
+              <CheckCircle className="w-5 h-5 shrink-0 mt-0.5" />
+            ) : (
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+            )}
+            <span>{passwordStatus.text}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleChangePassword} className="space-y-4 max-w-xl">
+          <div>
+            <label className="block text-xs font-semibold text-foreground mb-1">
+              New Password
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="At least 6 characters"
+                className="w-full h-10 px-3 pr-10 border border-border rounded-xl bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-foreground mb-1">
+              Confirm New Password
+            </label>
+            <input
+              type={showPassword ? "text" : "password"}
+              required
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Re-enter new password"
+              className="w-full h-10 px-3 border border-border rounded-xl bg-background text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+            />
+          </div>
+
+          <div className="pt-4 flex justify-end">
+            <Button
+              type="submit"
+              disabled={isChangingPassword}
+              className="bg-foreground text-background font-semibold h-10 px-6 rounded-full shadow hover:bg-foreground/90 transition-colors"
+            >
+              {isChangingPassword && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Update Password
+            </Button>
+          </div>
+        </form>
       </section>
 
       <Toast 

@@ -4,7 +4,7 @@
  * returns a public URL for gpt-4o vision analysis.
  */
 
-import { createClient } from "@supabase/supabase-js"
+import { createClient } from "@/lib/supabase/server"
 
 export const runtime = "edge"
 
@@ -12,9 +12,15 @@ const MAX_SIZE_BYTES = 5 * 1024 * 1024 // 5MB
 
 export async function POST(req: Request) {
   try {
+    const supabase = createClient()
+    const { data: { user }, error: authErr } = await supabase.auth.getUser()
+
+    if (authErr || !user) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const formData = await req.formData()
     const file = formData.get("file") as File | null
-    const userId = formData.get("userId") as string | null
 
     if (!file) {
       return Response.json({ error: "No file provided" }, { status: 400 })
@@ -24,18 +30,19 @@ export async function POST(req: Request) {
       return Response.json({ error: "File size exceeds 5MB limit" }, { status: 400 })
     }
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"]
-    if (!allowedTypes.includes(file.type)) {
+    const allowedTypes: Record<string, string> = {
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp",
+      "image/gif": "gif"
+    }
+
+    if (!allowedTypes[file.type]) {
       return Response.json({ error: "Only JPEG, PNG, WebP, and GIF images are supported" }, { status: 400 })
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
-
-    const ext = file.name.split(".").pop() || "jpg"
-    const fileName = `${userId || "guest"}/${Date.now()}.${ext}`
+    const ext = allowedTypes[file.type]
+    const fileName = `${user.id}/${Date.now()}.${ext}`
 
     const arrayBuffer = await file.arrayBuffer()
     const { error: uploadError } = await supabase.storage

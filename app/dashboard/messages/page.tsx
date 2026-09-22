@@ -103,6 +103,22 @@ export default function CustomerMessages() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Mark conversation read when selected
+  React.useEffect(() => {
+    if (!selectedOrderId) return
+    fetch("/api/messages/read", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId: selectedOrderId }),
+    })
+      .then((res) => {
+        if (res.ok) {
+          window.dispatchEvent(new CustomEvent("messages-read", { detail: { orderId: selectedOrderId } }))
+        }
+      })
+      .catch(() => {})
+  }, [selectedOrderId])
+
   return (
     <div className="space-y-8">
       <div>

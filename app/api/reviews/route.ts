@@ -47,8 +47,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "You can only review your own orders." }, { status: 403 })
     }
 
-    if (reqData.status !== "delivered") {
-      return NextResponse.json({ error: "You can only review delivered orders." }, { status: 409 })
+    if (!["delivered", "completed"].includes(reqData.status)) {
+      return NextResponse.json({ error: "You can only review delivered or completed orders." }, { status: 409 })
     }
 
     // Insert review row

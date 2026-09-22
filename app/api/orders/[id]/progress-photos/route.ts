@@ -186,16 +186,20 @@ export async function POST(
     }
 
     if (productionStage) {
-      const supabaseAdmin = createAdminClient()
-      
-      // Advance evidence status to waiting_for_customer_approval
-      const { error: updateErr } = await supabaseAdmin
-        .from("design_requests")
-        .update({ production_evidence_status: "waiting_for_customer_approval" })
-        .eq("id", orderId)
+      if (orderRow.status === productionStage) {
+        const supabaseAdmin = createAdminClient()
+        
+        // Advance evidence status to waiting_for_customer_approval
+        const { error: updateErr } = await supabaseAdmin
+          .from("design_requests")
+          .update({ production_evidence_status: "waiting_for_customer_approval" })
+          .eq("id", orderId)
 
-      if (updateErr) {
-        console.error("[progress-photos] evidence status update error:", updateErr.message)
+        if (updateErr) {
+          console.error("[progress-photos] evidence status update error:", updateErr.message)
+        }
+      } else {
+        console.warn(`[progress-photos] evidence status not updated: order status is '${orderRow.status}', expected '${productionStage}'`)
       }
     }
 

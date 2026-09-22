@@ -164,19 +164,6 @@ export function AboutFounder() {
     { title: "Supabase & Postgres", desc: "Building secure, scalable, and responsive real-time databases.", icon: Database },
   ]
 
-  // Magnetic button hover logic
-  const ctaRef = useRef<HTMLButtonElement>(null)
-  const [btnOffset, setBtnOffset] = useState({ x: 0, y: 0 })
-  const handleBtnMouseMove = (e: React.MouseEvent) => {
-    if (!ctaRef.current) return
-    const rect = ctaRef.current.getBoundingClientRect()
-    const cx = rect.left + rect.width / 2
-    const cy = rect.top + rect.height / 2
-    const dx = (e.clientX - cx) * 0.35
-    const dy = (e.clientY - cy) * 0.35
-    setBtnOffset({ x: dx, y: dy })
-  }
-
   return (
     <div
       ref={containerRef}
@@ -288,7 +275,7 @@ export function AboutFounder() {
 
                 {/* Profile Photo */}
                 <Image
-                  src="/images/founder.webp"
+                  src="/images/founder.jpg"
                   alt="Threadify Founder Portrait"
                   fill
                   className="object-cover rounded-[26px]"
@@ -396,20 +383,28 @@ export function AboutFounder() {
               </div>
             </div>
 
-            {/* Magnetic Button */}
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={ctaControls}>
-              <Link href="mailto:founder@threadify.in">
-                <button
-                  ref={ctaRef}
-                  onMouseMove={handleBtnMouseMove}
-                  onMouseLeave={() => setBtnOffset({ x: 0, y: 0 })}
-                  style={{ transform: `translate(${btnOffset.x}px, ${btnOffset.y}px)` }}
-                  className="flex items-center gap-2 px-6 py-4 rounded-full bg-primary hover:bg-primary/90 text-white text-sm font-semibold transition-all group shadow-[0_4px_25px_rgba(var(--primary-rgb),0.3)] hover:shadow-[0_4px_30px_rgba(var(--primary-rgb),0.5)] cursor-pointer"
-                >
-                  Let&apos;s Connect
-                  <Mail className="w-4 h-4 transition-transform group-hover:scale-110" />
-                </button>
-              </Link>
+            {/* Connect Button */}
+            <motion.div initial={{ opacity: 1, scale: 1 }} animate={ctaControls} className="relative z-20">
+              <a
+                href="https://mail.google.com/mail/?view=cm&fs=1&to=nandinilathanallamothu99%40gmail.com&su=Let%27s%20Connect%20with%20Nandini"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => {
+                  console.log("[Let's Connect] Button clicked!")
+                  // Fallback to guarantee new window opens even if standard event propagation is affected
+                  if (typeof window !== "undefined") {
+                    window.open(
+                      "https://mail.google.com/mail/?view=cm&fs=1&to=nandinilathanallamothu99%40gmail.com&su=Let%27s%20Connect%20with%20Nandini",
+                      "_blank",
+                      "noopener,noreferrer"
+                    )
+                  }
+                }}
+                className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full bg-primary hover:bg-primary/90 text-white text-sm font-semibold transition-all group shadow-[0_4px_25px_rgba(var(--primary-rgb),0.3)] hover:shadow-[0_4px_30px_rgba(var(--primary-rgb),0.5)] cursor-pointer select-none pointer-events-auto z-20 hover:scale-105 active:scale-95"
+              >
+                <span>Let&apos;s Connect</span>
+                <Mail className="w-4 h-4 transition-transform group-hover:scale-110 shrink-0 pointer-events-none" />
+              </a>
             </motion.div>
           </motion.div>
         </div>

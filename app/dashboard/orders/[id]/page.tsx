@@ -10,6 +10,7 @@ import {
   Loader2,
   AlertCircle,
   Tag,
+  Calendar,
   ArrowLeft,
   CheckCircle,
   Clock,
@@ -169,8 +170,11 @@ export default function CustomerOrderDetails() {
             *,
             tailor:users!tailor_id (
               name,
-              tailor_profiles (avg_rating, portfolio_images),
-              tailor_portfolio_items (public_url)
+              tailor_profiles (
+                avg_rating,
+                portfolio_images,
+                tailor_portfolio_items (public_url)
+              )
             )
           `)
           .eq("request_id", id)
@@ -198,8 +202,10 @@ export default function CustomerOrderDetails() {
           
           const mappedQuotes = uniqueQuotes.map((q: any) => {
             const profile = Array.isArray(q.tailor?.tailor_profiles) ? q.tailor.tailor_profiles[0] : q.tailor?.tailor_profiles
+            const portfolioItems = Array.isArray(profile?.tailor_portfolio_items) ? profile.tailor_portfolio_items : []
+            
             const pImages = [
-              ...(q.tailor?.tailor_portfolio_items || []).map((i: any) => i.public_url),
+              ...portfolioItems.map((i: any) => i.public_url),
               ...(profile?.portfolio_images || [])
             ]
             if (profile) {
@@ -510,100 +516,15 @@ export default function CustomerOrderDetails() {
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        {/* Left Col: Image & Details */}
+        {/* Left Col: Image */}
         <div className="lg:col-span-1 space-y-6">
-          <div className="aspect-[3/4] rounded-3xl overflow-hidden border border-border bg-muted relative">
+          <div className="aspect-[3/4] rounded-3xl overflow-hidden border border-border bg-muted relative shadow-sm">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={request.image_url}
               alt="Design inspiration"
               className="w-full h-full object-cover"
             />
-          </div>
-
-          <div className="bg-card border border-border rounded-3xl p-5 space-y-4">
-            <h3 className="font-bold text-foreground flex items-center gap-2 border-b border-border pb-3">
-              <Tag className="w-4 h-4 text-primary" />
-              Design Details
-            </h3>
-
-            <div>
-              <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-2">Detected Styles</p>
-              <div className="flex flex-wrap gap-1.5">
-                {request.ai_tags.map((tag: string, i: number) => (
-                  <span key={i} className="text-[10px] font-semibold px-2 py-1 bg-primary/10 text-primary rounded-md">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">Budget Range</p>
-              <p className="text-sm font-medium">{formatINR(request.budget_min)} – {formatINR(request.budget_max)}</p>
-            </div>
-
-            <div>
-              <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">Deadline</p>
-              <p className="text-sm font-medium">{request.deadline}</p>
-            </div>
-
-            {request.notes && (
-              <div>
-                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">Your Notes</p>
-                <p className="text-sm text-foreground/80 whitespace-pre-wrap">{request.notes}</p>
-              </div>
-            )}
-
-            {["pending_bids", "assigned"].includes(request.status) && (
-              <div className="pt-4 border-t border-border mt-4">
-                {cancelError && (
-                  <div className="p-3 mb-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-xl flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                    <span>{cancelError}</span>
-                  </div>
-                )}
-                {cancelSuccess && (
-                  <div className="p-3 mb-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm rounded-xl flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 shrink-0" />
-                    <span>Order cancelled successfully.</span>
-                  </div>
-                )}
-                
-                {isCancelConfirmOpen ? (
-                  <div className="bg-destructive/5 border border-destructive/20 p-4 rounded-2xl space-y-3">
-                    <p className="text-sm font-medium text-destructive">Are you sure you want to cancel this order?</p>
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="destructive" 
-                        className="flex-1 rounded-xl"
-                        onClick={handleCancelOrder}
-                        disabled={isCancelling}
-                      >
-                        {isCancelling ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                        Cancel Order
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        className="flex-1 rounded-xl"
-                        onClick={() => setIsCancelConfirmOpen(false)}
-                        disabled={isCancelling}
-                      >
-                        Keep Order
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <Button 
-                    variant="outline" 
-                    className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20 rounded-xl"
-                    onClick={() => setIsCancelConfirmOpen(true)}
-                  >
-                    Cancel Order
-                  </Button>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
@@ -778,8 +699,8 @@ export default function CustomerOrderDetails() {
                   </div>
                 )}
 
-                {/* Delivered / Reviewed */}
-                {["delivered", "reviewed"].includes(request.status) && (
+                {/* Delivered / Completed / Reviewed */}
+                {["delivered", "completed", "reviewed"].includes(request.status) && (
                   <div className="flex flex-col gap-4">
                     <div className="flex items-center gap-2 p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-xl text-sm text-emerald-700 dark:text-emerald-400 font-medium">
                       <PackageCheck className="w-4 h-4 shrink-0" />
@@ -788,7 +709,7 @@ export default function CustomerOrderDetails() {
                         : "—"}
                     </div>
 
-                    {request.status === "delivered" && !request.review?.length && (
+                    {["delivered", "completed"].includes(request.status) && !request.review?.length && (
                       <div className="bg-muted p-4 rounded-2xl border border-border space-y-4">
                         <h4 className="font-bold text-sm text-foreground">Rate your tailor</h4>
                         <div className="flex gap-1">
@@ -1000,6 +921,126 @@ export default function CustomerOrderDetails() {
               )}
             </div>
           )}
+        </div>
+
+        {/* Full-Width Design Details Card */}
+        <div className="lg:col-span-3">
+          <div className="bg-card border border-border rounded-3xl p-6 shadow-sm space-y-6 hover:border-primary/20 transition-colors">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-border pb-4">
+              <h3 className="font-bold text-foreground text-base flex items-center gap-2">
+                <Tag className="w-4 h-4 text-primary" aria-hidden="true" />
+                Design Details
+              </h3>
+            </div>
+
+            {/* Top Horizontal Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 items-start">
+              {/* Left / largest area: DETECTED STYLES */}
+              <div className="lg:col-span-6 space-y-2">
+                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+                  Detected Styles
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {request.ai_tags.map((tag: string, i: number) => (
+                    <span
+                      key={i}
+                      className="inline-flex items-center text-xs font-semibold px-2.5 py-1 bg-primary/10 text-primary border border-primary/20 rounded-lg"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Middle: BUDGET RANGE */}
+              <div className="lg:col-span-3 space-y-1 bg-muted/40 border border-border/60 rounded-2xl p-4">
+                <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">
+                  Budget Range
+                </p>
+                <p className="text-base font-bold text-foreground">
+                  {formatINR(request.budget_min)} – {formatINR(request.budget_max)}
+                </p>
+              </div>
+
+              {/* Right: DEADLINE */}
+              <div className="lg:col-span-3 space-y-1 bg-muted/40 border border-border/60 rounded-2xl p-4">
+                <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">
+                  Deadline
+                </p>
+                <p className="text-base font-bold text-foreground flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                  <span>{request.deadline}</span>
+                </p>
+              </div>
+            </div>
+
+            {/* YOUR NOTES (Full width) */}
+            {request.notes && (
+              <div className="pt-4 border-t border-border/60 space-y-2">
+                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+                  Your Notes
+                </p>
+                <div className="p-4 bg-muted/40 border border-border/60 rounded-2xl">
+                  <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">
+                    {request.notes}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Cancel Order at bottom-right */}
+            {["pending_bids", "assigned"].includes(request.status) && (
+              <div className="pt-4 border-t border-border flex flex-col items-end space-y-3">
+                {cancelError && (
+                  <div className="w-full p-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-xl flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{cancelError}</span>
+                  </div>
+                )}
+                {cancelSuccess && (
+                  <div className="w-full p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm rounded-xl flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 shrink-0" />
+                    <span>Order cancelled successfully.</span>
+                  </div>
+                )}
+
+                {isCancelConfirmOpen ? (
+                  <div className="w-full max-w-sm bg-destructive/5 border border-destructive/20 p-4 rounded-2xl space-y-3">
+                    <p className="text-sm font-medium text-destructive">Are you sure you want to cancel this order?</p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="destructive"
+                        className="flex-1 rounded-xl text-xs font-semibold"
+                        onClick={handleCancelOrder}
+                        disabled={isCancelling}
+                      >
+                        {isCancelling ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                        Cancel Order
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="flex-1 rounded-xl text-xs font-semibold"
+                        onClick={() => setIsCancelConfirmOpen(false)}
+                        disabled={isCancelling}
+                      >
+                        Keep Order
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30 rounded-xl text-xs font-semibold px-4 h-9"
+                    onClick={() => setIsCancelConfirmOpen(true)}
+                  >
+                    Cancel Order
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

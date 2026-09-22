@@ -173,7 +173,7 @@ export default function CustomerLayout({
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col md:flex-row">
+    <div className="min-h-screen bg-background flex flex-col md:flex-row md:h-screen md:overflow-hidden">
       {/* Skip to main content — accessibility */}
       <a
         href="#main-content"
@@ -205,11 +205,11 @@ export default function CustomerLayout({
       {/* Sidebar - Desktop */}
       <aside
         aria-label="Customer navigation"
-        className={`fixed inset-y-0 left-0 z-30 w-64 bg-background border-r border-border/40 flex flex-col justify-between transform md:translate-x-0 transition-transform duration-300 md:static ${
+        className={`fixed inset-y-0 left-0 z-30 w-64 bg-background border-r border-border/40 flex flex-col justify-between transform md:translate-x-0 transition-transform duration-300 md:static md:h-full md:shrink-0 ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex flex-col flex-1">
+        <div className="flex flex-col flex-1 min-h-0">
           {/* Sidebar Brand header */}
           <div className="h-20 border-b border-border/40 items-center px-8 hidden md:flex justify-between">
             <Link href="/" className="flex items-center space-x-2">
@@ -333,7 +333,7 @@ export default function CustomerLayout({
       <main
         id="main-content"
         tabIndex={-1}
-        className="flex-1 min-h-[calc(100vh-4rem)] md:min-h-screen bg-background relative overflow-y-auto"
+        className="flex-1 min-h-[calc(100vh-4rem)] md:min-h-0 md:h-full bg-background relative overflow-y-auto"
       >
         <div className="p-6 md:p-10 container mx-auto max-w-5xl">
           {children}

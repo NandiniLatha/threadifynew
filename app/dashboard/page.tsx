@@ -100,6 +100,16 @@ export default function CustomerDashboardOverview() {
       }
     }
     loadDashboard()
+
+    // Listen for custom read events dispatched when chat is opened
+    const handleMessagesRead = () => {
+      loadDashboard()
+    }
+    window.addEventListener("messages-read", handleMessagesRead)
+
+    return () => {
+      window.removeEventListener("messages-read", handleMessagesRead)
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

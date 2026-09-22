@@ -93,6 +93,9 @@ export default function TailorMessages() {
         })
 
         setConversations(mapped)
+        if (mapped.length > 0) {
+          setSelectedOrderId(mapped[0].orderId)
+        }
       } catch (err: any) {
         console.error("Tailor messages catch error:", err?.message || err)
         setErrorMsg("Failed to load conversations.")
@@ -103,6 +106,22 @@ export default function TailorMessages() {
     loadConversations()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Mark conversation read when selected
+  React.useEffect(() => {
+    if (!selectedOrderId) return
+    fetch("/api/messages/read", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId: selectedOrderId }),
+    })
+      .then((res) => {
+        if (res.ok) {
+          window.dispatchEvent(new CustomEvent("messages-read", { detail: { orderId: selectedOrderId } }))
+        }
+      })
+      .catch(() => {})
+  }, [selectedOrderId])
 
   return (
     <div className="space-y-8">

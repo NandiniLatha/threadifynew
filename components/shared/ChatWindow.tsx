@@ -46,6 +46,23 @@ export function ChatWindow({
 
   const scrollRef = React.useRef<HTMLDivElement>(null)
 
+  // Helper to mark conversation as read
+  const markAsRead = React.useCallback(async () => {
+    if (!orderId) return
+    try {
+      const res = await fetch("/api/messages/read", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId }),
+      })
+      if (res.ok) {
+        window.dispatchEvent(new CustomEvent("messages-read", { detail: { orderId } }))
+      }
+    } catch {
+      // Silently ignore network failures
+    }
+  }, [orderId])
+
   // 1. Load existing messages and subscribe to Supabase Realtime channel
   React.useEffect(() => {
     async function loadMessages() {
@@ -63,6 +80,8 @@ export function ChatWindow({
 
         if (data) {
           setMessages(data)
+          // Mark conversation read when messages load for active window
+          markAsRead()
         }
       } catch (err) {
         console.error("Failed to load chat history", err)
@@ -94,9 +113,10 @@ export function ChatWindow({
             return [...prev, msg]
           })
           
-          // Accessibility announcement
+          // Accessibility announcement & mark read if message is from chat partner
           if (msg.sender_id !== currentUserId) {
             setAnnouncement(`New message from partner: ${msg.content}`)
+            markAsRead()
           }
         }
       )
@@ -105,7 +125,7 @@ export function ChatWindow({
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [orderId, supabase, currentUserId])
+  }, [orderId, supabase, currentUserId, markAsRead])
 
   // Scroll to bottom on new messages
   React.useEffect(() => {
@@ -152,14 +172,23 @@ export function ChatWindow({
         }),
       })
       
-      const data = await res.json()
+      const responseJson = await res.json()
       
       if (!res.ok) {
-        setSendError(data.error || "Failed to send message. Please try again.")
+        setSendError(responseJson.error || "Failed to send message. Please try again.")
         // Restore input
         setNewMessage(contentToSend)
         if (currentAttachment) {
           setAttachment(currentAttachment)
+        }
+      } else {
+        // Immediately add the returned message to local state
+        const sentMessage = responseJson.data
+        if (sentMessage) {
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === sentMessage.id)) return prev
+            return [...prev, sentMessage]
+          })
         }
       }
     } catch {
@@ -175,14 +204,14 @@ export function ChatWindow({
   }
 
   return (
-    <div className="flex flex-col h-[500px] border border-border rounded-3xl bg-card overflow-hidden shadow-sm">
+    <div className="flex flex-col max-h-[420px] bg-background overflow-hidden">
       {/* Screen Reader Live Announcements */}
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {announcement}
       </div>
 
       {/* Messages Feed */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {isLoading ? (
           <div className="space-y-5 py-2">
             <div className="flex items-start gap-2.5 max-w-[70%]">
@@ -208,14 +237,11 @@ export function ChatWindow({
             </div>
           </div>
         ) : messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-              <FileText className="w-5 h-5" />
+          <div className="flex flex-col items-center justify-center text-center py-10 space-y-2">
+            <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+              <FileText className="w-4 h-4" />
             </div>
-            <h3 className="text-sm font-bold text-foreground">Start Consulting</h3>
-            <p className="text-xs text-muted-foreground max-w-xs leading-relaxed">
-              Send a text message or custom fitting attachment details to start discussing options.
-            </p>
+            <p className="text-xs text-muted-foreground">No messages yet.</p>
           </div>
         ) : (
           messages.map((msg) => {
@@ -223,16 +249,16 @@ export function ChatWindow({
             return (
               <div
                 key={msg.id}
-                className={`flex flex-col max-w-[80%] ${
+                className={`flex flex-col max-w-[85%] ${
                   isMe ? "ml-auto items-end" : "mr-auto items-start"
                 }`}
               >
                 {/* Bubble content */}
                 <div
-                  className={`p-3 rounded-2xl text-xs leading-relaxed ${
+                  className={`px-3 py-2 rounded-2xl text-xs leading-relaxed ${
                     isMe
-                      ? "bg-primary text-primary-foreground rounded-tr-none"
-                      : "bg-muted text-foreground rounded-tl-none border border-border"
+                      ? "bg-primary text-primary-foreground rounded-tr-sm"
+                      : "bg-muted/50 text-foreground rounded-tl-sm border border-border/40"
                   }`}
                 >
                   {msg.content}
@@ -246,7 +272,7 @@ export function ChatWindow({
                 </div>
 
                 {/* Timestamp */}
-                <span className="text-[9px] text-muted-foreground mt-1 px-1">
+                <span className="text-[10px] text-muted-foreground/60 mt-1 px-1">
                   {new Date(msg.created_at).toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -294,8 +320,8 @@ export function ChatWindow({
       )}
 
       {/* Input panel form */}
-      <form onSubmit={handleSendMessage} className="p-3 border-t border-border bg-background flex items-center gap-2">
-        <label className="p-2 hover:bg-muted border border-border rounded-xl cursor-pointer transition-colors shrink-0">
+      <form onSubmit={handleSendMessage} className="p-2 border-t border-border/40 bg-background flex items-center gap-2">
+        <label className="p-1.5 hover:bg-muted/50 rounded-lg cursor-pointer transition-colors shrink-0 text-muted-foreground hover:text-foreground">
           <input
             type="file"
             accept="image/*"
@@ -303,7 +329,7 @@ export function ChatWindow({
             className="hidden"
             aria-label="Add image attachment"
           />
-          <Paperclip className="w-4 h-4 text-muted-foreground" />
+          <Paperclip className="w-4 h-4" />
         </label>
 
         <input
@@ -312,19 +338,19 @@ export function ChatWindow({
           onChange={(e) => setNewMessage(e.target.value)}
           placeholder={placeholderText}
           aria-label="Chat input message"
-          className="flex-1 h-10 px-3 border border-border rounded-xl bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+          className="flex-1 h-9 px-3 border border-border/50 rounded-lg bg-background text-xs focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
         />
 
         <Button
           type="submit"
           disabled={isSending || (!newMessage.trim() && !attachment)}
-          className="bg-primary text-primary-foreground font-semibold h-10 w-10 p-0 rounded-xl shadow-sm shrink-0 flex items-center justify-center"
+          className="bg-primary text-primary-foreground h-9 w-9 p-0 rounded-lg shrink-0 flex items-center justify-center transition-opacity disabled:opacity-50"
           aria-label="Send message button"
         >
           {isSending ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            <Send className="w-4 h-4" />
+            <Send className="w-3.5 h-3.5" />
           )}
         </Button>
       </form>

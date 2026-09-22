@@ -12,6 +12,7 @@ const nextConfig = {
       { protocol: "https", hostname: "picsum.photos" },
       { protocol: "https", hostname: "res.cloudinary.com" },
       { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname : "bzegkzikkyrawhwhorit.supabase.co" },
     ],
     // Declare common responsive breakpoints so Next.js can pre-build srcsets
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],

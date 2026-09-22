@@ -52,10 +52,10 @@ export default function AboutPage() {
           <div className="hidden md:flex items-center space-x-4">
             <ThemeToggle />
             <a href="/login" className="text-sm font-medium hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded px-2 py-1">
-              Login
+              Sign In
             </a>
             <Button asChild className="font-medium bg-primary text-primary-foreground hover:opacity-90 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-              <a href="/dashboard">Start Designing</a>
+              <a href="/signup">Get Started</a>
             </Button>
           </div>
 
@@ -158,10 +158,10 @@ export default function AboutPage() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
               <Button asChild className="h-12 px-8 text-base bg-primary text-primary-foreground hover:opacity-90 shadow-md transition-all duration-200">
-                <a href="/dashboard">Start Designing <ArrowRight className="w-4 h-4 ml-2 inline" /></a>
+                <a href="/signup">Get Started <ArrowRight className="w-4 h-4 ml-2 inline" /></a>
               </Button>
-              <Button variant="outline" className="w-full sm:w-auto h-12 px-8 text-base border-border hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                Become a Tailor Partner
+              <Button asChild variant="outline" className="w-full sm:w-auto h-12 px-8 text-base border-border hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                <a href="/signup">Become a Tailor Partner</a>
               </Button>
             </div>
           </motion.div>

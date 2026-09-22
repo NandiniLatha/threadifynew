@@ -59,7 +59,8 @@ export default function ContactPage() {
           </Link>
           <div className="flex items-center gap-4">
             <ThemeToggle />
-            <Link href="/login" className="text-sm font-medium hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded px-2 py-1">Login</Link>
+            <Link href="/login" className="text-sm font-medium hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded px-2 py-1">Sign In</Link>
+            <Button asChild className="bg-primary text-primary-foreground font-medium"><a href="/signup">Get Started</a></Button>
           </div>
         </div>
       </header>

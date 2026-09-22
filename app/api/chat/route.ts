@@ -203,7 +203,10 @@ export async function POST(req: Request) {
     // Moderation check (non-blocking if it fails, but we log)
     if (userText && process.env.OPENAI_API_KEY && !process.env.OPENAI_API_KEY.startsWith("sk-your")) {
       try {
-        const openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+        const openaiClient = new OpenAI({ 
+          apiKey: process.env.OPENAI_API_KEY,
+          timeout: 5000 
+        })
         const modResult = await openaiClient.moderations.create({ input: userText })
         if (modResult.results[0]?.flagged) {
           return new Response(

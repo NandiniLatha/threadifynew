@@ -12,6 +12,9 @@ import {
   Calendar,
   ArrowRight,
   Plus,
+  Trash2,
+  Loader2,
+  CheckCircle2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -30,13 +33,17 @@ interface DesignRequest {
   created_at: string
 }
 
+const CANCELLABLE_STATUSES = ["draft", "pending_bids", "quoted", "cancelled"]
+
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   pending_bids: { label: "Awaiting Quotes", color: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20" },
+  quoted:       { label: "Price Sent", color: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/20" },
   assigned:     { label: "In Production", color: "bg-primary/10 text-primary border-primary/20" },
   in_production:{ label: "In Production", color: "bg-primary/10 text-primary border-primary/20" },
   shipped:      { label: "Shipped", color: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20" },
   delivered:    { label: "Delivered", color: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20" },
   reviewed:     { label: "Reviewed", color: "bg-muted text-muted-foreground border-border" },
+  cancelled:    { label: "Cancelled", color: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20" },
 }
 
 export default function CustomerRequests() {
@@ -44,6 +51,12 @@ export default function CustomerRequests() {
   const [requests, setRequests] = React.useState<DesignRequest[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null)
+  const [successMsg, setSuccessMsg] = React.useState<string | null>(null)
+
+  // Deletion Modal state
+  const [requestToDelete, setRequestToDelete] = React.useState<DesignRequest | null>(null)
+  const [isDeleting, setIsDeleting] = React.useState(false)
+  const [deleteErrorMsg, setDeleteErrorMsg] = React.useState<string | null>(null)
 
   React.useEffect(() => {
     async function loadRequests() {
@@ -76,6 +89,33 @@ export default function CustomerRequests() {
   const statusInfo = (status: string) =>
     STATUS_LABELS[status] || { label: status, color: "bg-muted text-muted-foreground border-border" }
 
+  const handleConfirmDelete = async () => {
+    if (!requestToDelete) return
+    setIsDeleting(true)
+    setDeleteErrorMsg(null)
+
+    try {
+      const res = await fetch(`/api/design-requests/${requestToDelete.id}`, {
+        method: "DELETE",
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to delete request.")
+      }
+
+      // Deletion successful: remove item immediately from UI
+      setRequests((prev) => prev.filter((r) => r.id !== requestToDelete.id))
+      setSuccessMsg("Request deleted successfully.")
+      setRequestToDelete(null)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to delete request."
+      setDeleteErrorMsg(msg)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex items-start justify-between">
@@ -92,6 +132,22 @@ export default function CustomerRequests() {
           </Button>
         </Link>
       </div>
+
+      {/* Success Notification Banner */}
+      {successMsg && (
+        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-sm rounded-2xl flex items-center justify-between gap-3 animate-in fade-in" role="status">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="w-5 h-5 shrink-0" aria-hidden="true" />
+            <span>{successMsg}</span>
+          </div>
+          <button
+            onClick={() => setSuccessMsg(null)}
+            className="text-xs font-semibold hover:underline opacity-80"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -122,6 +178,8 @@ export default function CustomerRequests() {
         <div className="space-y-4">
           {requests.map((req) => {
             const { label, color } = statusInfo(req.status)
+            const isCancellable = CANCELLABLE_STATUSES.includes(req.status)
+
             return (
               <div
                 key={req.id}
@@ -177,8 +235,25 @@ export default function CustomerRequests() {
                   </div>
                 </div>
 
-                {/* Action */}
-                <div className="flex items-center shrink-0">
+                {/* Action Buttons */}
+                <div className="flex items-center gap-2 shrink-0 flex-wrap md:flex-nowrap">
+                  {isCancellable && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setDeleteErrorMsg(null)
+                        setRequestToDelete(req)
+                      }}
+                      className="text-xs font-semibold h-9 rounded-xl border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive flex items-center gap-1.5 transition-colors"
+                      aria-label={`Delete request for ${req.ai_tags[0] || "this garment"}`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                      <span>Delete Request</span>
+                    </Button>
+                  )}
+
                   <Link
                     href={`/dashboard/orders/${req.id}`}
                     className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl"
@@ -196,6 +271,97 @@ export default function CustomerRequests() {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal Dialog */}
+      {requestToDelete && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-dialog-title"
+        >
+          <div className="bg-card border border-border rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-full bg-destructive/10 border border-destructive/20 flex items-center justify-center text-destructive shrink-0">
+                <AlertCircle className="w-5 h-5" aria-hidden="true" />
+              </div>
+              <div className="space-y-1 flex-1">
+                <h2 id="delete-dialog-title" className="text-base font-bold text-foreground">
+                  Delete this request?
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  This action cannot be undone.
+                </p>
+              </div>
+            </div>
+
+            {/* Target Item Brief */}
+            <div className="p-3 bg-muted/50 rounded-2xl border border-border flex items-center gap-3 text-xs">
+              <div className="w-10 h-10 rounded-lg overflow-hidden relative border border-border bg-muted shrink-0">
+                <Image
+                  src={requestToDelete.image_url}
+                  alt="Request preview"
+                  fill
+                  sizes="40px"
+                  className="object-cover"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-foreground truncate">
+                  {requestToDelete.ai_tags[0] || "Custom Design Request"}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  Status: {statusInfo(requestToDelete.status).label}
+                </p>
+              </div>
+            </div>
+
+            {/* Error Message inside Modal if API fails */}
+            {deleteErrorMsg && (
+              <div className="p-3 bg-destructive/10 border border-destructive/20 text-destructive text-xs rounded-xl flex items-start gap-2" role="alert">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
+                <span>{deleteErrorMsg}</span>
+              </div>
+            )}
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-3 pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isDeleting}
+                onClick={() => {
+                  if (!isDeleting) {
+                    setRequestToDelete(null)
+                    setDeleteErrorMsg(null)
+                  }
+                }}
+                className="h-10 rounded-xl px-4 text-xs font-semibold border-border hover:bg-accent"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleConfirmDelete}
+                className="h-10 rounded-xl px-4 text-xs font-semibold bg-destructive text-destructive-foreground hover:bg-destructive/90 flex items-center gap-2 shadow-sm"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>Delete Request</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>

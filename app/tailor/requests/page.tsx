@@ -28,6 +28,8 @@ interface DesignRequest {
   notes?: string
 }
 
+export const dynamic = "force-dynamic"
+
 export default function TailorRequests() {
   const supabase = createClient()
 

@@ -107,10 +107,10 @@ export function MarketingNavbar() {
           <div className="hidden md:flex items-center space-x-4">
             <ThemeToggle />
             <a href="/login" className="text-sm font-medium hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded px-2 py-1">
-              Login
+              Sign In
             </a>
             <Button asChild className="font-medium bg-primary text-primary-foreground hover:opacity-90 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-              <a href="/dashboard">Start Designing</a>
+              <a href="/signup">Get Started</a>
             </Button>
           </div>
 
@@ -160,14 +160,14 @@ export function MarketingNavbar() {
                   onClick={() => setMobileMenuOpen(false)}
                   className="text-center font-medium py-2 rounded border border-border hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
-                  Login
+                  Sign In
                 </a>
                 <Button
                   asChild
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full bg-primary text-primary-foreground font-medium py-3 rounded"
                 >
-                  <a href="/dashboard">Start Designing</a>
+                  <a href="/signup">Get Started</a>
                 </Button>
               </div>
             </div>

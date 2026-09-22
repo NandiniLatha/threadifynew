@@ -58,13 +58,20 @@ export async function POST(request: Request) {
     }
 
     // Prevent duplicate active quotes from the same tailor for this request
-    const { data: existingQuote } = await supabase
+    const { data: existingQuote, error: existingQuoteErr } = await supabase
       .from("quotations")
       .select("id")
       .eq("tailor_id", user.id)
       .eq("request_id", requestId)
       .in("status", ["pending", "accepted"])
-      .single()
+      .maybeSingle()
+
+    if (existingQuoteErr) {
+      return NextResponse.json(
+        { error: "Failed to verify existing quotations." },
+        { status: 500 }
+      )
+    }
 
     if (existingQuote) {
       return NextResponse.json(
@@ -87,15 +94,6 @@ export async function POST(request: Request) {
     }
 
     if (designRequest?.customer_id) {
-      // If this is the first quote, update the request status to 'quoted'
-      if (designRequest.status === "pending_bids") {
-        const supabaseAdmin = createAdminClient()
-        await supabaseAdmin
-          .from("design_requests")
-          .update({ status: "quoted" })
-          .eq("id", requestId)
-      }
-
       await createNotification(
         supabase,
         designRequest.customer_id,

@@ -35,10 +35,14 @@ export async function GET() {
       .eq(column, user.id)
       .order("date", { ascending: true })
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) {
+      console.error("[consultations] GET failed:", error.message)
+      return NextResponse.json({ error: "Failed to retrieve consultations." }, { status: 500 })
+    }
 
     return NextResponse.json({ consultations: data || [] })
-  } catch {
+  } catch (err) {
+    console.error("[consultations] GET unhandled error:", err)
     return NextResponse.json({ error: "Unexpected error." }, { status: 500 })
   }
 }
@@ -68,14 +72,19 @@ export async function POST(request: Request) {
     }
 
     // Check for double booking (same tailor, date, time slot)
-    const { data: conflict } = await supabase
+    const { data: conflict, error: conflictErr } = await supabase
       .from("consultations")
       .select("id")
       .eq("tailor_id", tailor_id)
       .eq("date", date)
       .eq("time_slot", time_slot)
       .neq("status", "cancelled")
-      .single()
+      .maybeSingle()
+
+    if (conflictErr) {
+      console.error("[consultations] Conflict check failed:", conflictErr.message)
+      return NextResponse.json({ error: "Failed to verify slot availability." }, { status: 500 })
+    }
 
     if (conflict) {
       return NextResponse.json(
@@ -98,7 +107,17 @@ export async function POST(request: Request) {
       .select()
       .single()
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) {
+      if (error.code === '23505') {
+        // Unique constraint violation (tailor_id, date, time_slot)
+        return NextResponse.json(
+          { error: "This time slot is already booked. Please choose another time." },
+          { status: 409 }
+        )
+      }
+      console.error("[consultations] POST insert failed:", error.message)
+      return NextResponse.json({ error: "Failed to book consultation." }, { status: 500 })
+    }
 
     // Notify the tailor
     await createNotification(
@@ -109,7 +128,8 @@ export async function POST(request: Request) {
     )
 
     return NextResponse.json({ success: true, consultation: data })
-  } catch {
+  } catch (err) {
+    console.error("[consultations] POST unhandled error:", err)
     return NextResponse.json({ error: "Unexpected error." }, { status: 500 })
   }
 }
@@ -140,11 +160,19 @@ export async function PUT(request: Request) {
     }
 
     // Fetch consultation to verify access
-    const { data: consultation } = await supabase
+    const { data: consultation, error: fetchErr } = await supabase
       .from("consultations")
       .select("id, customer_id, tailor_id, date, time_slot")
       .eq("id", id)
       .single()
+
+    if (fetchErr) {
+      if (fetchErr.code === 'PGRST116') {
+        return NextResponse.json({ error: "Consultation not found." }, { status: 404 })
+      }
+      console.error("[consultations] PUT fetch failed:", fetchErr.message)
+      return NextResponse.json({ error: "Failed to fetch consultation." }, { status: 500 })
+    }
 
     if (!consultation) {
       return NextResponse.json({ error: "Consultation not found." }, { status: 404 })
@@ -163,7 +191,10 @@ export async function PUT(request: Request) {
       .update({ status })
       .eq("id", id)
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) {
+      console.error("[consultations] PUT update failed:", error.message)
+      return NextResponse.json({ error: "Failed to update consultation." }, { status: 500 })
+    }
 
     // Send notification to the other party
     const notifyUserId =
@@ -179,7 +210,8 @@ export async function PUT(request: Request) {
     await createNotification(supabase, notifyUserId, msg, "/dashboard")
 
     return NextResponse.json({ success: true })
-  } catch {
+  } catch (err) {
+    console.error("[consultations] PUT unhandled error:", err)
     return NextResponse.json({ error: "Unexpected error." }, { status: 500 })
   }
 }

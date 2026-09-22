@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import Image from "next/image"
 import { ChatWindow } from "@/components/shared/ChatWindow"
@@ -109,6 +110,17 @@ const ACTIVE_ORDER_STATUSES = [
 ]
 
 export default function TailorOrders() {
+  return (
+    <React.Suspense fallback={<div className="h-[60vh] flex items-center justify-center"><Loader2 className="w-10 h-10 text-primary animate-spin" /></div>}>
+      <TailorOrdersContent />
+    </React.Suspense>
+  )
+}
+
+function TailorOrdersContent() {
+  const searchParams = useSearchParams()
+  const orderIdParam = searchParams.get("id")
+
   const supabase = createClient()
   const [currentUserId, setCurrentUserId] = React.useState<string | null>(null)
   const [orders, setOrders] = React.useState<TailorOrder[]>([])
@@ -202,12 +214,18 @@ export default function TailorOrders() {
         deadline:    row.deadline,
         notes:       row.notes ?? undefined,
         ai_tags:     row.ai_tags ?? [],
-        paymentVerified: verifiedPayments.has(row.id),
+        paymentVerified: verifiedPayments.has(row.id) || row.status === "paid" || Number(row.amount_paid ?? 0) > 0,
       }))
 
       setOrders(mapped)
       setActiveOrder(prev => {
-        if (!prev) return mapped[0] ?? null
+        if (!prev) {
+          if (orderIdParam) {
+            const target = mapped.find(o => o.id === orderIdParam);
+            if (target) return target;
+          }
+          return mapped[0] ?? null
+        }
         return mapped.find(o => o.id === prev.id) ?? mapped[0] ?? null
       })
     } catch (err: any) {
@@ -222,6 +240,16 @@ export default function TailorOrders() {
   React.useEffect(() => {
     loadOrders()
   }, [loadOrders])
+
+  const ordersRef = React.useRef(orders)
+  React.useEffect(() => { ordersRef.current = orders }, [orders])
+
+  React.useEffect(() => {
+    if (orderIdParam && ordersRef.current.length > 0) {
+      const target = ordersRef.current.find(o => o.id === orderIdParam)
+      if (target) setActiveOrder(target)
+    }
+  }, [orderIdParam])
 
   React.useEffect(() => {
     if (!currentUserId) return
@@ -279,7 +307,7 @@ export default function TailorOrders() {
   const getNextStatusDisplay = (status: string) => {
     const ALLOWED_TRANSITIONS: Record<string, string> = {
       paid: "cutting", cutting: "stitching", stitching: "quality_check",
-      quality_check: "ready", ready: "shipped", shipped: "delivered", delivered: "completed",
+      quality_check: "ready", ready: "shipped", delivered: "completed",
       // Legacy support
       confirmed: "cutting", measurements_pending: "cutting", in_production: "shipped"
     }
@@ -442,7 +470,9 @@ export default function TailorOrders() {
                             <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing…</>
                           ) : (
                             <>
-                              {NEXT_ACTION_LABEL[getNextStatusDisplay(activeOrder.status)!] || `Advance to ${STATUS_LABEL[getNextStatusDisplay(activeOrder.status)!]}`} 
+                              {activeOrder.status === "measurements_pending"
+                                ? "Measurements Received - Start Cutting"
+                                : (NEXT_ACTION_LABEL[getNextStatusDisplay(activeOrder.status)!] || `Advance to ${STATUS_LABEL[getNextStatusDisplay(activeOrder.status)!]}`)} 
                               <ArrowRight className="w-4 h-4 ml-2" />
                             </>
                           )}

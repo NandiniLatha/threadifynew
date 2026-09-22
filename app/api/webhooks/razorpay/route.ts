@@ -14,17 +14,23 @@ export async function POST(request: Request) {
     const signature = request.headers.get("x-razorpay-signature") || ""
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || ""
 
-    // Validate signature if webhookSecret is configured
-    if (webhookSecret && signature && !webhookSecret.includes("placeholder")) {
-      const isValid = Razorpay.validateWebhookSignature(
-        bodyText,
-        signature,
-        webhookSecret
-      )
+    // Validate signature
+    if (!webhookSecret || webhookSecret.includes("placeholder")) {
+      return NextResponse.json({ error: "Server misconfiguration: missing webhook secret" }, { status: 500 })
+    }
+    
+    if (!signature) {
+      return NextResponse.json({ error: "Missing webhook signature" }, { status: 400 })
+    }
 
-      if (!isValid) {
-        return NextResponse.json({ error: "Invalid webhook signature" }, { status: 400 })
-      }
+    const isValid = Razorpay.validateWebhookSignature(
+      bodyText,
+      signature,
+      webhookSecret
+    )
+
+    if (!isValid) {
+      return NextResponse.json({ error: "Invalid webhook signature" }, { status: 400 })
     }
 
     const payload = JSON.parse(bodyText)
@@ -40,28 +46,47 @@ export async function POST(request: Request) {
         // We need to fetch the design request to get customer_id and tailor_id
         const { data: request, error: reqErr } = await supabaseAdmin
           .from("design_requests")
-          .select("customer_id, tailor_id, accepted_quotation_id")
+          .select("status, customer_id, tailor_id, accepted_quotation_id")
           .eq("id", requestId)
           .single()
 
         if (request && !reqErr) {
-          // Calculate amount from payload or quotation
+          // Check if already processed
+          if (request.status === "paid" || request.status === "cutting" || request.status === "stitching" || request.status === "quality_check" || request.status === "ready" || request.status === "shipped" || request.status === "delivered" || request.status === "completed") {
+            return NextResponse.json({ received: true, msg: "Already processed" })
+          }
+
+          // Resolve quote from Razorpay notes
+          const quoteId = notes.quoteId
+          
+          if (!quoteId) {
+            return NextResponse.json({ error: "Missing quoteId in payment notes" }, { status: 400 })
+          }
+
           const { data: quote } = await supabaseAdmin
             .from("quotations")
-            .select("price")
-            .eq("id", request.accepted_quotation_id)
+            .select("price, tailor_id")
+            .eq("id", quoteId)
             .single()
 
           const amountPaid = quote ? Number(quote.price) : 0
+          
+          // Verify the paid amount matches the quote
+          const expectedAmountPaise = Math.round(amountPaid * 100)
+          if (expectedAmountPaise !== orderEntity.amount) {
+            return NextResponse.json({ error: "Payment amount mismatch" }, { status: 400 })
+          }
+
           const platformCommission = parseFloat((amountPaid * 0.10).toFixed(2))
           const tailorPayout = amountPaid - platformCommission
+          const tailorId = quote?.tailor_id || null
 
           const { error: paymentErr } = await supabaseAdmin
             .from("payments")
             .upsert({
               order_id: requestId,
               customer_id: request.customer_id,
-              tailor_id: request.tailor_id,
+              tailor_id: tailorId,
               amount: amountPaid,
               platform_fee: platformCommission,
               tailor_payout: tailorPayout,
@@ -73,20 +98,53 @@ export async function POST(request: Request) {
           if (paymentErr) {
             console.error("Webhook payment insert error", paymentErr.message)
           }
+
+          // Update database: mark design request as 'paid' and link quote
+          const { error } = await supabaseAdmin
+            .from("design_requests")
+            .update({
+              status: "paid",
+              production_evidence_status: "none",
+              tailor_id: tailorId,
+              accepted_quotation_id: quoteId,
+              amount_paid: amountPaid,
+              platform_commission: platformCommission,
+              razorpay_order_id: orderEntity.id
+            })
+            .eq("id", requestId)
+
+          if (error) {
+            console.error("Webhook database update error", error.message)
+            return NextResponse.json({ error: error.message }, { status: 500 })
+          }
         }
+      }
+    } else if (event === "payment.failed") {
+      const paymentEntity = payload.payload.payment.entity
+      const notes = paymentEntity.notes || {}
+      const requestId = notes.requestId
 
-        // Update database: mark design request as 'paid'
-        const { error } = await supabaseAdmin
+      if (requestId) {
+        // Fetch design request
+        const { data: request, error: reqErr } = await supabaseAdmin
           .from("design_requests")
-          .update({
-            status: "paid",
-            production_evidence_status: "none"
-          })
+          .select("customer_id")
           .eq("id", requestId)
+          .single()
+        
+        if (request && !reqErr) {
+          const { error: paymentErr } = await supabaseAdmin
+            .from("payments")
+            .upsert({
+              order_id: requestId,
+              customer_id: request.customer_id,
+              payment_status: "failed",
+              razorpay_order_id: paymentEntity.order_id,
+            }, { onConflict: "order_id" })
 
-        if (error) {
-          console.error("Webhook database update error", error.message)
-          return NextResponse.json({ error: error.message }, { status: 500 })
+          if (paymentErr) {
+            console.error("Webhook payment failed insert error", paymentErr.message)
+          }
         }
       }
     }

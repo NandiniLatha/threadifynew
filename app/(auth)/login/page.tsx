@@ -34,10 +34,13 @@ function LoginForm() {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isForgotLoading) return
+
     setErrorMsg(null)
     setForgotSuccessMsg(null)
 
-    if (!email) {
+    const normalizedEmail = email.trim().toLowerCase()
+    if (!normalizedEmail) {
       setErrorMsg("Please enter your email address to reset your password.")
       return
     }
@@ -45,11 +48,16 @@ function LoginForm() {
     setIsForgotLoading(true)
     try {
       const { forgotPassword } = await import("@/services/authService")
-      const result = await forgotPassword(email)
+      const result = await forgotPassword(normalizedEmail)
       if (!result.error) {
         setForgotSuccessMsg("Password reset email sent! Check your inbox for instructions.")
       } else {
-        setErrorMsg(result.error.message || "Failed to send reset email.")
+        const msg = result.error.message || ""
+        if (msg.includes("rate") || msg.includes("429") || msg.includes("over_email_send_rate_limit")) {
+          setErrorMsg("Too many password reset requests. Please wait a few minutes before trying again.")
+        } else {
+          setErrorMsg(msg || "Failed to send reset email.")
+        }
       }
     } catch {
       setErrorMsg("Failed to process password reset request.")
@@ -70,12 +78,21 @@ function LoginForm() {
     setIsLoading(true)
 
     try {
+      console.log("[Auth Audit] Target Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL)
+      console.log("[Auth Audit] Attempting login for email:", email.trim().toLowerCase())
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim().toLowerCase(),
         password,
       })
 
       if (error) {
+        console.warn("[Auth Audit] Auth response error:", {
+          status: error.status,
+          name: error.name,
+          code: error.code,
+          message: error.message,
+        })
         if (error.message.includes("Invalid login credentials") || error.message.includes("invalid_credentials")) {
           setErrorMsg("That email or password doesn't match our records. Please try again.")
         } else if (error.message.includes("Email not confirmed") || error.message.includes("email_not_confirmed")) {

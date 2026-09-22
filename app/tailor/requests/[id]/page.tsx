@@ -18,6 +18,23 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
+const STATUS_LABEL: Record<string, string> = {
+  pending_bids:         "Waiting for Proposals",
+  assigned:             "Assigned (Unpaid)",
+  paid:                 "Payment Done",
+  confirmed:            "Confirmed",
+  measurements_pending: "Measurements Pending",
+  cutting:              "Cutting",
+  stitching:            "Stitching",
+  quality_check:        "Quality Check",
+  ready:                "Ready",
+  in_production:        "In Production",
+  shipped:              "Shipped",
+  delivered:            "Delivered",
+  completed:            "Completed",
+  reviewed:             "Reviewed",
+}
+
 export default function TailorRequestDetails() {
   const { id } = useParams()
   const router = useRouter()
@@ -54,11 +71,9 @@ export default function TailorRequestDetails() {
             status,
             budget_max,
             budget_min,
-            description,
             ai_tags,
             notes,
             image_url,
-            measurements,
             customer:users!customer_id ( name )
           `)
           .eq("id", id)
@@ -77,7 +92,7 @@ export default function TailorRequestDetails() {
           .select("id, price, estimated_days, note, status")
           .eq("request_id", id)
           .eq("tailor_id", user.id)
-          .single()
+          .maybeSingle()
         
         if (!quoteError && quoteData) {
           setMyQuote(quoteData)
@@ -136,6 +151,32 @@ export default function TailorRequestDetails() {
       setIsSubmitting(false)
     }
   }
+
+  const { customizations, regularNotes } = React.useMemo(() => {
+    if (!request?.notes) return { customizations: [], regularNotes: "" }
+    
+    const customMatch = request.notes.match(/\[Customization:([\s\S]*?)\]/i)
+    const items: { label: string; value: string }[] = []
+    let regNotes = request.notes
+
+    if (customMatch) {
+      const rawPairs = customMatch[1].split('|').map((s: string) => s.trim())
+      for (const pair of rawPairs) {
+        const parts = pair.split(':')
+        if (parts.length >= 2) {
+          const label = parts[0].trim()
+          const value = parts.slice(1).join(':').trim()
+          const formattedLabel = label.charAt(0).toUpperCase() + label.slice(1).toLowerCase()
+          if (value && value.toLowerCase() !== "none") {
+            items.push({ label: formattedLabel, value })
+          }
+        }
+      }
+      regNotes = request.notes.replace(customMatch[0], '').trim()
+    }
+
+    return { customizations: items, regularNotes: regNotes }
+  }, [request?.notes])
 
   if (isLoading) {
     return (
@@ -212,7 +253,7 @@ export default function TailorRequestDetails() {
               </div>
               <div className="bg-muted/30 p-4 rounded-2xl border border-border/50 col-span-2 sm:col-span-1">
                 <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-1">Status</p>
-                <p className="text-lg font-bold text-foreground capitalize">{request.status.replace("_", " ")}</p>
+                <p className="text-lg font-bold text-foreground capitalize">{STATUS_LABEL[request.status] ?? request.status.replace("_", " ")}</p>
               </div>
             </div>
 
@@ -229,14 +270,29 @@ export default function TailorRequestDetails() {
               </div>
             )}
             
-            {request.notes && (
+            {(regularNotes || customizations.length > 0) && (
               <div className="pt-2">
                 <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-3 flex items-center gap-2">
                   <FileText className="w-3.5 h-3.5" /> Client Notes
                 </p>
-                <div className="text-sm text-foreground/90 bg-primary/5 p-6 rounded-[2rem] leading-relaxed italic border border-primary/10 relative">
-                  <span className="text-4xl text-primary/20 absolute top-2 left-3 font-serif">"</span>
-                  <span className="relative z-10 block pt-1 px-2">&ldquo;{request.notes}&rdquo;</span>
+                <div className="bg-muted/30 border border-border/50 rounded-2xl p-5 shadow-sm">
+                  {customizations.length > 0 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-8">
+                      {customizations.map((c, i) => (
+                        <div key={i} className="flex border-b border-border/30 pb-2 sm:border-0 sm:pb-0 last:border-0">
+                          <span className="text-sm text-muted-foreground w-28 shrink-0">{c.label}</span>
+                          <span className="text-sm font-medium text-foreground">{c.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {regularNotes && (
+                    <div className={customizations.length > 0 ? "mt-5 pt-5 border-t border-border/50" : ""}>
+                      <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap italic">
+                        {regularNotes}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

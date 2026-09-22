@@ -94,9 +94,30 @@ export default function TailorLayout({
     }
   }, [supabase, fetchNotifCount])
 
+  const fetchUnreadMessageCount = React.useCallback(async () => {
+    if (!userId) return
+    try {
+      const { data: convs } = await supabase
+        .from("conversations")
+        .select("tailor_unread")
+        .eq("tailor_id", userId)
+
+      const totalUnread = convs?.reduce((sum, c) => sum + (c.tailor_unread || 0), 0) ?? 0
+      setUnreadCount(totalUnread)
+    } catch { /* silently fail */ }
+  }, [supabase, userId])
+
   // Realtime subscription for unread messages badge and notifications
   React.useEffect(() => {
     if (!userId) return
+
+    fetchUnreadMessageCount()
+
+    // Listen for read events
+    const handleMessagesRead = () => {
+      fetchUnreadMessageCount()
+    }
+    window.addEventListener("messages-read", handleMessagesRead)
 
     // Realtime subscription for unread messages badge
     const messageChannelName = `global-tailor-messages-${userId}-${Math.random().toString(36).substring(7)}`
@@ -104,15 +125,9 @@ export default function TailorLayout({
       .channel(messageChannelName)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages" },
-        (payload) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const msg = payload.new as any
-          if (msg.sender_id !== userId) {
-            if (!window.location.pathname.includes("/messages") && !window.location.pathname.includes("/orders")) {
-              setUnreadCount((prev) => prev + 1)
-            }
-          }
+        { event: "*", schema: "public", table: "conversations", filter: `tailor_id=eq.${userId}` },
+        () => {
+          fetchUnreadMessageCount()
         }
       )
       .subscribe()
@@ -131,10 +146,11 @@ export default function TailorLayout({
       .subscribe()
 
     return () => {
+      window.removeEventListener("messages-read", handleMessagesRead)
       supabase.removeChannel(messageChannel)
       supabase.removeChannel(notifChannel)
     }
-  }, [supabase, userId, fetchNotifCount])
+  }, [supabase, userId, fetchNotifCount, fetchUnreadMessageCount])
 
 
   // Restructured Menu (Work, Communication, Account)
@@ -223,7 +239,7 @@ export default function TailorLayout({
   )
 
   return (
-    <div className="min-h-screen bg-background flex flex-col md:flex-row">
+    <div className="min-h-screen bg-background flex flex-col md:flex-row md:h-screen md:overflow-hidden">
       {/* Skip to main content — accessibility */}
       <a
         href="#main-content"
@@ -255,11 +271,11 @@ export default function TailorLayout({
       {/* Sidebar - Desktop */}
       <aside
         aria-label="Tailor navigation"
-        className={`fixed inset-y-0 left-0 z-30 w-64 bg-background border-r border-border/40 flex flex-col justify-between transform md:translate-x-0 transition-transform duration-300 md:static ${
+        className={`fixed inset-y-0 left-0 z-30 w-64 bg-background border-r border-border/40 flex flex-col justify-between transform md:translate-x-0 transition-transform duration-300 md:static md:h-full md:shrink-0 ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex flex-col flex-1">
+        <div className="flex flex-col flex-1 min-h-0">
           {/* Sidebar Brand header */}
           <div className="h-20 border-b border-border/40 items-center px-8 hidden md:flex justify-between">
             <Link href="/" className="flex items-center space-x-2">
@@ -350,7 +366,7 @@ export default function TailorLayout({
       <main
         id="main-content"
         tabIndex={-1}
-        className="flex-1 min-h-[calc(100vh-4rem)] md:min-h-screen bg-background relative overflow-y-auto"
+        className="flex-1 min-h-[calc(100vh-4rem)] md:min-h-0 md:h-full bg-background relative overflow-y-auto"
       >
         <div className="p-6 md:p-10 container mx-auto max-w-5xl">
           {children}

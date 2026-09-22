@@ -28,14 +28,18 @@ export async function POST(
       )
     }
 
-    // Query quotation price
+    // Query quotation price and verify it belongs to this specific order
     const { data: quote, error: quoteErr } = await supabase
       .from("quotations")
       .select("price, tailor_id")
       .eq("id", quoteId)
+      .eq("request_id", orderId)
       .single()
 
     if (quoteErr || !quote) {
+      if (process.env.NODE_ENV === 'production') {
+        return NextResponse.json({ error: "Quotation not found or invalid." }, { status: 400 })
+      }
       // Mock fallback if quote not in database
       const fallbackPrice = 280
       const pricePaise = fallbackPrice * 100
@@ -78,8 +82,13 @@ export async function POST(
         }
       } catch (rzpErr) {
         const warningMsg = rzpErr instanceof Error ? rzpErr.message : "unknown error"
-        console.warn("Razorpay order creation failed, falling back to mock", warningMsg)
+        console.warn("Razorpay order creation failed", warningMsg)
+        if (process.env.NODE_ENV === 'production') {
+          return NextResponse.json({ error: "Failed to create payment order." }, { status: 500 })
+        }
       }
+    } else if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json({ error: "Payment gateway is not configured." }, { status: 500 })
     }
 
     // Notify the tailor they have been assigned

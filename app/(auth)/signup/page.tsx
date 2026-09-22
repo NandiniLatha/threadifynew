@@ -25,7 +25,8 @@ export default function SignupPage() {
     setErrorMsg(null)
     setSuccessMsg(null)
 
-    if (!email || !password || !name) {
+    const normalizedEmail = email.trim().toLowerCase()
+    if (!normalizedEmail || !password || !name) {
       setErrorMsg("Please fill in your name, email, and password.")
       return
     }
@@ -39,7 +40,7 @@ export default function SignupPage() {
 
     try {
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: normalizedEmail,
         password,
         options: {
           data: {
@@ -51,20 +52,32 @@ export default function SignupPage() {
       })
 
       if (error) {
-        if (error.message.includes("already registered") || error.message.includes("User already registered")) {
-          setErrorMsg("This email is already registered. Try signing in instead.")
-        } else if (error.message.includes("rate") || error.message.includes("429") || error.message.includes("over_email_send_rate_limit")) {
+        let msg = error.message;
+        if (!msg || msg === "{}" || msg === "[object Object]") {
+          msg = "Signup failed due to a database error. Please contact support.";
+        }
+
+        if (msg.includes("already registered") || msg.includes("User already registered")) {
+          setErrorMsg("This email is already registered. Please log in instead.")
+        } else if (msg.includes("rate") || msg.includes("429") || msg.includes("over_email_send_rate_limit")) {
           setErrorMsg("Too many sign-up attempts. Please wait a few minutes before trying again.")
-        } else if (error.message.includes("invalid") && error.message.toLowerCase().includes("email")) {
+        } else if (msg.includes("invalid") && msg.toLowerCase().includes("email")) {
           setErrorMsg("Please enter a valid email address.")
         } else {
-          setErrorMsg(error.message)
+          setErrorMsg(msg)
         }
         setIsLoading(false)
         return
       }
 
       if (data.user) {
+        // Check if user already exists (Supabase email enumeration protection returns empty identities array)
+        if (data.user.identities && data.user.identities.length === 0) {
+          setErrorMsg("This email is already registered. Please log in instead.")
+          setIsLoading(false)
+          return
+        }
+
         // If session is immediately active (email confirmation disabled), redirect now
         if (data.session) {
           // Retry profile fetch — handles race condition with the DB trigger

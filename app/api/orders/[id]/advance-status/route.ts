@@ -61,7 +61,7 @@ export async function POST(
     // Fetch the design request — verify tailor ownership
     const { data: designRequest, error: reqErr } = await supabase
       .from("design_requests")
-      .select("id, status, tailor_id, customer_id, production_evidence_status")
+      .select("id, status, tailor_id, customer_id, production_evidence_status, amount_paid")
       .eq("id", requestId)
       .single()
 
@@ -95,16 +95,37 @@ export async function POST(
 
     // Enforce payment verification before starting production
     if (currentStatus === "paid" || currentStatus === "confirmed") {
-      const { data: payment, error: paymentErr } = await supabase
+      const supabaseAdmin = createAdminClient()
+      const { data: payment } = await supabaseAdmin
         .from("payments")
         .select("id")
         .eq("order_id", requestId)
         .eq("payment_status", "completed")
         .maybeSingle()
 
-      if (paymentErr || !payment) {
+      const isOrderPaid = designRequest.status === "paid" && Number(designRequest.amount_paid ?? 0) > 0
+
+      if (!payment && !isOrderPaid) {
         return NextResponse.json(
           { error: "Advance payment has not been successfully verified. Cannot start production." },
+          { status: 403 }
+        )
+      }
+    }
+
+    // Enforce measurements verification before cutting
+    if (nextStatus === "cutting") {
+      const supabaseAdmin = createAdminClient()
+      const { data: measurements, error: measurementsErr } = await supabaseAdmin
+        .from("measurements")
+        .select("id")
+        .eq("user_id", designRequest.customer_id)
+        .limit(1)
+        .maybeSingle()
+
+      if (measurementsErr || !measurements) {
+        return NextResponse.json(
+          { error: "The customer has not provided their measurements yet. Cannot start cutting." },
           { status: 403 }
         )
       }

@@ -61,6 +61,12 @@ export async function POST(
       return NextResponse.json({ error: "Only the request owner can confirm payment." }, { status: 403 })
     }
 
+    // Allowed payment statuses:
+    //   "pending_bids" — no quotes yet; customer initiated payment before any tailor replied (edge case)
+    //   "quoted"       — set AUTOMATICALLY by the DB trigger trg_sync_design_request_status_insert
+    //                    (migration 20260916000000_sync_design_request_status.sql) when the first
+    //                    quotation is inserted. This is the NORMAL state at payment time.
+    //   "assigned"     — tailor was manually assigned without the bidding flow
     if (!["pending_bids", "quoted", "assigned"].includes(designRequest.status)) {
       return NextResponse.json(
         { error: `Cannot pay for a request with status '${designRequest.status}'.` },
@@ -112,39 +118,61 @@ export async function POST(
       return NextResponse.json({ error: updateErr.message }, { status: 500 })
     }
 
-    // 1b. Create a verified payment record to enforce genuine payment status
+    // 1b. Create a verified payment record to enforce genuine payment status.
+    // IMPORTANT: Must use supabaseAdmin (service-role) — the payments table has
+    // no INSERT policy for regular authenticated users (by design; see migration
+    // 20260721000004_rls_additions.sql lines 166-168). Using the RLS-bound client
+    // would cause a 403/42501 here and leave the order in a corrupt paid-but-no-
+    // payment-record state.
+    // Upsert (instead of insert) makes this idempotent: if the customer retries
+    // after a transient error the UNIQUE(order_id) constraint won't block them.
     const tailorPayout = amountPaid - platformCommission
-    const { error: paymentErr } = await supabase
+    const { error: paymentErr } = await supabaseAdmin
       .from("payments")
-      .insert({
-        order_id: requestId,
-        customer_id: user.id,
-        tailor_id: quote.tailor_id,
-        amount: amountPaid,
-        platform_fee: platformCommission,
-        tailor_payout: tailorPayout,
-        currency: "INR",
-        payment_status: "completed",
-        razorpay_payment_id: demoTransactionId,
-      })
+      .upsert(
+        {
+          order_id: requestId,
+          customer_id: user.id,
+          tailor_id: quote.tailor_id,
+          amount: amountPaid,
+          platform_fee: platformCommission,
+          tailor_payout: tailorPayout,
+          currency: "INR",
+          payment_status: "completed",
+          razorpay_payment_id: demoTransactionId,
+        },
+        { onConflict: "order_id" }
+      )
 
     if (paymentErr) {
       console.error("[mock-pay] payments insert failed:", paymentErr.message)
       return NextResponse.json({ error: paymentErr.message }, { status: 500 })
     }
 
-    // 2. Mark this quotation as accepted
-    await supabase
+    // 2. Mark this quotation as accepted.
+    // MUST use supabaseAdmin (service-role): the customer's JWT has no UPDATE
+    // policy on quotations (only tailors can update their own via FOR ALL USING
+    // auth.uid() = tailor_id). Using the RLS-bound client here silently returns
+    // 0 rows affected, leaving the quotation perpetually in "pending" status
+    // even after payment is confirmed.
+    // Authorization is already fully enforced above (steps 1-3: auth check,
+    // customer_id ownership, and quote.request_id == requestId validation).
+    const { error: quoteUpdateErr } = await supabaseAdmin
       .from("quotations")
       .update({ status: "accepted" })
       .eq("id", quoteId)
+
+    if (quoteUpdateErr) {
+      console.error("[mock-pay] quotations update failed:", quoteUpdateErr.message)
+      return NextResponse.json({ error: quoteUpdateErr.message }, { status: 500 })
+    }
 
     // 3. Notify the tailor
     await createNotification(
       supabase,
       quote.tailor_id,
       "🎉 A customer has selected your quote and confirmed payment. Check your orders.",
-      "/tailor/orders"
+      `/tailor/orders?id=${requestId}`
     )
 
     return NextResponse.json({ success: true, transactionId: demoTransactionId })

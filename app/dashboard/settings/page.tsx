@@ -60,15 +60,18 @@ export default function CustomerSettings() {
     setIsSavingProfile(true)
     setProfileStatus(null)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error("Not authenticated.")
+      const res = await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      })
 
-      const { error } = await supabase
-        .from("users")
-        .update({ name })
-        .eq("id", user.id)
+      const data = await res.json()
 
-      if (error) throw new Error(error.message)
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to update profile.")
+      }
+
       setProfileStatus({ type: "success", text: "Profile updated successfully!" })
       
       // Notify layout to refresh the profile info in the sidebar

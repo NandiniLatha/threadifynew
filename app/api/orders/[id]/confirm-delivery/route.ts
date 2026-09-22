@@ -79,7 +79,7 @@ export async function POST(
         supabase,
         order.tailor_id,
         "✅ The customer has confirmed delivery. The order is complete!",
-        "/tailor/orders"
+        `/tailor/orders?id=${orderId}`
       )
     }
 

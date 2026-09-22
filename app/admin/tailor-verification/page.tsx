@@ -84,13 +84,16 @@ export default function TailorVerification() {
     setErrorMsg(null)
 
     try {
-      const { error } = await supabase
-        .from("tailor_profiles")
-        .update({ verification_status: status })
-        .eq("user_id", userId)
+      const res = await fetch("/api/admin/tailor-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, status }),
+      })
 
-      if (error) {
-        setErrorMsg(error.message)
+      const data = await res.json()
+
+      if (!res.ok) {
+        setErrorMsg(data.error || "Failed to update application status.")
       } else {
         // Remove from local list
         setApplications((prev) => prev.filter((app) => app.user_id !== userId))

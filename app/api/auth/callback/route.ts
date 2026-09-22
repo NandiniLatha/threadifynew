@@ -4,6 +4,7 @@ import { NextResponse } from "next/server"
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get("code")
+  const next = searchParams.get("next")
   const oauthError = searchParams.get("error")
   const oauthErrorDesc = searchParams.get("error_description")
 
@@ -18,9 +19,13 @@ export async function GET(request: Request) {
     const { data: { user }, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && user) {
+      if (next) {
+        const target = next.startsWith("/") ? next : "/dashboard"
+        return NextResponse.redirect(`${origin}${target}`)
+      }
       // Retry profile lookup — handles race condition where DB trigger hasn't run yet
       let role: string | undefined
-      for (let attempt = 0; attempt < 3; attempt++) {
+      for (let attempt = 0; attempt < 6; attempt++) {
         const { data: profile } = await supabase
           .from("users")
           .select("role")
