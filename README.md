@@ -561,9 +561,3 @@ This software was engineered and designed as a **Final Year B.Tech in Computer S
 - **Nandini Latha Nallamothu**  
   *B.Tech in Computer Science and Engineering*  
   Raghu Engineering College (Autonomous), Visakhapatnam, India
-
----
-
-## 📄 License
-
-License: Not specified.
